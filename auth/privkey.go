@@ -13,13 +13,7 @@ var Cipher = x509.PEMCipherAES256
 
 // GeneratePrivateKey builds a private key of given size from default random
 func GeneratePrivateKey(bits int) (*rsa.PrivateKey, error) {
-	key, err := rsa.GenerateKey(rand.Reader, bits)
-
-	if err != nil {
-		return nil, err
-	}
-
-	return key, nil
+	return rsa.GenerateKey(rand.Reader, bits)
 }
 
 // PrivateKeyToEncryptedPEM builds a PEM-encoded array of bytes from a private key and a password.
@@ -66,13 +60,8 @@ func EncryptedPEMToPrivateKey(data []byte, pwd string) (*rsa.PrivateKey, error) 
 		}
 	}
 
-	key, err := x509.ParsePKCS1PrivateKey(decodedData)
+	return x509.ParsePKCS1PrivateKey(decodedData)
 
-	if err != nil {
-		return nil, err
-	}
-
-	return key, nil
 }
 
 // PEMToPrivateKey tries to decode a plain PEM-encoded array of bytes to a private key.

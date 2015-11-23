@@ -11,7 +11,7 @@ func TestGeneratePrivateKey(t *testing.T) {
 	_, err := GeneratePrivateKey(1024)
 
 	if err != nil {
-		t.Fail()
+		t.Fatal(err)
 	}
 
 	if !testing.Short() {
@@ -20,52 +20,60 @@ func TestGeneratePrivateKey(t *testing.T) {
 }
 
 func TestPrivateKeyToPEM(t *testing.T) {
-	key, _ := GeneratePrivateKey(2048)
+	key, _ := GeneratePrivateKey(512)
 	res := PrivateKeyToPEM(key)
 
+	if res[0] != '-' {
+		t.Fatalf("Bad format\n%s", res)
+	}
+
 	if IsPEMEncrypted(res) {
-		t.Fail()
+		t.Fatal("Result is encrypted")
 	}
 }
 
 func TestPrivateKeyToEncryptedPEM(t *testing.T) {
-	key, _ := GeneratePrivateKey(2048)
+	key, _ := GeneratePrivateKey(512)
 	res, err := PrivateKeyToEncryptedPEM(key, "password")
 
+	if res[0] != '-' {
+		t.Fatalf("Bad format\n%s", res)
+	}
+
 	if !IsPEMEncrypted(res) || err != nil {
-		t.Fail()
+		t.Fatal("Result is not encrypted: ", err)
 	}
 }
 
 func TestPEMToPrivateKey(t *testing.T) {
-	key, _ := GeneratePrivateKey(2048)
+	key, _ := GeneratePrivateKey(512)
 	key2, err := PEMToPrivateKey(PrivateKeyToPEM(key))
 	if !reflect.DeepEqual(key, key2) || err != nil {
-		t.Fail()
+		t.Fatal(err)
 	}
 }
 
 func TestEncryptedPEMToPrivateKey(t *testing.T) {
-	key, _ := GeneratePrivateKey(2048)
+	key, _ := GeneratePrivateKey(512)
 	res, _ := PrivateKeyToEncryptedPEM(key, "password")
 
 	goodKey, err := EncryptedPEMToPrivateKey(res, "password")
 
 	if !reflect.DeepEqual(key, goodKey) || err != nil {
-		t.Fail()
+		t.Fatal(err)
 	}
 
 	badKey, err := EncryptedPEMToPrivateKey(res, "badpass")
 
 	if badKey != nil || err != x509.IncorrectPasswordError {
-		t.Fail()
+		t.Fatal(err)
 	}
 }
 
 func ExampleEncryptedPEMToPrivateKey() {
 
 	// Generate a new private key for example
-	key, err := GeneratePrivateKey(2048)
+	key, err := GeneratePrivateKey(512)
 
 	if err != nil {
 		panic(err)
