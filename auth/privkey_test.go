@@ -15,7 +15,10 @@ func TestGeneratePrivateKey(t *testing.T) {
 	}
 
 	if !testing.Short() {
-		GeneratePrivateKey(4096)
+		_, err = GeneratePrivateKey(4096)
+		if err != nil {
+			t.Fatal(err)
+		}
 	}
 }
 
