@@ -8,6 +8,7 @@ the developers managing and developing this open source project. In return,
 they should reciprocate that respect in addressing your issue or assessing
 patches and features.
 
+Please use english for public communication.
 
 ## Using the issue tracker
 
@@ -110,6 +111,9 @@ project's developers might not want to merge into the project.
 Please adhere to the coding conventions used throughout a project (indentation,
 accurate comments, etc.) and any other requirements (tests and their coverage).
 
+We are using **Golang** as the main language. Coding conventions are really simple
+and can be found [here](https://golang.org/doc/effective_go.html).
+
 Follow this process if you'd like your work considered for inclusion in the
 project:
 
@@ -179,7 +183,7 @@ implementation choice carries a trade-off and numerous costs. There is seldom
 a right answer, merely an optimal answer given a set of values and
 circumstances.
 
-Please keep unstructured critique to a minimum. If you have solid ideas you
+Please keep unstructured critics to a minimum. If you have solid ideas you
 want to experiment with, make a fork and see how it works.
 
 We will exclude you from interaction if you insult, demean or harass anyone.
