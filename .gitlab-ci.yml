@@ -1,0 +1,23 @@
+stages:
+  - test
+
+job_tests:
+  stage: test
+  tags:
+    - golang
+    - mongo  # Require an available mongo service
+    - strong # Disable this build on small runners
+  services:
+    - "lesterpig/mongo:latest" # Use this light version of mongo
+  script: "go test -cover -v ./..."
+
+job_lint:
+  stage: test
+  allow_failure: True
+  tags:
+    - golang
+    - lint
+  script:
+    - "go get github.com/alecthomas/gometalinter"
+    - "gometalinter --install"
+    - "gometalinter -t --deadline=60s ./..."
