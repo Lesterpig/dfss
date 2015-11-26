@@ -8,14 +8,14 @@ import (
 )
 
 func TestGeneratePrivateKey(t *testing.T) {
-	_, err := GeneratePrivateKey(1024)
+	_, err := GeneratePrivateKey(512)
 
 	if err != nil {
 		t.Fatal(err)
 	}
 
 	if !testing.Short() {
-		_, err = GeneratePrivateKey(4096)
+		_, err = GeneratePrivateKey(2048)
 		if err != nil {
 			t.Fatal(err)
 		}
