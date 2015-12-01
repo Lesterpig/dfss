@@ -1,7 +1,7 @@
 stages:
   - test
 
-job_tests:
+Unit tests:
   stage: test
   tags:
     - golang
@@ -9,9 +9,14 @@ job_tests:
     - strong # Disable this build on small runners
   services:
     - "lesterpig/mongo:latest" # Use this light version of mongo
-  script: "go test -cover -v ./..."
+  #artifacts: # Waiting GitLab 8.2.1...
+  #  paths:
+  #    - "coverage.html"
+  script:
+    - "go test -coverprofile c.out -v ./..."
+    - "go tool cover -html=c.out -o coverage.html"
 
-job_lint:
+Code lint:
   stage: test
   allow_failure: True
   tags:
