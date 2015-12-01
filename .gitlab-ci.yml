@@ -16,6 +16,13 @@ Unit tests:
     - "go test -coverprofile c.out -v ./..."
     - "go tool cover -html=c.out -o coverage.html"
 
+ARM tests:
+  stage: test
+  tags:
+    - arm
+  script:
+    - "go test -cover -short -v ./..."
+
 Code lint:
   stage: test
   allow_failure: True
