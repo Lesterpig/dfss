@@ -2,6 +2,7 @@ package auth
 
 import (
 	"crypto/rsa"
+	"crypto/x509"
 	"fmt"
 	"os"
 	"testing"
@@ -151,10 +152,28 @@ func ExampleGetCertificate() {
 	if cert == nil || err != nil {
 		fmt.Println(err)
 	} else {
-		fmt.Println("OK")
+		fmt.Println("Certificate generated")
+	}
+
+	// Check certificate validity
+
+	roots := x509.NewCertPool()
+	roots.AddCert(signerCertificate)
+
+	signeeCertificate, _ := PEMToCertificate(cert)
+
+	_, err = signeeCertificate.Verify(x509.VerifyOptions{
+		Roots: roots,
+	})
+
+	if err != nil {
+		fmt.Println(err)
+	} else {
+		fmt.Println("Certificate authenticated")
 	}
 
 	// Output:
-	// OK
+	// Certificate generated
+	// Certificate authenticated
 
 }
