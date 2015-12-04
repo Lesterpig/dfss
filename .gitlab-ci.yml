@@ -1,0 +1,35 @@
+stages:
+  - test
+
+Unit tests:
+  stage: test
+  tags:
+    - golang
+    - mongo  # Require an available mongo service
+    - strong # Disable this build on small runners
+  services:
+    - "lesterpig/mongo:latest" # Use this light version of mongo
+  #artifacts: # Waiting GitLab 8.2.1...
+  #  paths:
+  #    - "coverage.html"
+  script:
+    - "go test -coverprofile c.out -v ./..."
+    - "go tool cover -html=c.out -o coverage.html"
+
+ARM tests:
+  stage: test
+  tags:
+    - arm
+  script:
+    - "go test -cover -short -v ./..."
+
+Code lint:
+  stage: test
+  allow_failure: True
+  tags:
+    - golang
+    - lint
+  script:
+    - "go get github.com/alecthomas/gometalinter"
+    - "gometalinter --install"
+    - "gometalinter -t --deadline=60s ./..."
