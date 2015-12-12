@@ -13,7 +13,11 @@ Unit tests:
   #  paths:
   #    - "coverage.html"
   script:
-    - "go test -coverprofile c.out -v ./..."
+    - "go get gopkg.in/mgo.v2"
+    - "go test -coverprofile auth.part -v ./auth"
+    - "go test -coverprofile mgdb.part -v ./mgdb"
+    - "echo 'mode: set' *part > c.out"
+    - "grep -h -v 'mode: set' *part >> c.out"
     - "go tool cover -html=c.out -o coverage.html"
 
 ARM tests:
@@ -21,7 +25,8 @@ ARM tests:
   tags:
     - arm
   script:
-    - "go test -cover -short -v ./..."
+    - "go get gopkg.in/mgo.v2"
+    - "go test -cover -short -run 'Test[^M][^o][^n][^g][^o]' -v ./..."
 
 Code lint:
   stage: test
@@ -31,5 +36,6 @@ Code lint:
     - lint
   script:
     - "go get github.com/alecthomas/gometalinter"
+    - "go get gopkg.in/mgo.v2"
     - "gometalinter --install"
     - "gometalinter -t --deadline=60s ./..."
