@@ -2,7 +2,6 @@ package mgdb
 
 import (
 	"fmt"
-	"os"
 	"testing"
 )
 
@@ -26,10 +25,6 @@ type user struct {
 }
 
 var factory *MetadataFactory = NewMetadataFactory()
-
-func TestMain(m *testing.M) {
-	os.Exit(m.Run())
-}
 
 func TestPublicFields(t *testing.T) {
 	a := animal{}

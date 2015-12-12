@@ -19,12 +19,14 @@ type hand struct {
 	CardTwo card          `key:"card_two" bson:"card_two"`
 }
 
+var collection *MongoCollection
 var manager *MongoManager
 var err error
 
 func TestMain(m *testing.M) {
 	// Setup
-	manager, err = NewManager("localhost", "admin", "admin", "demo", "demo", 27017)
+	manager, err = NewManager("demo")
+	collection = manager.Get("demo")
 
 	// Run
 	code := m.Run()
@@ -32,7 +34,7 @@ func TestMain(m *testing.M) {
 	// Teardown
 	// The collection is created automatically on
 	// first connection, that's why we do not recreate it manually
-	manager.collection.DropCollection()
+	collection.collection.DropCollection()
 	manager.Close()
 
 	os.Exit(code)
@@ -52,7 +54,7 @@ func helperInsert(value, color string) (card, bool) {
 	}
 
 	fmt.Println("Inserting card : ", c)
-	ok, err := manager.Insert(c)
+	ok, err := collection.Insert(c)
 	if !ok {
 		fmt.Println("A problem occurred during insert : ", err)
 		return c, false
@@ -74,7 +76,7 @@ func TestFindById(t *testing.T) {
 	}
 
 	res := card{}
-	err := manager.FindById(c, &res)
+	err := collection.FindById(c, &res)
 	if err != nil {
 		t.Fatal("Couldn't fetch the card : ", err)
 	}
@@ -91,7 +93,7 @@ func TestUpdateById(t *testing.T) {
 	// Update and persist the card
 	c.Value = "Jack"
 	c.Color = ""
-	ok, err := manager.UpdateById(c)
+	ok, err := collection.UpdateById(c)
 	if !ok {
 		t.Fatal("Couldn't update the card : ", err)
 	}
@@ -99,7 +101,7 @@ func TestUpdateById(t *testing.T) {
 
 	// Assert the changes have been persisted
 	res := card{}
-	err = manager.FindById(c, &res)
+	err = collection.FindById(c, &res)
 	if err != nil {
 		t.Fatal("Couldn't fetch the previously updated card")
 	}
@@ -116,7 +118,7 @@ func TestUpdateByIdNestedTypes(t *testing.T) {
 	c2 := card{bson.NewObjectId(), "Ace", "Hearts"}
 	h := hand{bson.NewObjectId(), c1, c2}
 
-	ok, err := manager.Insert(h)
+	ok, err := collection.Insert(h)
 	if !ok {
 		t.Fatal("Couldn't insert hand :", err)
 	}
@@ -127,7 +129,7 @@ func TestUpdateByIdNestedTypes(t *testing.T) {
 	h.CardOne.Color = "Clubs"
 	h.CardTwo.Value = "Six"
 	h.CardTwo.Color = "Diamonds"
-	ok, err = manager.UpdateById(h)
+	ok, err = collection.UpdateById(h)
 	if !ok {
 		t.Fatal("An error occured while updating the hand :", err)
 	}
@@ -135,7 +137,7 @@ func TestUpdateByIdNestedTypes(t *testing.T) {
 
 	// Find the hand and assert the changes were made
 	res := hand{}
-	err = manager.FindById(h, &res)
+	err = collection.FindById(h, &res)
 	if err != nil {
 		t.Fatal("Couldn't fetch the previously update hand")
 	}
@@ -153,7 +155,7 @@ func TestDeleteById(t *testing.T) {
 		t.Fatal("Couldn't insert")
 	}
 
-	ok, err := manager.DeleteById(c)
+	ok, err := collection.DeleteById(c)
 	if !ok {
 		t.Fatal("Couldn't remove the card : ", err)
 	}

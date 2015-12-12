@@ -1,22 +1,24 @@
 package mgdb
 
 import (
-	"fmt"
 	"gopkg.in/mgo.v2"
 	"gopkg.in/mgo.v2/bson"
 	"os"
 )
 
+// An error struct to be thrown upon problem during connection
 type errorConnection struct {
 	s string
 }
 
+// Return the string contained in the error
 func (e *errorConnection) Error() string {
 	return e.s
 }
 
-func NewErrorConnection(s string) error {
-	return &errorConnection{s}
+// Creates a new error with the given message
+func NewErrorConnection(message string) error {
+	return &errorConnection{message}
 }
 
 // The Manager handling mongoDB connection
@@ -47,6 +49,12 @@ func NewManager(database string) (*MongoManager, error) {
 		db,
 		make(map[string]*MongoCollection),
 	}, nil
+}
+
+// Close the current connection
+// Be careful, you won't be able to query the collections anymore
+func (m *MongoManager) Close() {
+	m.session.Close()
 }
 
 // Get a MongoCollection over a specified collection
@@ -129,18 +137,8 @@ func (manager *MongoCollection) DeleteAll(query interface{}) (int, error) {
 	return info.Removed, err
 }
 
-// Switch collection in the database
-func (manager *MongoCollection) SwitchCollection(coll string) {
-	manager.collection = manager.database.C(coll)
-}
-
 // Count the number of entities currently in the database
 func (manager *MongoCollection) Count() int {
 	count, _ := manager.collection.Count()
 	return count
-}
-
-// Close the connection to the session
-func (manager *MongoCollection) Close() {
-	manager.session.Close()
 }
