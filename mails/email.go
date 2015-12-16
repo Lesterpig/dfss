@@ -9,6 +9,7 @@ import (
   "encoding/base64"
 )
 
+// CustomClient :
 // Modelizes the constants of a connection : an actual client, and a sender
 type CustomClient struct {
   sender string
@@ -17,25 +18,22 @@ type CustomClient struct {
 
 var errorNoTLS = errors.New("Connection failed : mail server doesn't support TLS");
 
-var errorNoAuthentification = errors.New(`Connection failed : mail server doesn't
-support authentication`);
 
-// Start a connection. Returns errorNoTLS if server doesn't implement TLS.
+// Initiate a connection. Returns errorNoTLS if server doesn't implement TLS.
 // Returns errorNoAuthentification if there is no authentification possible
-func initiate(sender string, host string, port string, password string) (*CustomClient,error){
+func Initiate(sender string, host string, port string, password string) (*CustomClient,error){
   // Connect to the server
-  c, err := smtp.Dial(host+port)
+  c, err := smtp.Dial(host+":"+port)
   if err != nil{
     return nil,err
   }
 
-  // Authenticate to the server
-  auth := smtp.PlainAuth("",sender,password,host)
-  if ok,_ := c.Extension("AUTH");!ok{
-    return nil,errorNoAuthentification
-  }
-  if err := c.Auth(auth); err != nil{
-    return nil,err
+  // Authenticate to the server if it is supported
+  if ok,_ := c.Extension("AUTH");ok{
+    auth := smtp.PlainAuth("",sender,password,host)
+    if err := c.Auth(auth); err != nil{
+      return nil,err
+    }
   }
 
   // Check that the server does implement TLS
@@ -48,18 +46,13 @@ func initiate(sender string, host string, port string, password string) (*Custom
     return nil, err
   }
 
-  // Set the sender of the mail
-  if err := c.Mail(sender);err != nil{
-    return nil,err
-  }
-
   return &CustomClient{sender,c},nil
 }
 
 // Send a mail with the custom client. Returns nil on success.
 func (c *CustomClient) Send(dest []string, subject string, message string) error{
   // Keep the connection in a local variable for ease of access
-  connection := c.client;
+  connection := c.client
 
   // Set the header once & forget it (save for the receiver)
   // The following is the same for all connections (speficied by user)
@@ -85,8 +78,7 @@ func (c *CustomClient) Send(dest []string, subject string, message string) error
 
   for _,receiver := range dest{
 
-    // Set the sender. If this is not the first call, this should also reset
-    // the receivers
+    // Set the sender
     if err := connection.Mail(c.sender);err != nil{
       return err
     }
@@ -110,11 +102,17 @@ func (c *CustomClient) Send(dest []string, subject string, message string) error
     if err != nil {
       return err
     }
-  }
+
+    // Reset the envellope
+    err = connection.Reset()
+     if err != nil {
+      return err
+    }
+ }
   return nil;
 }
 
-// Quits the connection of CustomClient
+// Close the connection of CustomClient
 func (c *CustomClient) Close() error{
   return c.client.Close()
 }
