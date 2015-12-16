@@ -30,7 +30,7 @@ func Initiate(sender string, host string, port string, password string) (*Custom
 
   // Authenticate to the server if it is supported
   if ok,_ := c.Extension("AUTH");ok{
-    auth := smtp.PlainAuth("",sender,password,host)
+    auth := smtp.PlainAuth(sender,sender,password,host)
     if err := c.Auth(auth); err != nil{
       return nil,err
     }
@@ -42,7 +42,7 @@ func Initiate(sender string, host string, port string, password string) (*Custom
   }
 
   // Start tls
-  if err := c.StartTLS(&tls.Config{ServerName : host});err != nil{
+  if err := c.StartTLS(&tls.Config{InsecureSkipVerify: true,ServerName : host});err != nil{
     return nil, err
   }
 

@@ -11,7 +11,7 @@ var err error
 
 func TestMain(m *testing.M) {
   // Setup
-  c,err = Initiate("qdauchy","10.132.11.198","8000","blah")
+  c,err = Initiate("Jenkar","127.0.0.1","5000","")
   if err != nil{
     fmt.Println(err)
   }
