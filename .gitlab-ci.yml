@@ -9,6 +9,7 @@ Unit tests:
     - strong # Disable this build on small runners
   services:
     - "lesterpig/mongo:latest" # Use this light version of mongo
+    - "lesterpig/postfix:latest"
   #artifacts: # Waiting GitLab 8.2.1...
   #  paths:
   #    - "coverage.html"
@@ -16,6 +17,7 @@ Unit tests:
     - "go get gopkg.in/mgo.v2"
     - "go test -coverprofile auth.part -v ./auth"
     - "go test -coverprofile mgdb.part -v ./mgdb"
+    - "go test -coverprofile mails.part -v ./mails"
     - "echo 'mode: set' *part > c.out"
     - "grep -h -v 'mode: set' *part >> c.out"
     - "go tool cover -html=c.out -o coverage.html"
@@ -26,7 +28,8 @@ ARM tests:
     - arm
   script:
     - "go get gopkg.in/mgo.v2"
-    - "go test -cover -short -run 'Test[^M][^o][^n][^g][^o]' -v ./..."
+    - "go test -cover -short -v ./auth"
+    - "go test -cover -short -v ./mgdb"
 
 Code lint:
   stage: test
@@ -38,4 +41,4 @@ Code lint:
     - "go get github.com/alecthomas/gometalinter"
     - "go get gopkg.in/mgo.v2"
     - "gometalinter --install"
-    - "gometalinter -t --deadline=60s ./..."
+    - "gometalinter -t --deadline=100s -j1 ./..."
