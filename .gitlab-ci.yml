@@ -38,6 +38,7 @@ Code lint:
     - golang
     - lint
   script:
+    - "go install ."
     - "go install ./..."
     - "go get github.com/alecthomas/gometalinter"
     - "go get gopkg.in/mgo.v2"
