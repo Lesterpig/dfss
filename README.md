@@ -18,3 +18,11 @@ Configure workspace
 go install dfss/...
 ```
 
+Run dfss modules
+----------------
+
+```bash
+dfssc help # Client
+dfssp help # Plaform
+dfssd help # Demonstrator
+```
