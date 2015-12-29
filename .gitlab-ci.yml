@@ -14,6 +14,7 @@ Unit tests:
   #  paths:
   #    - "coverage.html"
   script:
+    - "ln -s $(pwd) $GOPATH/src/dfss"
     - "go get gopkg.in/mgo.v2"
     - "go test -coverprofile auth.part -v ./auth"
     - "go test -coverprofile mgdb.part -v ./mgdb"
@@ -38,7 +39,9 @@ Code lint:
     - golang
     - lint
   script:
+    - "ln -s $(pwd) $GOPATH/src/dfss"
     - "go get github.com/alecthomas/gometalinter"
     - "go get gopkg.in/mgo.v2"
+    - "go install ./..."
     - "gometalinter --install"
     - "gometalinter -t --deadline=100s -j1 ./..."
