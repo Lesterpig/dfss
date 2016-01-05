@@ -15,7 +15,7 @@ Unit tests:
       - "coverage.html"
   script:
     - "ln -s $(pwd) $GOPATH/src/dfss"
-    - "go get gopkg.in/mgo.v2"
+    - "./build/deps.sh"
     - "go test -coverprofile auth.part -v ./auth"
     - "go test -coverprofile mgdb.part -v ./mgdb"
     - "go test -coverprofile mails.part -v ./mails"
@@ -28,7 +28,7 @@ ARM tests:
   tags:
     - arm
   script:
-    - "go get gopkg.in/mgo.v2"
+    - "./build/deps.sh"
     - "go test -cover -short -v ./auth"
     - "go test -cover -short -v ./mgdb"
 
@@ -41,7 +41,7 @@ Code lint:
   script:
     - "ln -s $(pwd) $GOPATH/src/dfss"
     - "go get github.com/alecthomas/gometalinter"
-    - "go get gopkg.in/mgo.v2"
+    - "./build/deps.sh"
     - "go install ./..."
     - "gometalinter --install"
     - "gometalinter -t --deadline=100s -j1 ./..."

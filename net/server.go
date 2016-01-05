@@ -3,31 +3,27 @@ package net
 import (
 	"crypto/tls"
 	"crypto/x509"
-	"flag"
-	"fmt"
-	"io/ioutil"
 	"log"
 	"net"
 
-	"golang.org/x/net/context"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials"
 	"google.golang.org/grpc/grpclog"
 )
 
-// Create a new grpc server with given tls creds
+// NewServer create a new grpc server with given tls credentials.
 //
 // cert/key/ca are PEM-encoded array of byte
 //
 // The returned grpcServer must be used in association with server{} to
 // register APIs before calling Listen()
-func NewServer(cert, key, ca []byte) *Server {
+func NewServer(cert, key, ca []byte) *grpc.Server {
 	// configure gRPC
 	var opts []grpc.ServerOption
 
 	serverCert, err := tls.X509KeyPair(cert, key)
 	if err != nil {
-		log.Fatal("Load peer cert/key error: %v", err)
+		log.Fatalf("Load peer cert/key error: %v", err)
 	}
 	caCertPool := x509.NewCertPool()
 	caCertPool.AppendCertsFromPEM(ca)
@@ -44,16 +40,20 @@ func NewServer(cert, key, ca []byte) *Server {
 	return grpc.NewServer(opts...)
 }
 
-// Listen with specified server on addr:port TCP
+// Listen with specified server on addr:port.
 //
-// addr is the addr to bind to
-// port is the port to listen on
-func Listen(addr, port string, grpcServer *Server) {
+// addrPort is formated as 127.0.0.1:8001
+// * addr is the addr to bind to,
+// * port is the port to listen on
+func Listen(addrPort string, grpcServer *grpc.Server) {
 	// open tcp socket
-	lis, err := net.Listen("tcp", fmt.Sprintf(":%d", *port))
+	lis, err := net.Listen("tcp", addrPort)
 	if err != nil {
 		grpclog.Fatalf("Failed to open tcp socket: %v", err)
 	}
 
-	grpcServer.Serve(lis)
+	err = grpcServer.Serve(lis)
+	if err != nil {
+		grpclog.Fatalf("Failed to bind gRPC server: %v", err)
+	}
 }
