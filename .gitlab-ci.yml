@@ -10,9 +10,9 @@ Unit tests:
   services:
     - "lesterpig/mongo:latest" # Use this light version of mongo
     - "lesterpig/postfix:latest"
-  #artifacts: # Waiting GitLab 8.2.1...
-  #  paths:
-  #    - "coverage.html"
+  artifacts:
+    paths:
+      - "coverage.html"
   script:
     - "ln -s $(pwd) $GOPATH/src/dfss"
     - "go get gopkg.in/mgo.v2"
