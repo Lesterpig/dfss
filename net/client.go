@@ -12,8 +12,8 @@ import (
 
 // Connect to a peer.
 //
-// Given parameters cert/key/ca are PEM-encoded array of byte
-// Closing must be defered after call
+// Given parameters cert/key/ca are PEM-encoded array of bytes.
+// Closing must be defered after call.
 func Connect(addrPort string, cert, key, ca []byte) *grpc.ClientConn {
 	// load peer cert/key, ca as PEM buffers
 	peerCert, err := tls.X509KeyPair(cert, key)

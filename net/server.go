@@ -11,12 +11,12 @@ import (
 	"google.golang.org/grpc/grpclog"
 )
 
-// NewServer create a new grpc server with given tls credentials.
+// NewServer creates a new grpc server with given tls credentials.
 //
-// cert/key/ca are PEM-encoded array of byte
+// cert/key/ca are PEM-encoded array of bytes.
 //
 // The returned grpcServer must be used in association with server{} to
-// register APIs before calling Listen()
+// register APIs before calling Listen().
 func NewServer(cert, key, ca []byte) *grpc.Server {
 	// configure gRPC
 	var opts []grpc.ServerOption
@@ -42,9 +42,7 @@ func NewServer(cert, key, ca []byte) *grpc.Server {
 
 // Listen with specified server on addr:port.
 //
-// addrPort is formated as 127.0.0.1:8001
-// * addr is the addr to bind to,
-// * port is the port to listen on
+// addrPort is formated as 127.0.0.1:8001.
 func Listen(addrPort string, grpcServer *grpc.Server) {
 	// open tcp socket
 	lis, err := net.Listen("tcp", addrPort)
