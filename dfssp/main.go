@@ -10,14 +10,14 @@ import (
 )
 
 var (
-	verbose                      bool
+	verbose bool
 	// Private key and certificate
 	path, country, org, unit, cn string
 	keySize, validity            int
 	pid                          *authority.PlatformID
 	// MongoDB connection
-	dbName, dbEnvVarName         string
-	dbManager                    *mgdb.MongoManager
+	dbName, dbEnvVarName string
+	dbManager            *mgdb.MongoManager
 )
 
 func init() {
@@ -81,7 +81,7 @@ func main() {
 		}
 		// TODO: use pid
 		_ = pid
-		
+
 		dbManager, err := mgdb.NewManager(dbName, dbEnvVarName)
 		if err != nil {
 			fmt.Println("An error occured during the connection to Mongo DB")
