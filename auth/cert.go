@@ -44,13 +44,13 @@ func PEMToCertificateRequest(data []byte) (*x509.CertificateRequest, error) {
 // GetCertificate builds a certificate from a certificate request and an authoritative certificate (CA), as a PEM-encoded array of bytes.
 // This function assumes that the identity of the signee is valid.
 //
-// The serial has to be unique.
+// The serial has to be unique and positive.
 //
 // The generated certificate can safely be distributed to unknown actors.
-func GetCertificate(days int, serial int64, req *x509.CertificateRequest, parent *x509.Certificate, key *rsa.PrivateKey) ([]byte, error) {
+func GetCertificate(days int, serial uint64, req *x509.CertificateRequest, parent *x509.Certificate, key *rsa.PrivateKey) ([]byte, error) {
 
 	template := &x509.Certificate{
-		SerialNumber: big.NewInt(serial),
+		SerialNumber: new(big.Int).SetUint64(serial),
 		Subject:      req.Subject,
 		NotBefore:    time.Now(),
 		NotAfter:     time.Now().AddDate(0, 0, days),
@@ -71,13 +71,13 @@ func GetCertificate(days int, serial int64, req *x509.CertificateRequest, parent
 
 // GetSelfSignedCertificate builds a CA certificate from a private key, as a PEM-encoded array of bytes.
 //
-// The serial has to be unique.
+// The serial has to be unique and positive.
 //
 // The generated certificate should be distributed to any other actor in the network under this CA.
-func GetSelfSignedCertificate(days int, serial int64, country, organization, unit, cn string, key *rsa.PrivateKey) ([]byte, error) {
+func GetSelfSignedCertificate(days int, serial uint64, country, organization, unit, cn string, key *rsa.PrivateKey) ([]byte, error) {
 
 	template := &x509.Certificate{
-		SerialNumber: big.NewInt(serial),
+		SerialNumber: new(big.Int).SetUint64(serial),
 		Subject: pkix.Name{
 			Country:            []string{country},
 			Organization:       []string{organization},

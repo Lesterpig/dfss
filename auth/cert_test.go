@@ -147,7 +147,7 @@ func ExampleGetCertificate() {
 	signerKey, _ := PEMToPrivateKey([]byte(keyFixture))
 
 	// Generate the certificate for 365 days with a serial of 0x10 (16)
-	cert, err := GetCertificate(365, int64(0x10), certificateRequest, signerCertificate, signerKey)
+	cert, err := GetCertificate(365, uint64(0x10), certificateRequest, signerCertificate, signerKey)
 
 	if cert == nil || err != nil {
 		fmt.Println(err)
