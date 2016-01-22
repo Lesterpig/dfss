@@ -33,7 +33,7 @@ func init() {
 		fmt.Println("Users and contracts manager")
 
 		fmt.Println("\nUsage:")
-		fmt.Println("  dfssp command [flags]")
+		fmt.Println("  dfssp [flags] command")
 
 		fmt.Println("\nThe commands are:")
 		fmt.Println("  init     [cn, country, keySize, org, path, unit, validity]")

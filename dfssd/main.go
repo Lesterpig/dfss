@@ -20,7 +20,7 @@ func init() {
 		fmt.Println("Debug tool to check remote transmissions")
 
 		fmt.Println("\nUsage:")
-		fmt.Println("  dfssd command [flags]")
+		fmt.Println("  dfssd [flags] command")
 
 		fmt.Println("\nThe commands are:")
 		fmt.Println("  help     print this help")
