@@ -19,22 +19,20 @@ type hand struct {
 	CardTwo card          `key:"card_two" bson:"card_two"`
 }
 
-const defaultDBUrl = "MGDB_URL"
-
 var collection *MongoCollection
 var manager *MongoManager
 var err error
 
 func TestMain(m *testing.M) {
 	// Setup
-	fmt.Println("Try to connect to : " + os.Getenv(defaultDBUrl))
+	fmt.Println("Try to connect to : " + os.Getenv(DefaultDBUrl))
 
-	db := os.Getenv(defaultDBUrl)
+	db := os.Getenv(DefaultDBUrl)
 	if db == "" {
 		db = "demo"
 	}
 
-	manager, err = NewManager(db, defaultDBUrl)
+	manager, err = NewManager(db, DefaultDBUrl)
 
 	collection = manager.Get("demo")
 
@@ -187,7 +185,7 @@ func ExampleMongoManager() {
 	}
 
 	//Initializes a MongoManager for the 'demo' database
-	manager, err := NewManager("demo", defaultDBUrl)
+	manager, err := NewManager("demo", DefaultDBUrl)
 	if err != nil { /* Handle error */
 	}
 

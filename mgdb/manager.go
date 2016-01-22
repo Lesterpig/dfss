@@ -6,6 +6,8 @@ import (
 	"os"
 )
 
+const DefaultDBUrl = "MGDB_URL"
+
 // errorConnection represents an error to be thrown upon connection
 type errorConnection struct {
 	s string
