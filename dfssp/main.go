@@ -2,7 +2,7 @@ package main
 
 import (
 	"dfss"
-	"dfss/dfssp/autority"
+	"dfss/dfssp/authority"
 	"flag"
 	"fmt"
 	"runtime"
@@ -12,14 +12,14 @@ var (
 	verbose                      bool
 	path, country, org, unit, cn string
 	keySize, validity            int
-	pid                          *autority.PlatformID
+	pid                          *authority.PlatformID
 )
 
 func init() {
 
 	flag.BoolVar(&verbose, "v", false, "Print verbose messages")
 
-	flag.StringVar(&path, "path", autority.GetHomeDir(), "Path for the platform's private key and root certificate")
+	flag.StringVar(&path, "path", authority.GetHomeDir(), "Path for the platform's private key and root certificate")
 	flag.StringVar(&country, "country", "France", "Country for the root certificate")
 	flag.StringVar(&org, "org", "DFSS", "Organization for the root certificate")
 	flag.StringVar(&unit, "unit", "INSA Rennes", "Organizational unit for the root certificate")
@@ -58,14 +58,14 @@ func main() {
 	case "version":
 		fmt.Println("v"+dfss.Version, runtime.GOOS, runtime.GOARCH)
 	case "init":
-		err := autority.Initialize(keySize, validity, country, org, unit, cn, path)
+		err := authority.Initialize(keySize, validity, country, org, unit, cn, path)
 		if err != nil {
 			fmt.Println("An error occured during the initialization operation")
 			fmt.Println(err)
 			panic(err)
 		}
 	case "start":
-		pid, err := autority.Start(path)
+		pid, err := authority.Start(path)
 		if err != nil {
 			fmt.Println("An error occured during the start operation")
 			fmt.Println(err)

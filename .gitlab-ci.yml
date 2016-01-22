@@ -16,9 +16,10 @@ Unit tests:
   script:
     - "ln -s $(pwd) $GOPATH/src/dfss"
     - "./build/deps.sh"
-    - "go test -coverprofile auth.part -v ./auth"
-    - "go test -coverprofile mgdb.part -v ./mgdb"
-    - "go test -coverprofile mails.part -v ./mails"
+    - "go test -coverprofile auth.part -v dfss/auth"
+    - "go test -coverprofile mgdb.part -v dfss/mgdb"
+    - "go test -coverprofile mails.part -v dfss/mails"
+    - "go test -coverprofile authority.part -v dfss/dfssp/authority"
     - "echo 'mode: set' *part > c.out"
     - "grep -h -v 'mode: set' *part >> c.out"
     - "go tool cover -html=c.out -o coverage.html"
@@ -31,6 +32,7 @@ ARM tests:
     - "./build/deps.sh"
     - "go test -cover -short -v ./auth"
     - "go test -cover -short -v ./mgdb"
+    - "go test -cover -short -v ./dfssp/..."
 
 Code lint:
   stage: test

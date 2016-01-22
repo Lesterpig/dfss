@@ -1,4 +1,4 @@
-package autority
+package authority
 
 import (
 	"crypto/rsa"
@@ -50,13 +50,13 @@ func TestInitialize(t *testing.T) {
 	if _, err = os.Stat(keyPath); os.IsNotExist(err) {
 		t.Fatal("Private key file couldn't be found")
 	} else {
-		os.Remove(keyPath)
+		_ = os.Remove(keyPath)
 	}
 
 	if _, err = os.Stat(certPath); os.IsNotExist(err) {
 		t.Fatal("Root certificate file couldn't be found")
 	} else {
-		os.Remove(certPath)
+		_ = os.Remove(certPath)
 	}
 }
 
@@ -71,35 +71,28 @@ func ExampleInitialize() {
 		fmt.Println(err)
 	}
 
-	if _, err = os.Stat(keyPath); os.IsNotExist(err) {
-		fmt.Println("Private key file couldn't be found")
-	} else {
-		fmt.Println("Private key file has been found")
-		err2 := os.Remove(keyPath)
-		if err2 != nil {
-			fmt.Println(err2)
-		} else {
-			fmt.Println("Private key file has been deleted")
-		}
-	}
-
-	if _, err = os.Stat(certPath); os.IsNotExist(err) {
-		fmt.Println("Certificate file couldn't be found")
-	} else {
-		fmt.Println("Certificate file has been found")
-		err2 := os.Remove(certPath)
-		if err2 != nil {
-			fmt.Println(err2)
-		} else {
-			fmt.Println("Certificate file has been deleted")
-		}
-	}
+	checkFile(keyPath, "Private key")
+	checkFile(certPath, "Certificate")
 
 	// Output:
 	// Private key file has been found
 	// Private key file has been deleted
 	// Certificate file has been found
 	// Certificate file has been deleted
+}
+
+func checkFile(path, name string) {
+	if _, err := os.Stat(path); os.IsNotExist(err) {
+		fmt.Println(name + " file couldn't be found")
+	} else {
+		fmt.Println(name + " file has been found")
+		err = os.Remove(path)
+		if err != nil {
+			fmt.Println(err)
+		} else {
+			fmt.Println(name + " file has been deleted")
+		}
+	}
 }
 
 func TestStart(t *testing.T) {
@@ -118,6 +111,6 @@ func TestStart(t *testing.T) {
 		t.Fatal("Data was not recovered from saved files")
 	}
 
-	os.Remove(keyPath)
-	os.Remove(certPath)
+	_ = os.Remove(keyPath)
+	_ = os.Remove(certPath)
 }

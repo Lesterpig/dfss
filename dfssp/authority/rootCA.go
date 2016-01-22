@@ -1,4 +1,4 @@
-package autority
+package authority
 
 import (
 	"crypto/rsa"
@@ -12,10 +12,13 @@ import (
 )
 
 const (
-	PkeyFileName   = "dffsp_pkey.pem"
+	// PkeyFileName is the private key file default name
+	PkeyFileName = "dffsp_pkey.pem"
+	// RootCAFileName is the root certificate file default name
 	RootCAFileName = "dffsp_rootCA.pem"
 )
 
+// PlatformID contains platform private key and root certificate
 type PlatformID struct {
 	pkey   *rsa.PrivateKey
 	rootCA *x509.Certificate
@@ -88,7 +91,7 @@ func Initialize(bits, days int, country, organization, unit, cn, path string) er
 	return nil
 }
 
-// Fetch the platform's private rsa key and root certificate, and create a PlatformID accordingly.
+// Start fetches the platform's private rsa key and root certificate, and create a PlatformID accordingly.
 //
 // The specified path should not end by a separator.
 //
