@@ -13,9 +13,9 @@ import (
 
 const (
 	// PkeyFileName is the private key file default name
-	PkeyFileName = "dffsp_pkey.pem"
+	PkeyFileName = "dfssp_pkey.pem"
 	// RootCAFileName is the root certificate file default name
-	RootCAFileName = "dffsp_rootCA.pem"
+	RootCAFileName = "dfssp_rootCA.pem"
 )
 
 // PlatformID contains platform private key and root certificate
