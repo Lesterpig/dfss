@@ -33,12 +33,12 @@ type MongoManager struct {
 	Collections map[string]*MongoCollection
 }
 
-// NewManager a new Manager, the environment variable MONGOHQ_URL needs to be set
+// NewManager a new Manager, the environment variable 'connection' needs to be set
 // up with mongo uri, else it throws an error
-func NewManager(database string) (*MongoManager, error) {
-	uri := os.Getenv("MGDB_URL")
+func NewManager(database, connection string) (*MongoManager, error) {
+	uri := os.Getenv(connection)
 	if uri == "" {
-		err := newErrorConnection("No uri provided, please set the MONGOHG_URL to connect to mongo")
+		err := newErrorConnection("No uri provided, please set the " + connection + " environment variable to connect to mongo")
 		return nil, err
 	}
 
