@@ -20,7 +20,7 @@ func init() {
 		fmt.Println("A tool to sign multiparty contracts")
 
 		fmt.Println("\nUsage:")
-		fmt.Println("  dfssc command [flags]")
+		fmt.Println("  dfssc [flags] command")
 
 		fmt.Println("\nThe commands are:")
 		fmt.Println("  help     print this help")
