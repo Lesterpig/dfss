@@ -4,6 +4,7 @@ import (
 	"dfss"
 	"flag"
 	"fmt"
+	"os"
 	"runtime"
 )
 
@@ -25,6 +26,7 @@ func init() {
 		fmt.Println("\nThe commands are:")
 		fmt.Println("  help     print this help")
 		fmt.Println("  version  print dfss client version")
+		fmt.Println("  start    start demonstrator server")
 
 		fmt.Println("\nFlags:")
 		flag.PrintDefaults()
@@ -40,6 +42,11 @@ func main() {
 	switch command {
 	case "version":
 		fmt.Println("v"+dfss.Version, runtime.GOOS, runtime.GOARCH)
+	case "start":
+		err := listen("localhost:3000")
+		if err != nil {
+			os.Exit(1)
+		}
 	default:
 		flag.Usage()
 	}

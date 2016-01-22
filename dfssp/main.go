@@ -2,6 +2,7 @@ package main
 
 import (
 	"dfss"
+	dapi "dfss/dfssd/api"
 	"dfss/dfssp/authority"
 	"dfss/dfssp/server"
 	"dfss/net"
@@ -12,7 +13,7 @@ import (
 )
 
 var (
-	verbose                                            bool
+	verbose, demo                                      bool
 	path, country, org, unit, cn, port, address, dbURI string
 	keySize, validity                                  int
 )
@@ -20,6 +21,7 @@ var (
 func init() {
 
 	flag.BoolVar(&verbose, "v", false, "Print verbose messages")
+	flag.BoolVar(&demo, "d", false, "Enable demonstrator")
 
 	flag.StringVar(&port, "p", "9000", "Default port listening")
 	flag.StringVar(&address, "a", "0.0.0.0", "Default address to bind for listening")
@@ -60,6 +62,7 @@ func init() {
 func main() {
 	flag.Parse()
 	command := flag.Arg(0)
+	dapi.Switch(demo)
 
 	switch command {
 	case "version":
@@ -70,9 +73,11 @@ func main() {
 			fmt.Println("An error occured during the initialization operation:", err)
 			os.Exit(1)
 		}
+		dapi.DLog("Private key generated !")
 	case "start":
 		srv := server.GetServer(path, dbURI, verbose)
 		fmt.Println("Listening on " + address + ":" + port)
+		dapi.DLog("Platform server started on " + address + ":" + port)
 		err := net.Listen(address+":"+port, srv)
 		if err != nil {
 			fmt.Println(err)
@@ -80,4 +85,6 @@ func main() {
 	default:
 		flag.Usage()
 	}
+
+	dapi.DClose()
 }

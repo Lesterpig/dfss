@@ -1,0 +1,22 @@
+syntax = "proto3";
+
+package api;
+
+service Demonstrator {
+    // Log message.
+    //
+    // Send the UnixNano timetamp, sender's identifier and log message
+    // Returns nothing ?
+    rpc SendLog(Log) returns (Ack) {}
+}
+
+// Log message to display information
+message Log {
+    int64 timestamp = 1;
+    string identifier = 2;
+    string log = 3;
+}
+
+// Empty ack message
+message Ack {
+}
