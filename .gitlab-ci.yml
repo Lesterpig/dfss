@@ -29,10 +29,11 @@ ARM tests:
   tags:
     - arm
   script:
+    - "ln -s -f $(pwd) $GOPATH/src/dfss"
     - "./build/deps.sh"
-    - "go test -cover -short -v ./auth"
-    - "go test -cover -short -v ./mgdb"
-    - "go test -cover -short -v ./dfssp/..."
+    - "go test -cover -short -v dfss/auth"
+    - "go test -cover -short -v dfss/mgdb"
+    - "go test -cover -short -v dfss/dfssp/authority"
 
 Code lint:
   stage: test
