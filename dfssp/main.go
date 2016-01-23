@@ -16,8 +16,8 @@ var (
 	keySize, validity            int
 	pid                          *authority.PlatformID
 	// MongoDB connection
-	dbName, dbEnvVarName string
-	dbManager            *mgdb.MongoManager
+	dbURI     string
+	dbManager *mgdb.MongoManager
 )
 
 func init() {
@@ -33,8 +33,7 @@ func init() {
 	flag.IntVar(&keySize, "keySize", 512, "Encoding size for the private key")
 	flag.IntVar(&validity, "validity", 21, "Root certificate's validity duration (days)")
 
-	flag.StringVar(&dbName, "dbn", "myDatabase", "Name of the mongo database to connect to")
-	flag.StringVar(&dbEnvVarName, "dbenv", mgdb.DefaultDBUrl, "Name of the environment variable containing the server url in standard MongoDB format")
+	flag.StringVar(&dbURI, "db", "mongodb://localhost/dfss", "Name of the environment variable containing the server url in standard MongoDB format")
 
 	flag.Usage = func() {
 		fmt.Println("DFSS platform v" + dfss.Version)
@@ -46,7 +45,7 @@ func init() {
 		fmt.Println("\nThe commands are:")
 		fmt.Println("  init     [cn, country, keySize, org, path, unit, validity]")
 		fmt.Println("           create and save the platform's private key and root certificate")
-		fmt.Println("  start    [path, dbn, dbenv]")
+		fmt.Println("  start    [path, db]")
 		fmt.Println("           start the platform after loading its private key and root certificate")
 		fmt.Println("  help     print this help")
 		fmt.Println("  version  print dfss client version")
@@ -82,7 +81,7 @@ func main() {
 		// TODO: use pid
 		_ = pid
 
-		dbManager, err := mgdb.NewManager(dbName, dbEnvVarName)
+		dbManager, err := mgdb.NewManager(dbURI)
 		if err != nil {
 			fmt.Println("An error occured during the connection to Mongo DB")
 			fmt.Println(err)

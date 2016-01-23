@@ -3,25 +3,7 @@ package mgdb
 import (
 	"gopkg.in/mgo.v2"
 	"gopkg.in/mgo.v2/bson"
-	"os"
 )
-
-const DefaultDBUrl = "MGDB_URL"
-
-// errorConnection represents an error to be thrown upon connection
-type errorConnection struct {
-	s string
-}
-
-// Return the string contained in the error
-func (e *errorConnection) Error() string {
-	return e.s
-}
-
-// Creates a new error with the given message
-func newErrorConnection(message string) error {
-	return &errorConnection{message}
-}
 
 // MongoManager is aimed at handling the Mongo connection through the mgo driver
 type MongoManager struct {
@@ -35,14 +17,9 @@ type MongoManager struct {
 	Collections map[string]*MongoCollection
 }
 
-// NewManager a new Manager, the environment variable 'connection' needs to be set
+// NewManager a new Manager, the parameter `uri` needs to be set
 // up with mongo uri, else it throws an error
-func NewManager(database, connection string) (*MongoManager, error) {
-	uri := os.Getenv(connection)
-	if uri == "" {
-		err := newErrorConnection("No uri provided, please set the " + connection + " environment variable to connect to mongo")
-		return nil, err
-	}
+func NewManager(uri string) (*MongoManager, error) {
 
 	sess, err := mgo.Dial(uri)
 
@@ -50,7 +27,7 @@ func NewManager(database, connection string) (*MongoManager, error) {
 		return nil, err
 	}
 
-	db := sess.DB(database)
+	db := sess.DB("") // Use name provided in connection string, or test by default
 	return &MongoManager{
 		sess,
 		db,
