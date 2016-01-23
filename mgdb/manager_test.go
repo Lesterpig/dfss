@@ -22,18 +22,16 @@ type hand struct {
 var collection *MongoCollection
 var manager *MongoManager
 var err error
+var dbURI string
 
 func TestMain(m *testing.M) {
-	// Setup
-	fmt.Println("Try to connect to : " + os.Getenv("MGDB_URL"))
 
-	db := os.Getenv("DFSS_TEST")
-	if db == "" {
-		db = "demo"
+	dbURI = os.Getenv("DFSS_MONGO_URI")
+	if dbURI == "" {
+		dbURI = "mongodb://localhost/dfss"
 	}
 
-	manager, err = NewManager(db)
-
+	manager, err = NewManager(dbURI)
 	collection = manager.Get("demo")
 
 	// Run
@@ -177,7 +175,6 @@ func TestMongoDeleteByID(t *testing.T) {
 func ExampleMongoManager() {
 
 	//Define an animal to be use in further tests
-
 	type animal struct {
 		Name string `key:"_id" bson:"_id"`
 		Race string `key:"race" bson:"race"`
@@ -185,7 +182,7 @@ func ExampleMongoManager() {
 	}
 
 	//Initializes a MongoManager for the 'demo' database
-	manager, err := NewManager("demo")
+	manager, err := NewManager(dbURI)
 	if err != nil { /* Handle error */
 	}
 

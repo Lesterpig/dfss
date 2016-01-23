@@ -3,16 +3,21 @@ package main
 import (
 	"dfss"
 	"dfss/dfssp/authority"
+	"dfss/mgdb"
 	"flag"
 	"fmt"
 	"runtime"
 )
 
 var (
-	verbose                      bool
+	verbose bool
+	// Private key and certificate
 	path, country, org, unit, cn string
 	keySize, validity            int
 	pid                          *authority.PlatformID
+	// MongoDB connection
+	dbURI     string
+	dbManager *mgdb.MongoManager
 )
 
 func init() {
@@ -28,6 +33,8 @@ func init() {
 	flag.IntVar(&keySize, "keySize", 512, "Encoding size for the private key")
 	flag.IntVar(&validity, "validity", 21, "Root certificate's validity duration (days)")
 
+	flag.StringVar(&dbURI, "db", "mongodb://localhost/dfss", "Name of the environment variable containing the server url in standard MongoDB format")
+
 	flag.Usage = func() {
 		fmt.Println("DFSS platform v" + dfss.Version)
 		fmt.Println("Users and contracts manager")
@@ -38,7 +45,7 @@ func init() {
 		fmt.Println("\nThe commands are:")
 		fmt.Println("  init     [cn, country, keySize, org, path, unit, validity]")
 		fmt.Println("           create and save the platform's private key and root certificate")
-		fmt.Println("  start    [path]")
+		fmt.Println("  start    [path, db]")
 		fmt.Println("           start the platform after loading its private key and root certificate")
 		fmt.Println("  help     print this help")
 		fmt.Println("  version  print dfss client version")
@@ -67,12 +74,21 @@ func main() {
 	case "start":
 		pid, err := authority.Start(path)
 		if err != nil {
-			fmt.Println("An error occured during the start operation")
+			fmt.Println("An error occured during the private key and root certificate retrieval")
 			fmt.Println(err)
 			panic(err)
 		}
 		// TODO: use pid
 		_ = pid
+
+		dbManager, err := mgdb.NewManager(dbURI)
+		if err != nil {
+			fmt.Println("An error occured during the connection to Mongo DB")
+			fmt.Println(err)
+			panic(err)
+		}
+		// TODO: use dbManager
+		_ = dbManager
 	default:
 		flag.Usage()
 	}
