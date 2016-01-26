@@ -1,10 +1,7 @@
 #!/bin/sh
 
-# mongo
-go get gopkg.in/mgo.v2
-
-# grpc
-go get google.golang.org/grpc
-
-# uuid
-go get github.com/pborman/uuid
+go get -u gopkg.in/mgo.v2
+go get -u github.com/golang/protobuf/proto
+go get -u github.com/golang/protobuf/protoc-gen-go
+go get -u google.golang.org/grpc
+go get -u github.com/pborman/uuid

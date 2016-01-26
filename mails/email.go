@@ -129,7 +129,7 @@ func createHeader(sender, subject, boundary string) string {
 }
 
 // Create the full message for a single receiver
-func createFullMessage(b *bytes.Buffer, receiver, sender, globalHeader, base64Message string, extensions, filenames []string, boundary string) error {
+func createFullMessage(b io.Writer, receiver, sender, globalHeader, base64Message string, extensions, filenames []string, boundary string) error {
 	fmt.Fprintf(b, "%s%s\r\n", globalHeader, receiver)
 
 	writer := multipart.NewWriter(b)
