@@ -47,4 +47,4 @@ Code lint:
     - "./build/deps.sh"
     - "go install ./..."
     - "gometalinter --install"
-    - "gometalinter -t --deadline=100s -j1 ./..."
+    - "gometalinter -t --deadline=300s -j1 --skip=api --skip=fixtures ./..."
