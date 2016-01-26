@@ -1,0 +1,11 @@
+syntax = "proto3";
+
+package fixtures;
+
+service Test {
+  rpc Ping(Hop) returns (Hop) {}
+}
+
+message Hop {
+  int32 id = 1;
+}
