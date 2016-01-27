@@ -3,13 +3,13 @@ package net
 import (
 	"crypto/tls"
 	"crypto/x509"
+	"log"
+	"net"
+
 	"golang.org/x/net/context"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials"
-	"google.golang.org/grpc/grpclog"
 	"google.golang.org/grpc/peer"
-	"log"
-	"net"
 )
 
 // NewServer creates a new grpc server with given tls credentials.
@@ -44,17 +44,13 @@ func NewServer(cert, key, ca []byte) *grpc.Server {
 // Listen with specified server on addr:port.
 //
 // addrPort is formated as 127.0.0.1:8001.
-func Listen(addrPort string, grpcServer *grpc.Server) {
+func Listen(addrPort string, grpcServer *grpc.Server) error {
 	// open tcp socket
 	lis, err := net.Listen("tcp", addrPort)
 	if err != nil {
-		grpclog.Fatalf("Failed to open tcp socket: %v", err)
+		return err
 	}
-
-	err = grpcServer.Serve(lis)
-	if err != nil {
-		grpclog.Fatalf("Failed to bind gRPC server: %v", err)
-	}
+	return grpcServer.Serve(lis)
 }
 
 // GetTLSState returns the current tls connection state from a grpc context.

@@ -1,0 +1,18 @@
+syntax = "proto3";
+
+package fixtures;
+
+service Test {
+  rpc Ping(Hop) returns (Hop) {}
+  rpc Auth(Empty) returns (IsAuth) {}
+}
+
+message Hop {
+  int32 id = 1;
+}
+
+message IsAuth {
+  bool auth = 1;
+}
+
+message Empty {}
