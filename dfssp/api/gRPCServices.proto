@@ -1,0 +1,64 @@
+syntax = "proto3";
+
+package api;
+
+service Platform {
+	rpc Register(RegisterRequest) returns (ErrorCode) {}
+	rpc Auth(AuthRequest) returns (RegisteredUser) {}
+	rpc Unregister(Empty) returns (ErrorCode) {}
+	rpc PostContract(PostContractRequest) returns (ErrorCode) {}
+	rpc JoinSignature(JoinSignatureRequest) returns (ErrorCode) {}
+	rpc ReadySign(ReadySignRequest) returns (ErrorCode) {}
+}
+
+// RegisterRequest message contains the client's email adress and his
+// public key
+message RegisterRequest {
+	string email = 1;
+	string key = 2;
+}
+
+// ErrorCode message contains an error code (see dffs/dfssp/api/errorCodes.go)
+// and a message
+message ErrorCode {
+	int32 code = 1;
+	string message = 2;
+}
+
+// AuthRequest message contains the client's email adress and the token used
+// for authentication
+message AuthRequest {
+	string email = 1;
+	string token = 2;
+}
+
+// RegisteredUser message contains the generated client certificate
+// and the CA root certificate (PEM-encoded)
+message RegisteredUser {
+	bytes rootCert = 1;
+	bytes clientCert = 2;
+}
+
+// Empty message is an empty message
+message Empty {
+}
+
+// PostContractRequest message contains the contract as SHA-512 hash, the list of signers
+// as an array of string, and a comment
+message PostContractRequest {
+	string contract = 1;
+	repeated string signer = 2;
+	string comment = 3;
+}
+
+// JoinSignatureRequest message contains the contract to join unique identifier
+// and the port the client will be listening at
+message JoinSignatureRequest {
+	string contractUuid = 1;
+	uint32 port  =2;
+}
+
+// ReadySignRequest contains the contract unique identitier that is ready to be signed
+message ReadySignRequest {
+	string contractUuid = 1;
+}
