@@ -65,6 +65,9 @@ func (s *testServer) Ping(ctx context.Context, in *pb.Hop) (*pb.Hop, error) {
 	(*in).Id++
 	return in, nil
 }
+func (s *testServer) Auth(ctx context.Context, in *pb.Empty) (*pb.IsAuth, error) {
+	return &pb.IsAuth{Auth: GetCN(&ctx) == "test@test.com"}, nil
+}
 
 func startTestServer(c chan bool) {
 	server := NewServer([]byte(caFixture), []byte(serverKeyFixture), []byte(caFixture))
@@ -93,27 +96,62 @@ func TestServerOnly(t *testing.T) {
 	time.Sleep(100 * time.Millisecond)
 }
 
-func TestServerClient(t *testing.T) {
+func TestServerClientAuth(t *testing.T) {
 
 	// Start server
 	c := make(chan bool)
 	go startTestServer(c)
 	time.Sleep(2 * time.Second)
 
-	conn := Connect("localhost:9000", []byte(clientCertFixture), []byte(clientKeyFixture), []byte(caFixture))
+	conn, err := Connect("localhost:9000", []byte(clientCertFixture), []byte(clientKeyFixture), []byte(caFixture))
+
+	if err != nil {
+		t.Fatal("Unable to connect:", err)
+	}
 
 	client := pb.NewTestClient(conn)
-	r, err := client.Ping(context.Background(), &pb.Hop{Id: 0})
-	if err != nil {
-		t.Fatal("Unable to ping:", err)
-	}
-
-	if (*r).Id != 1 {
-		t.Fatal("Bad result, got", *r)
-	}
-
+	sharedServerClientTest(t, client, true)
 	_ = conn.Close()
 
 	c <- true
 	time.Sleep(100 * time.Millisecond)
+}
+
+func TestServerClientNonAuth(t *testing.T) {
+
+	// Start server
+	c := make(chan bool)
+	go startTestServer(c)
+	time.Sleep(2 * time.Second)
+
+	conn, err := Connect("localhost:9000", []byte{}, []byte{}, []byte(caFixture))
+
+	if err != nil {
+		t.Fatal("Unable to connect:", err)
+	}
+
+	client := pb.NewTestClient(conn)
+	sharedServerClientTest(t, client, false)
+	_ = conn.Close()
+
+	c <- true
+	time.Sleep(100 * time.Millisecond)
+}
+
+func sharedServerClientTest(t *testing.T, client pb.TestClient, expectedAuth bool) {
+	r, err := client.Ping(context.Background(), &pb.Hop{Id: 0})
+	if err != nil {
+		t.Fatal("Unable to ping:", err)
+	}
+	if (*r).Id != 1 {
+		t.Fatal("Bad result, got", *r)
+	}
+
+	auth, err := client.Auth(context.Background(), &pb.Empty{})
+	if err != nil {
+		t.Fatal("Unable to auth:", err)
+	}
+	if expectedAuth != (*auth).Auth {
+		t.Fatal("Bad result, got", *auth)
+	}
 }

@@ -3,12 +3,13 @@ package net
 import (
 	"crypto/tls"
 	"crypto/x509"
+	"log"
+	"net"
+
 	"golang.org/x/net/context"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials"
 	"google.golang.org/grpc/peer"
-	"log"
-	"net"
 )
 
 // NewServer creates a new grpc server with given tls credentials.

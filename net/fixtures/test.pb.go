@@ -10,6 +10,8 @@ It is generated from these files:
 
 It has these top-level messages:
 	Hop
+	IsAuth
+	Empty
 */
 package fixtures
 
@@ -27,6 +29,10 @@ var _ = proto.Marshal
 var _ = fmt.Errorf
 var _ = math.Inf
 
+// This is a compile-time assertion to ensure that this generated file
+// is compatible with the proto package it is being compiled against.
+const _ = proto.ProtoPackageIsVersion1
+
 type Hop struct {
 	Id int32 `protobuf:"varint,1,opt,name=id" json:"id,omitempty"`
 }
@@ -36,8 +42,27 @@ func (m *Hop) String() string            { return proto.CompactTextString(m) }
 func (*Hop) ProtoMessage()               {}
 func (*Hop) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{0} }
 
+type IsAuth struct {
+	Auth bool `protobuf:"varint,1,opt,name=auth" json:"auth,omitempty"`
+}
+
+func (m *IsAuth) Reset()                    { *m = IsAuth{} }
+func (m *IsAuth) String() string            { return proto.CompactTextString(m) }
+func (*IsAuth) ProtoMessage()               {}
+func (*IsAuth) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{1} }
+
+type Empty struct {
+}
+
+func (m *Empty) Reset()                    { *m = Empty{} }
+func (m *Empty) String() string            { return proto.CompactTextString(m) }
+func (*Empty) ProtoMessage()               {}
+func (*Empty) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{2} }
+
 func init() {
 	proto.RegisterType((*Hop)(nil), "fixtures.Hop")
+	proto.RegisterType((*IsAuth)(nil), "fixtures.IsAuth")
+	proto.RegisterType((*Empty)(nil), "fixtures.Empty")
 }
 
 // Reference imports to suppress errors if they are not otherwise used.
@@ -48,6 +73,7 @@ var _ grpc.ClientConn
 
 type TestClient interface {
 	Ping(ctx context.Context, in *Hop, opts ...grpc.CallOption) (*Hop, error)
+	Auth(ctx context.Context, in *Empty, opts ...grpc.CallOption) (*IsAuth, error)
 }
 
 type testClient struct {
@@ -67,10 +93,20 @@ func (c *testClient) Ping(ctx context.Context, in *Hop, opts ...grpc.CallOption)
 	return out, nil
 }
 
+func (c *testClient) Auth(ctx context.Context, in *Empty, opts ...grpc.CallOption) (*IsAuth, error) {
+	out := new(IsAuth)
+	err := grpc.Invoke(ctx, "/fixtures.Test/Auth", in, out, c.cc, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // Server API for Test service
 
 type TestServer interface {
 	Ping(context.Context, *Hop) (*Hop, error)
+	Auth(context.Context, *Empty) (*IsAuth, error)
 }
 
 func RegisterTestServer(s *grpc.Server, srv TestServer) {
@@ -89,6 +125,18 @@ func _Test_Ping_Handler(srv interface{}, ctx context.Context, dec func(interface
 	return out, nil
 }
 
+func _Test_Auth_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error) (interface{}, error) {
+	in := new(Empty)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	out, err := srv.(TestServer).Auth(ctx, in)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 var _Test_serviceDesc = grpc.ServiceDesc{
 	ServiceName: "fixtures.Test",
 	HandlerType: (*TestServer)(nil),
@@ -97,17 +145,24 @@ var _Test_serviceDesc = grpc.ServiceDesc{
 			MethodName: "Ping",
 			Handler:    _Test_Ping_Handler,
 		},
+		{
+			MethodName: "Auth",
+			Handler:    _Test_Auth_Handler,
+		},
 	},
 	Streams: []grpc.StreamDesc{},
 }
 
 var fileDescriptor0 = []byte{
-	// 101 bytes of a gzipped FileDescriptorProto
+	// 152 bytes of a gzipped FileDescriptorProto
 	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x09, 0x6e, 0x88, 0x02, 0xff, 0xe2, 0xe2, 0x2a, 0x49, 0x2d, 0x2e,
 	0xd1, 0x2b, 0x28, 0xca, 0x2f, 0xc9, 0x17, 0xe2, 0x48, 0xcb, 0xac, 0x28, 0x29, 0x2d, 0x4a, 0x2d,
 	0x56, 0x12, 0xe5, 0x62, 0xf6, 0xc8, 0x2f, 0x10, 0xe2, 0xe3, 0x62, 0xca, 0x4c, 0x91, 0x60, 0x54,
-	0x60, 0xd4, 0x60, 0x0d, 0x02, 0xb2, 0x8c, 0xf4, 0xb8, 0x58, 0x42, 0x80, 0xca, 0x85, 0xd4, 0xb8,
-	0x58, 0x02, 0x32, 0xf3, 0xd2, 0x85, 0x78, 0xf5, 0x60, 0x3a, 0xf4, 0x80, 0xca, 0xa5, 0x50, 0xb9,
-	0x4a, 0x0c, 0x49, 0x6c, 0x60, 0x73, 0x8d, 0x01, 0x01, 0x00, 0x00, 0xff, 0xff, 0xa9, 0x6e, 0xee,
-	0x4e, 0x65, 0x00, 0x00, 0x00,
+	0x60, 0xd4, 0x60, 0x0d, 0x02, 0xb2, 0x94, 0x64, 0xb8, 0xd8, 0x3c, 0x8b, 0x1d, 0x4b, 0x4b, 0x32,
+	0x84, 0x84, 0xb8, 0x58, 0x12, 0x81, 0x34, 0x58, 0x8e, 0x23, 0x08, 0xcc, 0x56, 0x62, 0xe7, 0x62,
+	0x75, 0xcd, 0x2d, 0x28, 0xa9, 0x34, 0x8a, 0xe6, 0x62, 0x09, 0x01, 0x9a, 0x2a, 0xa4, 0xc6, 0xc5,
+	0x12, 0x90, 0x99, 0x97, 0x2e, 0xc4, 0xab, 0x07, 0x33, 0x58, 0x0f, 0x68, 0xaa, 0x14, 0x2a, 0x57,
+	0x89, 0x41, 0x48, 0x9b, 0x8b, 0x05, 0x6c, 0x28, 0x3f, 0x42, 0x02, 0x6c, 0x90, 0x94, 0x00, 0x42,
+	0x00, 0x62, 0xaf, 0x12, 0x43, 0x12, 0x1b, 0xd8, 0xad, 0xc6, 0x80, 0x00, 0x00, 0x00, 0xff, 0xff,
+	0x03, 0x4e, 0x65, 0x96, 0xb9, 0x00, 0x00, 0x00,
 }
