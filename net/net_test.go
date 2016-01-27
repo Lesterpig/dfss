@@ -1,9 +1,11 @@
 package net
 
 import (
+	"fmt"
 	"net"
 	"testing"
 	"time"
+
 	pb "dfss/net/fixtures"
 	"golang.org/x/net/context"
 )
@@ -60,7 +62,8 @@ HBs0FRZQlpn1kXgfvakOtkifTcLaksnn3Y5PAEhP
 
 // SERVER DEFINITION
 
-type testServer struct {}
+type testServer struct{}
+
 func (s *testServer) Ping(ctx context.Context, in *pb.Hop) (*pb.Hop, error) {
 	(*in).Id++
 	return in, nil
@@ -80,7 +83,7 @@ func startTestServer(c chan bool) {
 	server.Stop()
 }
 
-// SERVER TEST
+// TESTS
 
 func TestServerOnly(t *testing.T) {
 	c := make(chan bool)
@@ -154,4 +157,45 @@ func sharedServerClientTest(t *testing.T, client pb.TestClient, expectedAuth boo
 	if expectedAuth != (*auth).Auth {
 		t.Fatal("Bad result, got", *auth)
 	}
+}
+
+// EXAMPLE
+
+func Example() {
+
+	// Init server
+	server := NewServer([]byte(caFixture), []byte(serverKeyFixture), []byte(caFixture))
+	pb.RegisterTestServer(server, &testServer{})
+	go func() {
+		_ = Listen("localhost:9000", server)
+	}()
+
+	// Let the server enough time to start property
+	time.Sleep(2 * time.Second)
+
+	// Start a client
+	// The second and third arguments can be empty for non-auth connection
+	conn, err := Connect("localhost:9000", []byte(clientCertFixture), []byte(clientKeyFixture), []byte(caFixture))
+	if err != nil {
+		panic("Unable to connect")
+	}
+
+	client := pb.NewTestClient(conn)
+
+	// During a ping, the server increments the Hop.Id field (test case only)
+	r, err := client.Ping(context.Background(), &pb.Hop{Id: 41})
+	if err != nil {
+		panic("Unable to ping")
+	}
+
+	fmt.Println((*r).Id)
+
+	// Close client
+	_ = conn.Close()
+
+	// Stop server
+	server.Stop()
+
+	// Output:
+	// 42
 }
