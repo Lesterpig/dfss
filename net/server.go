@@ -1,9 +1,9 @@
 package net
 
 import (
+	"crypto/rsa"
 	"crypto/tls"
 	"crypto/x509"
-	"log"
 	"net"
 
 	"golang.org/x/net/context"
@@ -18,16 +18,17 @@ import (
 //
 // The returned grpcServer must be used in association with server{} to
 // register APIs before calling Listen().
-func NewServer(cert, key, ca []byte) *grpc.Server {
+func NewServer(cert *x509.Certificate, key *rsa.PrivateKey, ca *x509.Certificate) *grpc.Server {
 	// configure gRPC
 	var opts []grpc.ServerOption
 
-	serverCert, err := tls.X509KeyPair(cert, key)
-	if err != nil {
-		log.Fatalf("Load peer cert/key error: %v", err)
+	serverCert := tls.Certificate{
+		Certificate: [][]byte{cert.Raw},
+		PrivateKey:  key,
 	}
+
 	caCertPool := x509.NewCertPool()
-	caCertPool.AppendCertsFromPEM(ca)
+	caCertPool.AddCert(ca)
 
 	// configure transport authentificator
 	ta := credentials.NewTLS(&tls.Config{
