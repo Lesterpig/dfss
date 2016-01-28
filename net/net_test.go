@@ -6,6 +6,7 @@ import (
 	"testing"
 	"time"
 
+	"dfss/auth"
 	pb "dfss/net/fixtures"
 	"golang.org/x/net/context"
 )
@@ -73,7 +74,11 @@ func (s *testServer) Auth(ctx context.Context, in *pb.Empty) (*pb.IsAuth, error)
 }
 
 func startTestServer(c chan bool) {
-	server := NewServer([]byte(caFixture), []byte(serverKeyFixture), []byte(caFixture))
+
+	ca, _ := auth.PEMToCertificate([]byte(caFixture))
+	key, _ := auth.PEMToPrivateKey([]byte(serverKeyFixture))
+
+	server := NewServer(ca, key, ca)
 	pb.RegisterTestServer(server, &testServer{})
 	go func() {
 		_ = Listen("localhost:9000", server)
@@ -106,7 +111,11 @@ func TestServerClientAuth(t *testing.T) {
 	go startTestServer(c)
 	time.Sleep(2 * time.Second)
 
-	conn, err := Connect("localhost:9000", []byte(clientCertFixture), []byte(clientKeyFixture), []byte(caFixture))
+	ca, _ := auth.PEMToCertificate([]byte(caFixture))
+	cert, _ := auth.PEMToCertificate([]byte(clientCertFixture))
+	key, _ := auth.PEMToPrivateKey([]byte(clientKeyFixture))
+
+	conn, err := Connect("localhost:9000", cert, key, ca)
 
 	if err != nil {
 		t.Fatal("Unable to connect:", err)
@@ -127,7 +136,8 @@ func TestServerClientNonAuth(t *testing.T) {
 	go startTestServer(c)
 	time.Sleep(2 * time.Second)
 
-	conn, err := Connect("localhost:9000", []byte{}, []byte{}, []byte(caFixture))
+	ca, _ := auth.PEMToCertificate([]byte(caFixture))
+	conn, err := Connect("localhost:9000", nil, nil, ca)
 
 	if err != nil {
 		t.Fatal("Unable to connect:", err)
@@ -163,8 +173,14 @@ func sharedServerClientTest(t *testing.T, client pb.TestClient, expectedAuth boo
 
 func Example() {
 
+	// Load certs and private keys
+	ca, _ := auth.PEMToCertificate([]byte(caFixture))
+	cert, _ := auth.PEMToCertificate([]byte(clientCertFixture))
+	ckey, _ := auth.PEMToPrivateKey([]byte(clientKeyFixture))
+	skey, _ := auth.PEMToPrivateKey([]byte(serverKeyFixture))
+
 	// Init server
-	server := NewServer([]byte(caFixture), []byte(serverKeyFixture), []byte(caFixture))
+	server := NewServer(ca, skey, ca)
 	pb.RegisterTestServer(server, &testServer{})
 	go func() {
 		_ = Listen("localhost:9000", server)
@@ -175,7 +191,7 @@ func Example() {
 
 	// Start a client
 	// The second and third arguments can be empty for non-auth connection
-	conn, err := Connect("localhost:9000", []byte(clientCertFixture), []byte(clientKeyFixture), []byte(caFixture))
+	conn, err := Connect("localhost:9000", cert, ckey, ca)
 	if err != nil {
 		panic("Unable to connect")
 	}

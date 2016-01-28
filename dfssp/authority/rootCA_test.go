@@ -107,7 +107,7 @@ func TestStart(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if pid == nil || pid.pkey == nil || pid.rootCA == nil {
+	if pid == nil || pid.Pkey == nil || pid.RootCA == nil {
 		t.Fatal("Data was not recovered from saved files")
 	}
 

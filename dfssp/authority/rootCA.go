@@ -20,8 +20,8 @@ const (
 
 // PlatformID contains platform private key and root certificate
 type PlatformID struct {
-	pkey   *rsa.PrivateKey
-	rootCA *x509.Certificate
+	Pkey   *rsa.PrivateKey
+	RootCA *x509.Certificate
 }
 
 // GetHomeDir determines the home directory of the current user.
@@ -127,8 +127,9 @@ func Start(path string) (*PlatformID, error) {
 	}
 
 	res := &PlatformID{
-		pkey:   key,
-		rootCA: cert}
+		Pkey:   key,
+		RootCA: cert,
+	}
 
 	return res, nil
 }

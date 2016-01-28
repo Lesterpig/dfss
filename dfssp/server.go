@@ -1,25 +1,31 @@
 package main
 
 import (
-	api "dfss/dfssp/api"
+	"dfss/dfssp/api"
+	"dfss/dfssp/authority"
+	"dfss/mgdb"
 	"golang.org/x/net/context"
 )
 
-type server struct{}
+type platformServer struct {
+	Pid     *authority.PlatformID
+	DB      *mgdb.MongoManager
+	Verbose bool
+}
 
 // Register handler
 //
 // Handle incoming RegisterRequest messages
-func (s *server) Register(ctx context.Context, in *api.RegisterRequest) (*api.ErrorCode, error) {
+func (s *platformServer) Register(ctx context.Context, in *api.RegisterRequest) (*api.ErrorCode, error) {
 	// TODO
-	_ = new(server)
+	_ = new(platformServer)
 	return nil, nil
 }
 
 // Auth handler
 //
 // Handle incoming AuthRequest messages
-func (s *server) Auth(ctx context.Context, in *api.AuthRequest) (*api.RegisteredUser, error) {
+func (s *platformServer) Auth(ctx context.Context, in *api.AuthRequest) (*api.RegisteredUser, error) {
 	// TODO
 	return nil, nil
 }
@@ -27,7 +33,7 @@ func (s *server) Auth(ctx context.Context, in *api.AuthRequest) (*api.Registered
 // Unregister handler
 //
 // Handle incoming UnregisterRequest messages
-func (s *server) Unegister(ctx context.Context, in *api.Empty) (*api.ErrorCode, error) {
+func (s *platformServer) Unregister(ctx context.Context, in *api.Empty) (*api.ErrorCode, error) {
 	// TODO
 	return nil, nil
 }
@@ -35,7 +41,7 @@ func (s *server) Unegister(ctx context.Context, in *api.Empty) (*api.ErrorCode, 
 // PostContract handler
 //
 // Handle incoming PostContractRequest messages
-func (s *server) PostContract(ctx context.Context, in *api.PostContractRequest) (*api.ErrorCode, error) {
+func (s *platformServer) PostContract(ctx context.Context, in *api.PostContractRequest) (*api.ErrorCode, error) {
 	// TODO
 	return nil, nil
 }
@@ -43,7 +49,7 @@ func (s *server) PostContract(ctx context.Context, in *api.PostContractRequest) 
 // JoinSignature handler
 //
 // Handle incoming JoinSignatureRequest messages
-func (s *server) JoinSignature(ctx context.Context, in *api.JoinSignatureRequest) (*api.ErrorCode, error) {
+func (s *platformServer) JoinSignature(ctx context.Context, in *api.JoinSignatureRequest) (*api.ErrorCode, error) {
 	// TODO
 	return nil, nil
 }
@@ -51,7 +57,7 @@ func (s *server) JoinSignature(ctx context.Context, in *api.JoinSignatureRequest
 // ReadySign handler
 //
 // Handle incoming ReadySignRequest messages
-func (s *server) ReadySign(ctx context.Context, in *api.ReadySignRequest) (*api.ErrorCode, error) {
+func (s *platformServer) ReadySign(ctx context.Context, in *api.ReadySignRequest) (*api.ErrorCode, error) {
 	// TODO
 	return nil, nil
 }

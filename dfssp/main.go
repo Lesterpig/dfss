@@ -2,27 +2,28 @@ package main
 
 import (
 	"dfss"
+	"dfss/dfssp/api"
 	"dfss/dfssp/authority"
 	"dfss/mgdb"
+	"dfss/net"
 	"flag"
 	"fmt"
+	"os"
 	"runtime"
 )
 
 var (
-	verbose bool
-	// Private key and certificate
-	path, country, org, unit, cn string
-	keySize, validity            int
-	pid                          *authority.PlatformID
-	// MongoDB connection
-	dbURI     string
-	dbManager *mgdb.MongoManager
+	verbose                                            bool
+	path, country, org, unit, cn, port, address, dbURI string
+	keySize, validity                                  int
 )
 
 func init() {
 
 	flag.BoolVar(&verbose, "v", false, "Print verbose messages")
+
+	flag.StringVar(&port, "p", "9000", "Default port listening")
+	flag.StringVar(&address, "a", "0.0.0.0", "Default address to bind for listening")
 
 	flag.StringVar(&path, "path", authority.GetHomeDir(), "Path for the platform's private key and root certificate")
 	flag.StringVar(&country, "country", "France", "Country for the root certificate")
@@ -45,7 +46,7 @@ func init() {
 		fmt.Println("\nThe commands are:")
 		fmt.Println("  init     [cn, country, keySize, org, path, unit, validity]")
 		fmt.Println("           create and save the platform's private key and root certificate")
-		fmt.Println("  start    [path, db]")
+		fmt.Println("  start    [path, db, a, p]")
 		fmt.Println("           start the platform after loading its private key and root certificate")
 		fmt.Println("  help     print this help")
 		fmt.Println("  version  print dfss client version")
@@ -67,28 +68,36 @@ func main() {
 	case "init":
 		err := authority.Initialize(keySize, validity, country, org, unit, cn, path)
 		if err != nil {
-			fmt.Println("An error occured during the initialization operation")
-			fmt.Println(err)
-			panic(err)
+			fmt.Println("An error occured during the initialization operation:", err)
+			os.Exit(1)
 		}
 	case "start":
 		pid, err := authority.Start(path)
 		if err != nil {
-			fmt.Println("An error occured during the private key and root certificate retrieval")
-			fmt.Println(err)
-			panic(err)
+			fmt.Println("An error occured during the private key and root certificate retrieval:", err)
+			os.Exit(1)
 		}
-		// TODO: use pid
-		_ = pid
 
 		dbManager, err := mgdb.NewManager(dbURI)
 		if err != nil {
-			fmt.Println("An error occured during the connection to Mongo DB")
-			fmt.Println(err)
-			panic(err)
+			fmt.Println("An error occured during the connection to MongoDB:", err)
+			os.Exit(1)
 		}
-		// TODO: use dbManager
-		_ = dbManager
+
+		server := net.NewServer(pid.RootCA, pid.Pkey, pid.RootCA)
+		api.RegisterPlatformServer(server, &platformServer{
+			Pid:     pid,
+			DB:      dbManager,
+			Verbose: verbose,
+		})
+
+		fmt.Println("Listening on " + address + ":" + port)
+		err = net.Listen(address+":"+port, server)
+
+		if err != nil {
+			fmt.Println(err)
+		}
+
 	default:
 		flag.Usage()
 	}
