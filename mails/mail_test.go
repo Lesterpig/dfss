@@ -63,7 +63,7 @@ func TestAttachmentMailText(t *testing.T) {
 }
 
 func TestAttachmentMailImage(t *testing.T) {
-	err = client.Send([]string{rcpt1}, "TestAttachmentMailImage", "What would make a good attachment?", []string{"image/gif"}, []string{"testImg.gif"})
+	err = client.Send([]string{rcpt1}, "TestAttachmentMailImage", "What would make a good attachment?", []string{"image/gif"}, []string{"testdata/testImg.gif"})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -72,27 +72,27 @@ func TestAttachmentMailImage(t *testing.T) {
 func ExampleCustomClient() {
 
 	// Create a connection
-	client, err := NewCustomClient("qdauchy@insa-rennes.fr", "mailhost.insa-rennes.fr", "587", "qdauchy", "notreallymypass")
+	client, err := NewCustomClient("sender@mail.com", "mail.server.com", "25", "username", "password")
 	if err != nil {
 		fmt.Println(err)
 	}
 
 	// Some reused variables
-	receiver1 := "lbonniot@insa-rennes.fr"
-	receiver2 := "qdauchy@insa-rennes.fr"
-	receiver3 := "tclaverie@insa-rennes.fr"
+	recipient1 := "first@recipient.com"
+	recipient2 := "second@recipient.com"
+	recipient3 := "third@recipient.com"
 	subject := "Mail example"
 	message := `Hello, this is a mail example. It's not like the cactus is going
   to be jealous or anything...`
 
 	// Send a first mail, without attachments
-	err = client.Send([]string{receiver1, receiver2}, subject, message, []string{}, []string{})
+	err = client.Send([]string{recipient1, recipient2}, subject, message, []string{}, []string{})
 	if err != nil {
 		fmt.Println(err)
 	}
 
 	// Send a second mail, with some attachments
-	err = client.Send([]string{receiver1, receiver3}, subject, message, []string{"text/plain", "image/gif"}, []string{"email.go", "testImg.gif"})
+	err = client.Send([]string{recipient1, recipient3}, subject, message, []string{"text/plain", "image/gif"}, []string{"email.go", "testdata/testImg.gif"})
 	if err != nil {
 		fmt.Println(err)
 	}
