@@ -1,4 +1,4 @@
-package contract
+package entities
 
 import (
 	"dfss/mgdb"
@@ -19,13 +19,6 @@ type Signer struct {
 	UserID bson.ObjectId `key:"userId" bson:"userId"`
 	Email  string        `key:"email" bson:"email"`
 	Hash   string        `key:"hash" bson:"hash"`
-}
-
-// NewSigner : Creates a signer associated to a contract
-func NewSigner() *Signer {
-	return &Signer{
-		UserID: bson.NewObjectId(),
-	}
 }
 
 // Contract : Informations about a contract to be signed
@@ -51,21 +44,28 @@ func NewContract() *Contract {
 }
 
 // AddSigner : Add a signer to the contract
-func (c *Contract) AddSigner(email, hash string) {
-	signer := NewSigner()
+func (c *Contract) AddSigner(id *bson.ObjectId, email, hash string) {
+	signer := &Signer{}
 	signer.Email = email
+
+	if id != nil {
+		signer.UserID = *id
+	} else {
+		signer.UserID = bson.ObjectIdHex("000000000000000000000000")
+	}
+
 	signer.Hash = hash
 	c.Signers = append(c.Signers, *signer)
 }
 
-// Repository to contains every complex methods related to contract
-type Repository struct {
+// ContractRepository to contains every complex methods related to contract
+type ContractRepository struct {
 	Collection *mgdb.MongoCollection
 }
 
-// NewRepository : Creates a new Contract Repository
-func NewRepository(collection *mgdb.MongoCollection) *Repository {
-	return &Repository{
+// NewContractRepository : Creates a new Contract Repository
+func NewContractRepository(collection *mgdb.MongoCollection) *ContractRepository {
+	return &ContractRepository{
 		collection,
 	}
 }

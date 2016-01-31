@@ -19,6 +19,7 @@ Unit tests:
   script:
     - "ln -s $(pwd) $GOPATH/src/dfss"
     - "./build/deps.sh"
+    - "cd $GOPATH/src/dfss && go install ./..."
     - "go test -coverprofile auth.part -v dfss/auth"
     - "go test -coverprofile mgdb.part -v dfss/mgdb"
     - "go test -coverprofile mails.part -v dfss/mails"
@@ -37,6 +38,7 @@ ARM tests:
   script:
     - "ln -s -f $(pwd) $GOPATH/src/dfss"
     - "./build/deps.sh"
+    - "cd $GOPATH/src/dfss && go install ./..."
     - "go test -cover -short -v dfss/auth"
     - "go test -cover -short -v dfss/mgdb"
     - "go test -cover -short -v dfss/net"

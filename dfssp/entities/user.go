@@ -1,4 +1,4 @@
-package user
+package entities
 
 import (
 	"dfss/mgdb"
@@ -24,6 +24,7 @@ type User struct {
 	ID           bson.ObjectId  `key:"_id" bson:"_id"`                   // Internal id of a User
 	Email        string         `key:"email" bson:"email"`               // Email of a User
 	Registration time.Time      `key:"registration" bson:"registration"` // Time of registration of the User
+	Expiration   time.Time      `key:"expiration" bson:"expiration"`     // Certificate expiration of the User
 	RegToken     string         `key:"regToken" bson:"regToken"`         // Token used for registering a User
 	Csr          string         `key:"csr" bson:"csr"`                   // Certificate request at PEM format
 	Certificate  string         `key:"certificate" bson:"certificate"`   // Certificate of the User
@@ -40,20 +41,20 @@ func NewUser() *User {
 	}
 }
 
-// Repository : Holds all the complex methods regarding a user
-type Repository struct {
+// UserRepository : Holds all the complex methods regarding a user
+type UserRepository struct {
 	Collection *mgdb.MongoCollection
 }
 
-// NewRepository : Creates a new user repository from the given connection
-func NewRepository(collection *mgdb.MongoCollection) *Repository {
-	return &Repository{
+// NewUserRepository : Creates a new user repository from the given connection
+func NewUserRepository(collection *mgdb.MongoCollection) *UserRepository {
+	return &UserRepository{
 		collection,
 	}
 }
 
 // FetchByMailAndHash : Fetches a User from its email and certificate hash
-func (repository *Repository) FetchByMailAndHash(email, hash string) (*User, error) {
+func (repository *UserRepository) FetchByMailAndHash(email, hash string) (*User, error) {
 	var users []User
 	err := repository.Collection.FindAll(bson.M{"email": email, "certHash": hash}, &users)
 	if err != nil || len(users) == 0 {
