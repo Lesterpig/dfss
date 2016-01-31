@@ -40,7 +40,7 @@ func TestMain(m *testing.M) {
 	// Start platform server
 	keyPath := filepath.Join(os.Getenv("GOPATH"), "src", "dfss", "dfssp", "testdata")
 
-	srv := server.GetServer(keyPath, dbURI, true)
+	srv := server.GetServer(keyPath, dbURI, 365, true)
 	go func() { _ = net.Listen("localhost:9090", srv) }()
 
 	// Run

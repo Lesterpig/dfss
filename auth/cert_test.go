@@ -88,6 +88,12 @@ func TestPEMToCertificateRequest(t *testing.T) {
 		t.Fatal("Wrong CN: ", res.Subject.CommonName)
 	}
 
+	res, err = PEMToCertificateRequest([]byte("invalid"))
+
+	if err == nil {
+		t.Fatal("The request should not have been decoded as is was invalid format")
+	}
+
 }
 
 func TestGetSelfSignedCertificate(t *testing.T) {

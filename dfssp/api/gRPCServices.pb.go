@@ -74,7 +74,7 @@ func (x ErrorCode_Code) String() string {
 func (ErrorCode_Code) EnumDescriptor() ([]byte, []int) { return fileDescriptor0, []int{1, 0} }
 
 // RegisterRequest message contains the client's email adress and his
-// certificate request
+// request (ie the PEM-encoded certificate request)
 type RegisterRequest struct {
 	Email   string `protobuf:"bytes,1,opt,name=email" json:"email,omitempty"`
 	Request string `protobuf:"bytes,2,opt,name=request" json:"request,omitempty"`
