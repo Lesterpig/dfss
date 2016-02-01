@@ -9,11 +9,9 @@ import (
 	"errors"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"mime/multipart"
 	"net/smtp"
 	"net/textproto"
-	"strings"
 	"time"
 )
 
@@ -23,8 +21,6 @@ type CustomClient struct {
 	sender string
 	client *smtp.Client
 }
-
-const rfc2822 = "Fri 18 Dec 2015 10:01:17 -0606" // used to format time to rfc2822. Not accurate but fmt can't see a ,
 
 // NewCustomClient starts up a custom client.
 func NewCustomClient(sender, host, port, username, password string) (*CustomClient, error) {
@@ -57,7 +53,7 @@ func NewCustomClient(sender, host, port, username, password string) (*CustomClie
 }
 
 // Send a mail with the custom client. Returns nil on success.
-func (c *CustomClient) Send(receivers []string, subject, message string, extensions, filenames []string) error {
+func (c *CustomClient) Send(receivers []string, subject, message string, extensions, filenames []string, files [][]byte) error {
 	// Keep the connection in a local variable for ease of access
 	connection := c.client
 
@@ -81,7 +77,7 @@ func (c *CustomClient) Send(receivers []string, subject, message string, extensi
 
 		// Set the message : header, then message encoded in base64, then attachments
 		var localBuffer bytes.Buffer
-		if err := createFullMessage(&localBuffer, receiver, c.sender, header, base64Message, extensions, filenames, boundary); err != nil {
+		if err := createFullMessage(&localBuffer, receiver, c.sender, header, base64Message, extensions, filenames, files, boundary); err != nil {
 			return err
 		}
 
@@ -122,14 +118,14 @@ func createHeader(sender, subject, boundary string) string {
 	fmt.Fprintf(&buffer, "MIME-Version: 1.0\r\n")
 	fmt.Fprintf(&buffer, "Subject: %s\r\n", subject)
 	// Replace the first space with a comma and a space to conform to rfc2822
-	fmt.Fprintf(&buffer, "Date: %s%s", strings.Replace(time.Now().UTC().Format(rfc2822), " ", ", ", 1), "\r\n")
+	fmt.Fprintf(&buffer, "Date: %s%s", time.Now().Format(time.RFC1123Z), "\r\n")
 	fmt.Fprintf(&buffer, "Content-Type: multipart/mixed; boundary=\"%s\"; charset=\"UTF-8\"\r\n", boundary)
 	fmt.Fprintf(&buffer, "To: ")
 	return buffer.String()
 }
 
 // Create the full message for a single receiver
-func createFullMessage(b io.Writer, receiver, sender, globalHeader, base64Message string, extensions, filenames []string, boundary string) error {
+func createFullMessage(b io.Writer, receiver, sender, globalHeader, base64Message string, extensions, filenames []string, files [][]byte, boundary string) error {
 	fmt.Fprintf(b, "%s%s\r\n", globalHeader, receiver)
 
 	writer := multipart.NewWriter(b)
@@ -142,8 +138,8 @@ func createFullMessage(b io.Writer, receiver, sender, globalHeader, base64Messag
 	}
 
 	// Set attachments. Here for now because the boundaries are wanted unique
-	for index, value := range filenames {
-		if err := createAttachment(writer, extensions[index], value); err != nil {
+	for index, value := range files {
+		if err := createAttachment(writer, extensions[index], filenames[index], value); err != nil {
 			return err
 		}
 	}
@@ -155,7 +151,7 @@ func createFullMessage(b io.Writer, receiver, sender, globalHeader, base64Messag
 }
 
 // Create an attachment with a certain extension
-func createAttachment(writer *multipart.Writer, extension, path string) error {
+func createAttachment(writer *multipart.Writer, extension, path string, file []byte) error {
 	// Create a header
 	newHeader := make(textproto.MIMEHeader)
 	newHeader.Add("Content-Type", extension)
@@ -168,13 +164,7 @@ func createAttachment(writer *multipart.Writer, extension, path string) error {
 		return err
 	}
 
-	// Write the file to the message
-	data, err := ioutil.ReadFile(path)
-	if err != nil {
-		return err
-	}
-	fmt.Fprintf(output, base64.StdEncoding.EncodeToString([]byte(data)))
-
+	fmt.Fprintf(output, base64.StdEncoding.EncodeToString(file))
 	return nil
 }
 
