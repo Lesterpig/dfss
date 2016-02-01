@@ -2,6 +2,7 @@ package mails
 
 import (
 	"fmt"
+	"io/ioutil"
 	"os"
 	"testing"
 )
@@ -35,35 +36,34 @@ func TestMain(m *testing.M) {
 }
 
 func TestSingleMail(t *testing.T) {
-	err = client.Send([]string{rcpt1}, "TestSingleMail", "Gros espoirs!", []string{}, []string{})
+	err = client.Send([]string{rcpt1}, "TestSingleMail", "Gros espoirs!", []string{}, []string{}, [][]byte{})
 	if err != nil {
 		t.Fatal(err)
 	}
 }
 
 func TestDoubleMail(t *testing.T) {
-	err = client.Send([]string{rcpt1, rcpt2}, "TestDoubleMail", "Gros espoirs!", []string{}, []string{})
+	err = client.Send([]string{rcpt1, rcpt2}, "TestDoubleMail", "Gros espoirs!", []string{}, []string{}, [][]byte{})
 	if err != nil {
 		t.Fatal(err)
 	}
 }
 
 func TestRuneMail(t *testing.T) {
-	err = client.Send([]string{rcpt1}, "TestRuneMail", "测试", []string{}, []string{})
-	if err != nil {
-		t.Fatal(err)
-	}
-}
-
-func TestAttachmentMailText(t *testing.T) {
-	err = client.Send([]string{rcpt1}, "TestAttachmentMailText", "What would make a good attachment?", []string{"text/plain"}, []string{"mail_test.go"})
+	err = client.Send([]string{rcpt1}, "TestRuneMail", "测试", []string{}, []string{}, [][]byte{})
 	if err != nil {
 		t.Fatal(err)
 	}
 }
 
 func TestAttachmentMailImage(t *testing.T) {
-	err = client.Send([]string{rcpt1}, "TestAttachmentMailImage", "What would make a good attachment?", []string{"image/gif"}, []string{"testdata/testImg.gif"})
+
+	content, err := ioutil.ReadFile("testdata/testImg.gif")
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	err = client.Send([]string{rcpt1}, "TestAttachmentMailImage", "What would make a good attachment?", []string{"image/gif"}, []string{"testImg.gif"}, [][]byte{content})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -86,13 +86,17 @@ func ExampleCustomClient() {
   to be jealous or anything...`
 
 	// Send a first mail, without attachments
-	err = client.Send([]string{recipient1, recipient2}, subject, message, []string{}, []string{})
+	err = client.Send([]string{recipient1, recipient2}, subject, message, []string{}, []string{}, [][]byte{})
 	if err != nil {
 		fmt.Println(err)
 	}
 
+	// Just some test data
+	fileA := []byte{'A'}
+	fileB := []byte{'B'}
+
 	// Send a second mail, with some attachments
-	err = client.Send([]string{recipient1, recipient3}, subject, message, []string{"text/plain", "image/gif"}, []string{"email.go", "testdata/testImg.gif"})
+	err = client.Send([]string{recipient1, recipient3}, subject, message, []string{"text/plain", "image/gif"}, []string{"email.go", "testdata/testImg.gif"}, [][]byte{fileA, fileB})
 	if err != nil {
 		fmt.Println(err)
 	}
