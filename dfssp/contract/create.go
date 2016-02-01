@@ -7,6 +7,7 @@ import (
 
 	"dfss/dfssp/api"
 	"dfss/dfssp/entities"
+	"dfss/dfssp/templates"
 	"dfss/mgdb"
 	"gopkg.in/mgo.v2/bson"
 )
@@ -25,15 +26,17 @@ func PostRoute(m *mgdb.MongoManager, in *api.PostContractRequest) *api.ErrorCode
 		return &api.ErrorCode{Code: api.ErrorCode_INTERR, Message: "Database error"}
 	}
 
-	err = addContract(m, in, signers, missingSigners)
+	contract, err := addContract(m, in, signers, missingSigners)
 	if err != nil {
 		log.Println(err)
 		return &api.ErrorCode{Code: api.ErrorCode_INTERR}
 	}
 
 	if len(missingSigners) > 0 {
+		sendPendingContractMail(contract, missingSigners)
 		return &api.ErrorCode{Code: api.ErrorCode_WARNING, Message: "Some users are not ready yet"}
 	}
+	sendNewContractMail(contract)
 	return &api.ErrorCode{Code: api.ErrorCode_SUCCESS}
 
 }
@@ -84,7 +87,7 @@ func fetchSigners(m *mgdb.MongoManager, signers []string) ([]entities.User, []st
 	return users, missing, nil
 }
 
-func addContract(m *mgdb.MongoManager, in *api.PostContractRequest, signers []entities.User, missingSigners []string) error {
+func addContract(m *mgdb.MongoManager, in *api.PostContractRequest, signers []entities.User, missingSigners []string) (*entities.Contract, error) {
 	contract := entities.NewContract()
 	for _, s := range signers {
 		contract.AddSigner(&s.ID, s.Email, s.CertHash)
@@ -100,5 +103,55 @@ func addContract(m *mgdb.MongoManager, in *api.PostContractRequest, signers []en
 	contract.File.Hosted = false
 
 	_, err := m.Get("contracts").Insert(contract)
-	return err
+	return contract, err
+}
+
+func sendNewContractMail(c *entities.Contract) {
+	conn := templates.MailConn()
+	if conn == nil {
+		return
+	}
+	defer func() { _ = conn.Close() }()
+
+	rcpts := make([]string, len(c.Signers))
+	for i, s := range c.Signers {
+		rcpts[i] = s.Email
+	}
+
+	content, err := templates.Get("contract", c)
+	if err != nil {
+		log.Println(err)
+		return
+	}
+
+	file, err := GetJSON(c, nil)
+	if err != nil {
+		log.Println(err)
+		return
+	}
+
+	_ = conn.Send(
+		rcpts,
+		"[DFSS] You are invited to sign "+c.File.Name,
+		content,
+		[]string{"application/json"},
+		[]string{c.ID.Hex() + ".json"},
+		[][]byte{file},
+	)
+}
+
+func sendPendingContractMail(c *entities.Contract, rcpts []string) {
+	conn := templates.MailConn()
+	if conn == nil {
+		return
+	}
+	defer func() { _ = conn.Close() }()
+
+	content, err := templates.Get("invitation", c)
+	if err != nil {
+		log.Println(err)
+		return
+	}
+
+	_ = conn.Send(rcpts, "[DFSS] You are invited to sign "+c.File.Name, content, nil, nil, nil)
 }
