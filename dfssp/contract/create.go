@@ -12,46 +12,65 @@ import (
 	"gopkg.in/mgo.v2/bson"
 )
 
-// PostRoute is the GRPC route designed to create a contract.
-func PostRoute(m *mgdb.MongoManager, in *api.PostContractRequest) *api.ErrorCode {
+// Builder contains internal information to create a new contract.
+type Builder struct {
+	m              *mgdb.MongoManager
+	in             *api.PostContractRequest
+	signers        []entities.User
+	missingSigners []string
+	contract       *entities.Contract
+}
 
-	inputError := checkInput(in)
+// NewContractBuilder creates a new builder from current context.
+// Call Execute() on the builder to get a result from it.
+func NewContractBuilder(m *mgdb.MongoManager, in *api.PostContractRequest) *Builder {
+	return &Builder{
+		m:  m,
+		in: in,
+	}
+}
+
+// Execute triggers the creation of a new contract.
+func (c *Builder) Execute() *api.ErrorCode {
+
+	inputError := c.checkInput()
 	if inputError != nil {
 		return inputError
 	}
 
-	signers, missingSigners, err := fetchSigners(m, in.Signer)
+	err := c.fetchSigners()
 	if err != nil {
 		log.Println(err)
 		return &api.ErrorCode{Code: api.ErrorCode_INTERR, Message: "Database error"}
 	}
 
-	contract, err := addContract(m, in, signers, missingSigners)
+	err = c.addContract()
 	if err != nil {
 		log.Println(err)
 		return &api.ErrorCode{Code: api.ErrorCode_INTERR}
 	}
 
-	if len(missingSigners) > 0 {
-		sendPendingContractMail(contract, missingSigners)
+	if len(c.missingSigners) > 0 {
+		c.sendPendingContractMail()
 		return &api.ErrorCode{Code: api.ErrorCode_WARNING, Message: "Some users are not ready yet"}
 	}
-	sendNewContractMail(contract)
+	c.sendNewContractMail()
 	return &api.ErrorCode{Code: api.ErrorCode_SUCCESS}
 
 }
 
-func checkInput(in *api.PostContractRequest) *api.ErrorCode {
+// checkInput checks that a PostContractRequest is well-formed
+func (c *Builder) checkInput() *api.ErrorCode {
 
-	if len(in.Signer) == 0 {
+	if len(c.in.Signer) == 0 {
 		return &api.ErrorCode{Code: api.ErrorCode_INVARG, Message: "Expecting at least one signer"}
 	}
 
-	if len(in.Filename) == 0 {
+	if len(c.in.Filename) == 0 {
 		return &api.ErrorCode{Code: api.ErrorCode_INVARG, Message: "Expecting a valid filename"}
 	}
 
-	if len(in.Hash) != sha512.Size {
+	if len(c.in.Hash) != sha512.Size {
 		return &api.ErrorCode{Code: api.ErrorCode_INVARG, Message: "Expecting a valid sha512 hash"}
 	}
 
@@ -59,19 +78,22 @@ func checkInput(in *api.PostContractRequest) *api.ErrorCode {
 
 }
 
-func fetchSigners(m *mgdb.MongoManager, signers []string) ([]entities.User, []string, error) {
+// fetchSigners fetches authenticated users for this contract from the DB
+func (c *Builder) fetchSigners() error {
 	var users []entities.User
-	err := m.Get("users").FindAll(bson.M{
+
+	// Fetch users where email is part of the signers slice in request
+	// and authentication is valid
+	err := c.m.Get("users").FindAll(bson.M{
 		"expiration": bson.M{"$gt": time.Now()},
-		"email":      bson.M{"$in": signers},
+		"email":      bson.M{"$in": c.in.Signer},
 	}, &users)
 	if err != nil {
-		return nil, nil, err
+		return err
 	}
 
 	// Locate missing users
-	var missing []string
-	for _, s := range signers {
+	for _, s := range c.in.Signer {
 		found := false
 		for _, u := range users {
 			if s == u.Email {
@@ -80,41 +102,46 @@ func fetchSigners(m *mgdb.MongoManager, signers []string) ([]entities.User, []st
 			}
 		}
 		if !found {
-			missing = append(missing, s)
+			c.missingSigners = append(c.missingSigners, s) // a list of not valid mail adress
 		}
 	}
 
-	return users, missing, nil
+	c.signers = users
+	return nil
 }
 
-func addContract(m *mgdb.MongoManager, in *api.PostContractRequest, signers []entities.User, missingSigners []string) (*entities.Contract, error) {
+// addContract inserts the contract into the DB
+func (c *Builder) addContract() error {
 	contract := entities.NewContract()
-	for _, s := range signers {
+	for _, s := range c.signers {
 		contract.AddSigner(&s.ID, s.Email, s.CertHash)
 	}
-	for _, s := range missingSigners {
+	for _, s := range c.missingSigners {
 		contract.AddSigner(nil, s, "")
 	}
 
-	contract.Comment = in.Comment
-	contract.Ready = len(missingSigners) == 0
-	contract.File.Name = in.Filename
-	contract.File.Hash = in.Hash
+	contract.Comment = c.in.Comment
+	contract.Ready = len(c.missingSigners) == 0
+	contract.File.Name = c.in.Filename
+	contract.File.Hash = c.in.Hash
 	contract.File.Hosted = false
 
-	_, err := m.Get("contracts").Insert(contract)
-	return contract, err
+	_, err := c.m.Get("contracts").Insert(contract)
+	c.contract = contract
+
+	return err
 }
 
-func sendNewContractMail(c *entities.Contract) {
+// sendNewContractMail sends a mail to each known signer in a contract containing the DFSS file
+func (c *Builder) sendNewContractMail() {
 	conn := templates.MailConn()
 	if conn == nil {
 		return
 	}
 	defer func() { _ = conn.Close() }()
 
-	rcpts := make([]string, len(c.Signers))
-	for i, s := range c.Signers {
+	rcpts := make([]string, len(c.contract.Signers))
+	for i, s := range c.contract.Signers {
 		rcpts[i] = s.Email
 	}
 
@@ -124,23 +151,26 @@ func sendNewContractMail(c *entities.Contract) {
 		return
 	}
 
-	file, err := GetJSON(c, nil)
+	file, err := GetJSON(c.contract, nil)
 	if err != nil {
 		log.Println(err)
 		return
 	}
 
+	fileSmallHash := c.contract.ID.Hex()[0:8] // Pretty hash instead of huge one
+
 	_ = conn.Send(
 		rcpts,
-		"[DFSS] You are invited to sign "+c.File.Name,
+		"[DFSS] You are invited to sign "+c.contract.File.Name,
 		content,
 		[]string{"application/json"},
-		[]string{c.ID.Hex() + ".json"},
+		[]string{fileSmallHash + ".json"},
 		[][]byte{file},
 	)
 }
 
-func sendPendingContractMail(c *entities.Contract, rcpts []string) {
+// sendPendingContractMail sends a mail to non-authenticated signers to invite them
+func (c *Builder) sendPendingContractMail() {
 	conn := templates.MailConn()
 	if conn == nil {
 		return
@@ -153,5 +183,5 @@ func sendPendingContractMail(c *entities.Contract, rcpts []string) {
 		return
 	}
 
-	_ = conn.Send(rcpts, "[DFSS] You are invited to sign "+c.File.Name, content, nil, nil, nil)
+	_ = conn.Send(c.missingSigners, "[DFSS] You are invited to sign "+c.contract.File.Name, content, nil, nil, nil)
 }

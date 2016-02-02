@@ -102,6 +102,7 @@ func TestAddContract(t *testing.T) {
 	assert.Equal(t, "ContractComment", contracts[0].Comment)
 	assert.T(t, contracts[0].Ready)
 
+	assert.Equal(t, 2, len(contracts[0].Signers))
 	assert.Equal(t, user1.ID, contracts[0].Signers[0].UserID)
 	assert.Equal(t, user1.CertHash, contracts[0].Signers[0].Hash)
 	assert.Equal(t, user1.Email, contracts[0].Signers[0].Email)
@@ -136,6 +137,7 @@ func TestAddContractMissingUser(t *testing.T) {
 	assert.Equal(t, "", contracts[0].Comment)
 	assert.T(t, !contracts[0].Ready)
 
+	assert.Equal(t, 2, len(contracts[0].Signers))
 	assert.Equal(t, user1.ID, contracts[0].Signers[0].UserID)
 	assert.Equal(t, user1.CertHash, contracts[0].Signers[0].Hash)
 	assert.Equal(t, user1.Email, contracts[0].Signers[0].Email)

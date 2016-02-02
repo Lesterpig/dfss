@@ -48,7 +48,8 @@ func (s *platformServer) Unregister(ctx context.Context, in *api.Empty) (*api.Er
 //
 // Handle incoming PostContractRequest messages
 func (s *platformServer) PostContract(ctx context.Context, in *api.PostContractRequest) (*api.ErrorCode, error) {
-	return contract.PostRoute(s.DB, in), nil
+	builder := contract.NewContractBuilder(s.DB, in)
+	return builder.Execute(), nil
 }
 
 // JoinSignature handler
