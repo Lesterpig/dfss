@@ -84,9 +84,10 @@ func GetSelfSignedCertificate(days int, serial uint64, country, organization, un
 			OrganizationalUnit: []string{unit},
 			CommonName:         cn,
 		},
-		NotBefore: time.Now(),
-		NotAfter:  time.Now().AddDate(0, 0, days),
-		IsCA:      true,
+		NotBefore:             time.Now(),
+		NotAfter:              time.Now().AddDate(0, 0, days),
+		BasicConstraintsValid: true,
+		IsCA: true,
 	}
 
 	der, err := x509.CreateCertificate(rand.Reader, template, template, &key.PublicKey, key)

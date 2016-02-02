@@ -1,11 +1,12 @@
 package user
 
 import (
-	"dfss/mgdb"
 	"fmt"
 	"os"
 	"testing"
 
+	"dfss/dfssp/entities"
+	"dfss/mgdb"
 	"gopkg.in/mgo.v2/bson"
 )
 
@@ -14,7 +15,7 @@ var collection *mgdb.MongoCollection
 var manager *mgdb.MongoManager
 var dbURI string
 
-var repository *Repository
+var repository *entities.UserRepository
 
 func TestMain(m *testing.M) {
 
@@ -26,7 +27,7 @@ func TestMain(m *testing.M) {
 	manager, err = mgdb.NewManager(dbURI)
 	collection = manager.Get("demo")
 
-	repository = NewRepository(collection)
+	repository = entities.NewUserRepository(collection)
 
 	// Run
 	code := m.Run()
@@ -52,7 +53,7 @@ func TestMongoFetchInexistantUser(t *testing.T) {
 }
 
 func TestMongoInsertUser(t *testing.T) {
-	user := NewUser()
+	user := entities.NewUser()
 	user.Email = "dfss1@mpcs.tk"
 	user.CertHash = "dummy_hash"
 	user.ConnInfo.IP = "127.0.0.1"
@@ -68,7 +69,7 @@ func TestMongoInsertUser(t *testing.T) {
 	fmt.Println("Successfully inserted a user")
 }
 
-func equalUsers(t *testing.T, user1, user2 *User) {
+func equalUsers(t *testing.T, user1, user2 *entities.User) {
 	if user1.ID != user2.ID {
 		t.Fatal("ID doesn't match : received ", user1.ID, " and ", user2.ID)
 	}
@@ -107,7 +108,7 @@ func equalUsers(t *testing.T, user1, user2 *User) {
 }
 
 func TestMongoFetchUser(t *testing.T) {
-	user := NewUser()
+	user := entities.NewUser()
 	user.Email = "dfss2@mpcs.tk"
 	user.CertHash = "dummy_hash"
 	user.ConnInfo.IP = "127.0.0.2"
@@ -131,7 +132,7 @@ func TestMongoFetchUser(t *testing.T) {
 }
 
 func TestMongoFetchIncompleteUser(t *testing.T) {
-	user := User{
+	user := entities.User{
 		ID: bson.NewObjectId(),
 	}
 

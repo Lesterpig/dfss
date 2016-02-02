@@ -21,7 +21,19 @@ message RegisterRequest {
 // ErrorCode message contains an error code (see dffs/dfssp/api/errorCodes.go)
 // and a message
 message ErrorCode {
-	int32 code = 1;
+	enum Code {
+		// SUCCESS is the error code for a successful request
+		SUCCESS = 0;
+		// INVARG is the error code for an invalid argument
+		INVARG = 1;
+		// BADAUTH is the error code for a bad authentication
+		BADAUTH = 2;
+		// WARNING is the error code for a success state containing a specific warning message
+		WARNING = 3;
+		// INTERR is the error code for an internal server error
+		INTERR = -1;
+	}
+	Code code = 1;
 	string message = 2;
 }
 
@@ -43,19 +55,20 @@ message RegisteredUser {
 message Empty {
 }
 
-// PostContractRequest message contains the contract as SHA-512 hash, the list of signers
-// as an array of string, and a comment
+// PostContractRequest message contains the contract as SHA-512 hash, its filename,
+// the list of signers as an array of strings, and a comment
 message PostContractRequest {
-	string contract = 1;
-	repeated string signer = 2;
-	string comment = 3;
+	string hash = 1;
+	string filename = 2;
+	repeated string signer = 3;
+	string comment = 4;
 }
 
 // JoinSignatureRequest message contains the contract to join unique identifier
 // and the port the client will be listening at
 message JoinSignatureRequest {
 	string contractUuid = 1;
-	uint32 port  =2;
+	uint32 port = 2;
 }
 
 // ReadySignRequest contains the contract unique identitier that is ready to be signed

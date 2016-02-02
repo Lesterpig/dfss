@@ -2,9 +2,8 @@ package main
 
 import (
 	"dfss"
-	"dfss/dfssp/api"
 	"dfss/dfssp/authority"
-	"dfss/mgdb"
+	"dfss/dfssp/server"
 	"dfss/net"
 	"flag"
 	"fmt"
@@ -72,32 +71,12 @@ func main() {
 			os.Exit(1)
 		}
 	case "start":
-		pid, err := authority.Start(path)
-		if err != nil {
-			fmt.Println("An error occured during the private key and root certificate retrieval:", err)
-			os.Exit(1)
-		}
-
-		dbManager, err := mgdb.NewManager(dbURI)
-		if err != nil {
-			fmt.Println("An error occured during the connection to MongoDB:", err)
-			os.Exit(1)
-		}
-
-		server := net.NewServer(pid.RootCA, pid.Pkey, pid.RootCA)
-		api.RegisterPlatformServer(server, &platformServer{
-			Pid:     pid,
-			DB:      dbManager,
-			Verbose: verbose,
-		})
-
+		srv := server.GetServer(path, dbURI, verbose)
 		fmt.Println("Listening on " + address + ":" + port)
-		err = net.Listen(address+":"+port, server)
-
+		err := net.Listen(address+":"+port, srv)
 		if err != nil {
 			fmt.Println(err)
 		}
-
 	default:
 		flag.Usage()
 	}
