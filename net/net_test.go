@@ -8,6 +8,7 @@ import (
 
 	"dfss/auth"
 	pb "dfss/net/fixtures"
+
 	"golang.org/x/net/context"
 )
 
@@ -189,7 +190,7 @@ func Example() {
 	// Let the server enough time to start property
 	time.Sleep(2 * time.Second)
 
-	// Start a client
+	// Start an authentified client
 	// The second and third arguments can be empty for non-auth connection
 	conn, err := Connect("localhost:9000", cert, ckey, ca)
 	if err != nil {
@@ -206,6 +207,22 @@ func Example() {
 
 	fmt.Println((*r).Id)
 
+	// Start a non-authentified client
+	conn, err = Connect("localhost:9000", nil, nil, ca)
+	if err != nil {
+		panic("Unable to connect")
+	}
+
+	client = pb.NewTestClient(conn)
+
+	// During a ping, the server increments the Hop.Id field (test case only)
+	r, err = client.Ping(context.Background(), &pb.Hop{Id: 42})
+	if err != nil {
+		panic("Unable to ping")
+	}
+
+	fmt.Println((*r).Id)
+
 	// Close client
 	_ = conn.Close()
 
@@ -214,4 +231,5 @@ func Example() {
 
 	// Output:
 	// 42
+	// 43
 }
