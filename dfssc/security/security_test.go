@@ -33,13 +33,7 @@ var path = os.TempDir()
 func TestGenerateKeys(t *testing.T) {
 	fkey := filepath.Join(path, "genKey.pem")
 
-	rsa, err := GenerateKeys(2048, "pwd", fkey)
-	assert.T(t, err == nil, "An error has been raised during generation")
-	assert.T(t, rsa != nil, "RSA key should not be nil")
-	assert.T(t, common.FileExists(fkey), "File is missing")
-	common.DeleteQuietly(fkey)
-
-	rsa, err = GenerateKeys(4096, "pwd", fkey)
+	rsa, err := GenerateKeys(512, "pwd", fkey)
 	assert.T(t, err == nil, "An error has been raised during generation")
 	assert.T(t, rsa != nil, "RSA key should not be nil")
 	assert.T(t, common.FileExists(fkey), "File is missing")
@@ -50,7 +44,7 @@ func TestGenerateKeys(t *testing.T) {
 func TestCertificateRequest(t *testing.T) {
 	fkey := filepath.Join(path, "genCsr.pem")
 
-	rsa, err := GenerateKeys(2048, "pwd", fkey)
+	rsa, err := GenerateKeys(512, "pwd", fkey)
 	defer common.DeleteQuietly(fkey)
 	assert.T(t, err == nil, "An error has been raised during generation")
 	assert.T(t, rsa != nil, "RSA key should not be nil")
@@ -65,7 +59,7 @@ func TestCertificateRequest(t *testing.T) {
 func TestDumpingKey(t *testing.T) {
 	fkey := filepath.Join(path, "dumpKey.pem")
 
-	rsa, err := GenerateKeys(2048, "pwd", fkey)
+	rsa, err := GenerateKeys(512, "pwd", fkey)
 	defer common.DeleteQuietly(fkey)
 
 	assert.T(t, err == nil, "An error has been raised during generation")
