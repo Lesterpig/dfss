@@ -38,6 +38,7 @@ func init() {
 		fmt.Println("  help      print this help")
 		fmt.Println("  version   print dfss client version")
 		fmt.Println("  register  register a new client")
+		fmt.Println("  show <c>  print contract information from file c")
 
 		fmt.Println("\nFlags:")
 		flag.PrintDefaults()
@@ -85,6 +86,8 @@ func main() {
 			fmt.Println("An error occurred : ", err.Error())
 		}
 
+	case "show":
+		showContract(flag.Arg(1))
 	default:
 		flag.Usage()
 	}
