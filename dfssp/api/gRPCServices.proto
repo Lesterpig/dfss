@@ -12,10 +12,10 @@ service Platform {
 }
 
 // RegisterRequest message contains the client's email adress and his
-// public key
+// certificate request
 message RegisterRequest {
 	string email = 1;
-	string key = 2;
+	string request = 2;
 }
 
 // ErrorCode message contains an error code (see dffs/dfssp/api/errorCodes.go)
@@ -45,10 +45,9 @@ message AuthRequest {
 }
 
 // RegisteredUser message contains the generated client certificate
-// and the CA root certificate (PEM-encoded)
+// (PEM-encoded)
 message RegisteredUser {
-	bytes rootCert = 1;
-	bytes clientCert = 2;
+	string clientCert = 1;
 }
 
 // Empty message is an empty message
