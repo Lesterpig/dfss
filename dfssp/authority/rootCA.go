@@ -4,9 +4,7 @@ import (
 	"crypto/rsa"
 	"crypto/x509"
 	"dfss/auth"
-	"github.com/pborman/uuid"
 	"io/ioutil"
-	"math/big"
 	"os/user"
 	"path/filepath"
 )
@@ -35,14 +33,9 @@ func GetHomeDir() string {
 	return usr.HomeDir
 }
 
-// GenerateRootCA constructs a self-signed certificate, using a unique serial number randomly generated (see UUID)
+// GenerateRootCA constructs a self-signed certificate, using a unique serial number randomly generated
 func GenerateRootCA(days int, country, organization, unit, cn string, key *rsa.PrivateKey) ([]byte, error) {
-	// Generating and converting the uuid to fit our needs: an 8 bytes integer.
-	uuid := uuid.NewRandom()
-	var slice []byte
-	slice = uuid[:8]
-	// TODO: improve this conversion method/need
-	serial := new(big.Int).SetBytes(slice).Uint64()
+	serial := auth.GenerateUID()
 
 	cert, err := auth.GetSelfSignedCertificate(days, serial, country, organization, unit, cn, key)
 

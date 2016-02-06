@@ -24,6 +24,7 @@ func Init() {
 	_ = template.Must(tpl.Parse("{{define `signature`}}" + signature + "{{end}}"))
 	_ = template.Must(tpl.Parse("{{define `invitation`}}" + invitation + "{{end}}"))
 	_ = template.Must(tpl.Parse("{{define `contractDetails`}}" + contractDetails + "{{end}}"))
+	_ = template.Must(tpl.Parse("{{define `verificationMail`}}" + verificationMail + "{{end}}"))
 	ready = true
 
 }

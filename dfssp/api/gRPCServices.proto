@@ -12,7 +12,7 @@ service Platform {
 }
 
 // RegisterRequest message contains the client's email adress and his
-// certificate request
+// request (ie the PEM-encoded certificate request)
 message RegisterRequest {
 	string email = 1;
 	string request = 2;

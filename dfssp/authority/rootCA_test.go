@@ -71,8 +71,8 @@ func ExampleInitialize() {
 		fmt.Println(err)
 	}
 
-	checkFile(keyPath, "Private key")
-	checkFile(certPath, "Certificate")
+	CheckFile(keyPath, "Private key")
+	CheckFile(certPath, "Certificate")
 
 	// Output:
 	// Private key file has been found
@@ -81,7 +81,7 @@ func ExampleInitialize() {
 	// Certificate file has been deleted
 }
 
-func checkFile(path, name string) {
+func CheckFile(path, name string) {
 	if _, err := os.Stat(path); os.IsNotExist(err) {
 		fmt.Println(name + " file couldn't be found")
 	} else {

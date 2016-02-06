@@ -6,6 +6,8 @@ import (
 	"crypto/x509"
 	"crypto/x509/pkix"
 	"encoding/pem"
+	"errors"
+	"github.com/pborman/uuid"
 	"math/big"
 	"time"
 )
@@ -38,6 +40,11 @@ func GetCertificateRequest(country, organization, unit, mail string, key *rsa.Pr
 // PEMToCertificateRequest tries to decode a PEM-encoded array of bytes to a certificate request
 func PEMToCertificateRequest(data []byte) (*x509.CertificateRequest, error) {
 	block, _ := pem.Decode(data)
+
+	if block == nil {
+		return nil, errors.New("Couldn't decode the PEM data as a x509 Certificate request")
+	}
+
 	return x509.ParseCertificateRequest(block.Bytes)
 }
 
@@ -107,4 +114,14 @@ func GetSelfSignedCertificate(days int, serial uint64, country, organization, un
 func PEMToCertificate(data []byte) (*x509.Certificate, error) {
 	block, _ := pem.Decode(data)
 	return x509.ParseCertificate(block.Bytes)
+}
+
+// GenerateUID generates a unique identifier as a uint64
+func GenerateUID() uint64 {
+	// Generating and converting the uuid to fit our needs: an 8 bytes unsigned integer
+	uuid := uuid.NewRandom()
+	var slice []byte
+	slice = uuid[:8]
+	// TODO: improve this conversion method/need
+	return new(big.Int).SetBytes(slice).Uint64()
 }

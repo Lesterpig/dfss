@@ -7,6 +7,7 @@ import (
 	"dfss/dfssp/api"
 	"dfss/dfssp/authority"
 	"dfss/dfssp/contract"
+	"dfss/dfssp/user"
 	"dfss/mgdb"
 	"dfss/net"
 	"golang.org/x/net/context"
@@ -14,26 +15,24 @@ import (
 )
 
 type platformServer struct {
-	Pid     *authority.PlatformID
-	DB      *mgdb.MongoManager
-	Verbose bool
+	Pid          *authority.PlatformID
+	DB           *mgdb.MongoManager
+	CertDuration int
+	Verbose      bool
 }
 
 // Register handler
 //
 // Handle incoming RegisterRequest messages
 func (s *platformServer) Register(ctx context.Context, in *api.RegisterRequest) (*api.ErrorCode, error) {
-	// TODO
-	_ = new(platformServer)
-	return nil, nil
+	return user.Register(s.DB, in)
 }
 
 // Auth handler
 //
 // Handle incoming AuthRequest messages
 func (s *platformServer) Auth(ctx context.Context, in *api.AuthRequest) (*api.RegisteredUser, error) {
-	// TODO
-	return nil, nil
+	return user.Auth(s.Pid, s.DB, s.CertDuration, in)
 }
 
 // Unregister handler
@@ -69,7 +68,7 @@ func (s *platformServer) ReadySign(ctx context.Context, in *api.ReadySignRequest
 }
 
 // GetServer returns the GRPC server associated with the platform
-func GetServer(keyPath, db string, verbose bool) *grpc.Server {
+func GetServer(keyPath, db string, certValidity int, verbose bool) *grpc.Server {
 	pid, err := authority.Start(keyPath)
 	if err != nil {
 		fmt.Println("An error occured during the private key and root certificate retrieval:", err)
@@ -84,9 +83,10 @@ func GetServer(keyPath, db string, verbose bool) *grpc.Server {
 
 	server := net.NewServer(pid.RootCA, pid.Pkey, pid.RootCA)
 	api.RegisterPlatformServer(server, &platformServer{
-		Pid:     pid,
-		DB:      dbManager,
-		Verbose: verbose,
+		Pid:          pid,
+		DB:           dbManager,
+		CertDuration: certValidity,
+		Verbose:      verbose,
 	})
 	return server
 }
