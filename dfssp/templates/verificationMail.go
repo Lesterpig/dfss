@@ -8,7 +8,7 @@ the following text as token:
 
 {{.Token}}
 
-If you did not asked for registration, we deeply excuse
+If you did not ask for registration, we deeply excuse
 for the error.
 
 {{template "signature"}}
