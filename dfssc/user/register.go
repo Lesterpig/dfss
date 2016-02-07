@@ -1,13 +1,13 @@
 package user
 
 import (
-	"dfss/dfssc/common"
-	"dfss/dfssc/security"
-	pb "dfss/dfssp/api"
 	"errors"
 	"regexp"
 	"time"
 
+	"dfss/dfssc/common"
+	"dfss/dfssc/security"
+	pb "dfss/dfssp/api"
 	"golang.org/x/net/context"
 )
 
@@ -111,7 +111,7 @@ func (m *RegisterManager) GetCertificate() error {
 		return err
 	}
 
-	err = m.evaluateResponse(code)
+	err = common.EvaluateErrorCodeResponse(code)
 	if err != nil {
 		common.DeleteQuietly(m.fileKey)
 		return err
@@ -157,13 +157,4 @@ func (m *RegisterManager) sendRequest(certRequest string) (*pb.ErrorCode, error)
 	}
 
 	return response, nil
-}
-
-// Evaluate the errorCode received
-func (m *RegisterManager) evaluateResponse(code *pb.ErrorCode) error {
-	if code.Code != pb.ErrorCode_SUCCESS {
-		return errors.New("Received error code " + (*code).String() + ", message is " + code.Message)
-	}
-
-	return nil
 }

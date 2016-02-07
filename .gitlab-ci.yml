@@ -32,6 +32,7 @@ Unit tests:
     - "go test -coverprofile dfssc_common.part -v dfss/dfssc/common"
     - "go test -coverprofile dfssc_security.part -v dfss/dfssc/security"
     - "go test -coverprofile dfssc_user.part -v dfss/dfssc/user"
+    - "go test -coverprofile dfssc_user.part -v dfss/dfssc/sign"
     - "echo 'mode: set' *part > c.out"
     - "grep -h -v 'mode: set' *part >> c.out"
     - "go tool cover -html=c.out -o coverage.html"
@@ -55,6 +56,7 @@ ARM tests:
     - "go test -cover -short -v dfss/dfssc/common"
     - "go test -cover -short -v dfss/dfssc/security"
     - "go test -cover -short -v dfss/dfssc/user"
+    - "go test -cover -short -v dfss/dfssc/sign"
 
 Code lint:
   stage: test

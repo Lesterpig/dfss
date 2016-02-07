@@ -2,6 +2,7 @@ package contract_test
 
 import (
 	"crypto/sha512"
+	"fmt"
 	"io/ioutil"
 	"path/filepath"
 	"testing"
@@ -17,7 +18,7 @@ import (
 
 var user1, user2, user3 *entities.User
 var defaultHash = sha512.Sum512([]byte{0})
-var defaultHashStr = string(defaultHash[:sha512.Size])
+var defaultHashStr = fmt.Sprintf("%x", defaultHash)
 
 func createDataset() {
 

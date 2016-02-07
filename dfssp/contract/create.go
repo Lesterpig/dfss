@@ -70,7 +70,7 @@ func (c *Builder) checkInput() *api.ErrorCode {
 		return &api.ErrorCode{Code: api.ErrorCode_INVARG, Message: "Expecting a valid filename"}
 	}
 
-	if len(c.in.Hash) != sha512.Size {
+	if len(c.in.Hash) != sha512.Size*2 { // *2 because string format doubles the length
 		return &api.ErrorCode{Code: api.ErrorCode_INVARG, Message: "Expecting a valid sha512 hash"}
 	}
 
