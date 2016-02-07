@@ -3,7 +3,6 @@ package contract_test
 import (
 	"crypto/sha512"
 	"io/ioutil"
-	"os"
 	"path/filepath"
 	"testing"
 	"time"
@@ -55,20 +54,34 @@ func dropDataset() {
 }
 
 func clientTest(t *testing.T) api.PlatformClient {
-	path := filepath.Join(os.Getenv("GOPATH"), "src", "dfss", "dfssp", "testdata", "dfssp_rootCA.pem")
-	CAData, err := ioutil.ReadFile(path)
-	if err != nil {
-		t.Fatal("Unable to load CA file:", err)
-	}
+	// TODO if anyone needs this function in another test suite, please put it in a separate file
+	// to avoid code duplication
+	caData, _ := ioutil.ReadFile(filepath.Join("..", "testdata", "dfssp_rootCA.pem"))
+	certData, _ := ioutil.ReadFile(filepath.Join("..", "..", "dfssc", "testdata", "cert.pem"))
+	keyData, _ := ioutil.ReadFile(filepath.Join("..", "..", "dfssc", "testdata", "key.pem"))
+	ca, _ := auth.PEMToCertificate(caData)
+	cert, _ := auth.PEMToCertificate(certData)
+	key, _ := auth.EncryptedPEMToPrivateKey(keyData, "password")
 
-	CA, err := auth.PEMToCertificate(CAData)
-
-	conn, err := net.Connect("localhost:9090", nil, nil, CA)
+	conn, err := net.Connect("localhost:9090", cert, key, ca)
 	if err != nil {
 		t.Fatal("Unable to connect:", err)
 	}
 
 	return api.NewPlatformClient(conn)
+}
+
+func TestAddContractBadAuth(t *testing.T) {
+	caData, _ := ioutil.ReadFile(filepath.Join("..", "testdata", "dfssp_rootCA.pem"))
+	ca, _ := auth.PEMToCertificate(caData)
+	conn, err := net.Connect("localhost:9090", nil, nil, ca)
+	if err != nil {
+		t.Fatal("Unable to connect:", err)
+	}
+	client := api.NewPlatformClient(conn)
+	errorCode, err := client.PostContract(context.Background(), &api.PostContractRequest{})
+	assert.Equal(t, nil, err)
+	assert.Equal(t, api.ErrorCode_BADAUTH, errorCode.Code)
 }
 
 func TestAddContract(t *testing.T) {
@@ -82,12 +95,8 @@ func TestAddContract(t *testing.T) {
 		Signer:   []string{user1.Email, user2.Email},
 		Comment:  "ContractComment",
 	})
-	if err != nil {
-		t.Fatal(err)
-	}
-	if errorCode.Code != api.ErrorCode_SUCCESS {
-		t.Fatal("Unexpected errorCode:", errorCode)
-	}
+	assert.Equal(t, nil, err)
+	assert.Equal(t, api.ErrorCode_SUCCESS, errorCode.Code)
 
 	// Check database content
 	var contracts []entities.Contract

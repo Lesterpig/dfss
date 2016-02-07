@@ -47,6 +47,12 @@ func (s *platformServer) Unregister(ctx context.Context, in *api.Empty) (*api.Er
 //
 // Handle incoming PostContractRequest messages
 func (s *platformServer) PostContract(ctx context.Context, in *api.PostContractRequest) (*api.ErrorCode, error) {
+
+	cn := net.GetCN(&ctx)
+	if len(cn) == 0 {
+		return &api.ErrorCode{Code: api.ErrorCode_BADAUTH}, nil
+	}
+
 	builder := contract.NewContractBuilder(s.DB, in)
 	return builder.Execute(), nil
 }
