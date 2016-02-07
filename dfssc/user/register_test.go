@@ -65,7 +65,7 @@ func TestMain(m *testing.M) {
 }
 
 // Test the validation of the fields
-func TestValidation(t *testing.T) {
+func TestRegisterValidation(t *testing.T) {
 	_, err := NewRegisterManager(fca, fcert, fkey, addrPort, "password", "FR", "organization", "unit", "dummy", 2048)
 	assert.T(t, err != nil, "Email is invalid")
 
@@ -97,15 +97,15 @@ func TestGetCertificate(t *testing.T) {
 	err = manager.GetCertificate()
 	assert.T(t, err == nil, "An error occurred while getting the certificate")
 
-	go testInvalidResponse(t, "dfss@invarg.io")
-	go testInvalidResponse(t, "dfss@badauth.io")
-	go testInvalidResponse(t, "dfss@warning.io")
-	go testInvalidResponse(t, "dfss@interr.io")
-	go testInvalidResponse(t, "dfss@inexistant.io")
+	go testRegisterInvalidResponse(t, "dfss@invarg.io")
+	go testRegisterInvalidResponse(t, "dfss@badauth.io")
+	go testRegisterInvalidResponse(t, "dfss@warning.io")
+	go testRegisterInvalidResponse(t, "dfss@interr.io")
+	go testRegisterInvalidResponse(t, "dfss@inexistant.io")
 }
 
 // Test an invalid error code and check we get an error
-func testInvalidResponse(t *testing.T, mail string) {
+func testRegisterInvalidResponse(t *testing.T, mail string) {
 	manager, err := NewRegisterManager(fca, fcert+mail, fkey+mail, addrPort, "password", "FR", "organization", "unit", mail, 2048)
 
 	assert.T(t, err == nil, "An error occurred while processing")

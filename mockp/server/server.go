@@ -32,8 +32,7 @@ func (s *mockServer) Register(ctx context.Context, in *api.RegisterRequest) (*ap
 //
 // Handle incoming AuthRequest messages
 func (s *mockServer) Auth(ctx context.Context, in *api.AuthRequest) (*api.RegisteredUser, error) {
-	// TODO
-	return nil, nil
+	return fixtures.AuthFixture["default"], nil
 }
 
 // Unregister handler

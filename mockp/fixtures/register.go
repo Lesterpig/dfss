@@ -6,7 +6,7 @@ import (
 )
 
 // RegisterFixture holds the fixture for the Register route
-var RegisterFixture map[string]*pb.ErrorCode = map[string]*pb.ErrorCode{
+var RegisterFixture = map[string]*pb.ErrorCode{
 	"dfss@success.io": &pb.ErrorCode{
 		Code:    pb.ErrorCode_SUCCESS,
 		Message: "SUCCESS",
