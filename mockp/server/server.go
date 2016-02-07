@@ -25,7 +25,6 @@ func (s *mockServer) Register(ctx context.Context, in *api.RegisterRequest) (*ap
 		return response, nil
 	}
 	return fixtures.RegisterFixture["default"], nil
-
 }
 
 // Auth handler
@@ -47,7 +46,7 @@ func (s *mockServer) Unregister(ctx context.Context, in *api.Empty) (*api.ErrorC
 //
 // Handle incoming PostContractRequest messages
 func (s *mockServer) PostContract(ctx context.Context, in *api.PostContractRequest) (*api.ErrorCode, error) {
-	return nil, nil
+	return fixtures.CreateFixture[in.Comment], nil
 }
 
 // JoinSignature handler
@@ -77,7 +76,6 @@ func GetServer(ca *x509.Certificate, pkey *rsa.PrivateKey) *grpc.Server {
 func Run(ca *x509.Certificate, pkey *rsa.PrivateKey, addrPort string) {
 	srv := GetServer(ca, pkey)
 	err := net.Listen(addrPort, srv)
-	fmt.Println("Started mock server")
 	if err != nil {
 		fmt.Println(err)
 	}

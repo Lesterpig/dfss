@@ -162,7 +162,7 @@ func (m *RegisterManager) sendRequest(certRequest string) (*pb.ErrorCode, error)
 // Evaluate the errorCode received
 func (m *RegisterManager) evaluateResponse(code *pb.ErrorCode) error {
 	if code.Code != pb.ErrorCode_SUCCESS {
-		return errors.New("Received error code " + (*code).String() + ", message is " + code.Message)
+		return errors.New("Received error code " + (code.Code).String() + ", message is: " + code.Message)
 	}
 
 	return nil
