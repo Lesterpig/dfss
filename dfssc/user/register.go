@@ -4,7 +4,6 @@ import (
 	"dfss/dfssc/common"
 	"dfss/dfssc/security"
 	pb "dfss/dfssp/api"
-	"dfss/net"
 	"errors"
 	"regexp"
 	"time"
@@ -138,12 +137,7 @@ func (m *RegisterManager) buildCertificateRequest() (string, error) {
 
 // Send the request and returns the response
 func (m *RegisterManager) sendRequest(certRequest string) (*pb.ErrorCode, error) {
-	ca, err := security.GetCertificate(m.fileCA)
-	if err != nil {
-		return nil, err
-	}
-
-	conn, err := net.Connect(m.addrPort, nil, nil, ca)
+	client, err := connect(m.fileCA, m.addrPort)
 	if err != nil {
 		return nil, err
 	}
@@ -154,7 +148,6 @@ func (m *RegisterManager) sendRequest(certRequest string) (*pb.ErrorCode, error)
 		Request: certRequest,
 	}
 
-	client := pb.NewPlatformClient(conn)
 	// Stop the context if it takes too long for the platform to answer
 	ctx, cancel := context.WithTimeout(context.TODO(), 10*time.Second)
 	defer cancel()

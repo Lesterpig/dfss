@@ -38,6 +38,7 @@ func init() {
 		fmt.Println("  help      print this help")
 		fmt.Println("  version   print dfss client version")
 		fmt.Println("  register  register a new client")
+		fmt.Println("  auth      authenticate a new client")
 		fmt.Println("  show <c>  print contract information from file c")
 
 		fmt.Println("\nFlags:")
@@ -82,6 +83,18 @@ func main() {
 		recapUser(fca, fcert, fkey, addrPort, country, organization, unit, mail, bits)
 
 		err = user.Register(fca, fcert, fkey, addrPort, passphrase, country, organization, unit, mail, bits)
+		if err != nil {
+			fmt.Println("An error occurred : ", err.Error())
+		}
+
+	case "authenticate":
+		fmt.Println("Authenticating user")
+		var mail, token string
+
+		readStringParam("Mail", "", &mail)
+		readStringParam("Token", "", &token)
+
+		err := user.Authenticate(fca, fcert, addrPort, mail, token)
 		if err != nil {
 			fmt.Println("An error occurred : ", err.Error())
 		}
