@@ -98,6 +98,12 @@ func (manager *MongoCollection) FindByID(id interface{}, result interface{}) err
 	return err
 }
 
+// FindOne finds the first entity matching the selector
+// It may be useful in case of querying with an indexed field
+func (manager *MongoCollection) FindOne(query interface{}, result interface{}) error {
+	return manager.Collection.Find(query).One(result)
+}
+
 // FindAll finds all entities matching the selector and put them into the result slice
 // The format of the selector is expected to follow the one
 // provided in mgo's documentation

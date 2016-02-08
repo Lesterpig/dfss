@@ -1,8 +1,6 @@
 package mgdb
 
-import (
-	"reflect"
-)
+import "reflect"
 
 /****************
  MetadataFactory
@@ -25,7 +23,7 @@ func NewMetadataFactory() *MetadataFactory {
 func (factory *MetadataFactory) Metadata(element interface{}) *Metadata {
 	metadata, present := factory.metadatas[reflect.TypeOf(element).String()]
 	if !present {
-		metadata = newMetadata(element)
+		metadata = newMetadata(element, make(map[string]bool))
 		factory.metadatas[reflect.TypeOf(element).String()] = metadata
 	}
 	return metadata
@@ -40,7 +38,11 @@ func (factory *MetadataFactory) ToMap(element interface{}) map[string]interface{
 	v := reflect.ValueOf(element)
 	for key, value := range data.Mapping {
 		fieldValue := v.FieldByName(key).Interface()
-		m[value] = fieldValue
+		if _, ok := data.Nested[key]; ok {
+			m[value] = factory.ToMap(fieldValue)
+		} else {
+			m[value] = fieldValue
+		}
 	}
 	return m
 }
@@ -54,21 +56,37 @@ type Metadata struct {
 
 	// Mapping maps the go fields to the database fields
 	Mapping map[string]string
+
+	// Nested holds metadata for nested structs if necessary
+	Nested map[string]*Metadata
 }
 
 // NewMetadata instantiate the Metadata associated to the given struct
 // It uses the `key` tag to do the mapping, more concrete
 // examples are provided in the documentation
-func newMetadata(element interface{}) *Metadata {
+// Handles nested and recursive types
+func newMetadata(element interface{}, visited map[string]bool) *Metadata {
 	m := make(map[string]string)
+	n := make(map[string]*Metadata)
 	t := reflect.TypeOf(element)
+	visited[t.String()] = true
 	for i := 0; i < t.NumField(); i++ {
 		field := t.Field(i)
 		if tag := field.Tag.Get("key"); tag != "" {
 			m[field.Name] = tag
+			if _, ok := visited[field.Type.String()]; !ok {
+				kind := field.Type.Kind()
+				// Handle nested types. Does not handle maps
+				if kind == reflect.Struct {
+					n[field.Name] = newMetadata(reflect.New(field.Type).Elem().Interface(), visited)
+				} else if kind == reflect.Array || kind == reflect.Slice {
+					n[field.Name] = newMetadata(reflect.New(field.Type.Elem()).Elem().Interface(), visited)
+				}
+			}
 		}
 	}
 	return &Metadata{
 		m,
+		n,
 	}
 }

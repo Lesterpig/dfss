@@ -26,6 +26,17 @@ type user struct {
 
 var factory = NewMetadataFactory()
 
+func checkMapping(t *testing.T, fields, expected []string, metadata *Metadata) {
+	if len(fields) != len(metadata.Mapping) {
+		t.Error("Invalid length of mapping")
+	}
+	for idx, val := range fields {
+		if v, _ := metadata.Mapping[val]; v != expected[idx] {
+			t.Error("Expected %s to be mapped into %s, got %s", val, expected[idx], v)
+		}
+	}
+}
+
 func TestPublicFields(t *testing.T) {
 	a := animal{"pika", "mouse", 15}
 	data := factory.Metadata(a)
@@ -34,11 +45,8 @@ func TestPublicFields(t *testing.T) {
 		t.Fatal("Metadata is nil")
 	}
 
-	mapping := data.Mapping
-	fmt.Println(mapping)
-	if len(mapping) != 3 || mapping["Name"] != "Name" || mapping["Race"] != "Race" || mapping["Age"] != "Age" {
-		t.Fatal("Mapping not correctly built")
-	}
+	fmt.Println(data.Mapping)
+	checkMapping(t, []string{"Name", "Race", "Age"}, []string{"Name", "Race", "Age"}, data)
 }
 
 func TestPrivateFields(t *testing.T) {
@@ -49,11 +57,8 @@ func TestPrivateFields(t *testing.T) {
 		t.Fatal("Metadata is nil")
 	}
 
-	mapping := data.Mapping
-	fmt.Println(mapping)
-	if len(mapping) != 4 || mapping["firstName"] != "f" || mapping["lastName"] != "l" || mapping["address"] != "a" || mapping["ani"] != "ani" {
-		t.Fatal("Mapping not correctly built")
-	}
+	fmt.Println(data.Mapping)
+	checkMapping(t, []string{"firstName", "lastName", "address", "ani"}, []string{"f", "l", "a", "ani"}, data)
 }
 
 func TestUnmappedFields(t *testing.T) {
@@ -64,9 +69,56 @@ func TestUnmappedFields(t *testing.T) {
 		t.Fatal("Metadata is nil")
 	}
 
-	mapping := data.Mapping
-	fmt.Println(mapping)
-	if len(mapping) != 2 || mapping["mail"] != "_id" || mapping["login"] != "login" {
-		t.Fatal("Mapping not correctly built")
+	fmt.Println(data.Mapping)
+	checkMapping(t, []string{"mail", "login"}, []string{"_id", "login"}, data)
+}
+
+func TestNestedTypes(t *testing.T) {
+	// Struct to check right mapping with nested types
+	type node struct {
+		u       user      `key:"u"`
+		ptr     *node     `key:"ptr"`
+		animals [3]animal `key:"animals"`
+		persons []person  `key:"persons"`
 	}
+
+	f := NewMetadataFactory()
+
+	var animals [3]animal
+	persons := make([]person, 1)
+	ptr := &node{}
+	user := user{}
+
+	animals[0] = animal{"carapuce", "turtle", 10}
+	animals[1] = animal{"salameche", "lizard", 10}
+	persons = append(persons, person{"Adam", "Douglas", "Earth", animals[0]})
+	n := node{
+		user,
+		ptr,
+		animals,
+		persons,
+	}
+
+	metadata := f.Metadata(n)
+	nestedNode := metadata.Nested
+	if len(nestedNode) != 3 {
+		t.Error("Expected only 3 nested entities")
+	}
+	metaUser, ok := nestedNode["u"]
+	if !ok {
+		t.Error("Expected mapping of User entity")
+	}
+	metaAnimals, ok := nestedNode["animals"]
+	if !ok {
+		t.Error("Expected mapping of Animal entity")
+	}
+	metaPersons, ok := nestedNode["persons"]
+	if !ok {
+		t.Error("Expected mapping of Person entity")
+	}
+
+	checkMapping(t, []string{"mail", "login"}, []string{"_id", "login"}, metaUser)
+	checkMapping(t, []string{"Name", "Race", "Age"}, []string{"Name", "Race", "Age"}, metaAnimals)
+	checkMapping(t, []string{"firstName", "lastName", "address", "ani"}, []string{"f", "l", "a", "ani"}, metaPersons)
+
 }
