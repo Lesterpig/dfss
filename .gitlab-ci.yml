@@ -3,6 +3,7 @@ before_script:
 
 stages:
   - test
+  - deploy
 
 Unit tests:
   stage: test
@@ -71,3 +72,17 @@ Code lint:
     - "cd $GOPATH/src/dfss && go install ./..."
     - "gometalinter --install"
     - "gometalinter -t --deadline=600s -j1 --skip=api --skip=fixtures ./..."
+
+Deploy:
+  stage: deploy
+  only:
+    - /^v[0-9]/
+    - master
+  tags:
+    - golang
+    - strong
+  script:
+    - "ln -s -f $(pwd) $GOPATH/src/dfss"
+    - "./build/deps.sh"
+    - "make release"
+    - "make deploy"

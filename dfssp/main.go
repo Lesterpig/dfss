@@ -26,7 +26,7 @@ func init() {
 	flag.StringVar(&port, "p", "9000", "Default port listening")
 	flag.StringVar(&address, "a", "0.0.0.0", "Default address to bind for listening")
 
-	flag.StringVar(&path, "path", authority.GetHomeDir(), "Path for the platform's private key and root certificate")
+	flag.StringVar(&path, "path", ".", "Path for the platform's private key and root certificate")
 	flag.StringVar(&country, "country", "France", "Country for the root certificate")
 	flag.StringVar(&org, "org", "DFSS", "Organization for the root certificate")
 	flag.StringVar(&unit, "unit", "INSA Rennes", "Organizational unit for the root certificate")

@@ -5,7 +5,6 @@ import (
 	"crypto/x509"
 	"dfss/auth"
 	"io/ioutil"
-	"os/user"
 	"path/filepath"
 )
 
@@ -20,17 +19,6 @@ const (
 type PlatformID struct {
 	Pkey   *rsa.PrivateKey
 	RootCA *x509.Certificate
-}
-
-// GetHomeDir determines the home directory of the current user.
-func GetHomeDir() string {
-	usr, err := user.Current()
-
-	if err != nil {
-		panic(err)
-	}
-
-	return usr.HomeDir
 }
 
 // GenerateRootCA constructs a self-signed certificate, using a unique serial number randomly generated
