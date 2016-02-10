@@ -18,7 +18,7 @@ type Builder struct {
 	in             *api.PostContractRequest
 	signers        []entities.User
 	missingSigners []string
-	contract       *entities.Contract
+	Contract       *entities.Contract
 }
 
 // NewContractBuilder creates a new builder from current context.
@@ -54,7 +54,7 @@ func (c *Builder) Execute() *api.ErrorCode {
 		c.sendPendingContractMail()
 		return &api.ErrorCode{Code: api.ErrorCode_WARNING, Message: "Some users are not ready yet"}
 	}
-	c.sendNewContractMail()
+	c.SendNewContractMail()
 	return &api.ErrorCode{Code: api.ErrorCode_SUCCESS}
 
 }
@@ -127,41 +127,41 @@ func (c *Builder) addContract() error {
 	contract.File.Hosted = false
 
 	_, err := c.m.Get("contracts").Insert(contract)
-	c.contract = contract
+	c.Contract = contract
 
 	return err
 }
 
-// sendNewContractMail sends a mail to each known signer in a contract containing the DFSS file
-func (c *Builder) sendNewContractMail() {
+// SendNewContractMail sends a mail to each known signer in a contract containing the DFSS file
+func (c *Builder) SendNewContractMail() {
 	conn := templates.MailConn()
 	if conn == nil {
 		return
 	}
 	defer func() { _ = conn.Close() }()
 
-	rcpts := make([]string, len(c.contract.Signers))
-	for i, s := range c.contract.Signers {
+	rcpts := make([]string, len(c.Contract.Signers))
+	for i, s := range c.Contract.Signers {
 		rcpts[i] = s.Email
 	}
 
-	content, err := templates.Get("contract", c)
+	content, err := templates.Get("contract", c.Contract)
 	if err != nil {
 		log.Println(err)
 		return
 	}
 
-	file, err := GetJSON(c.contract, nil)
+	file, err := GetJSON(c.Contract, nil)
 	if err != nil {
 		log.Println(err)
 		return
 	}
 
-	fileSmallHash := c.contract.ID.Hex()[0:8] // Pretty hash instead of huge one
+	fileSmallHash := c.Contract.ID.Hex()
 
 	_ = conn.Send(
 		rcpts,
-		"[DFSS] You are invited to sign "+c.contract.File.Name,
+		"[DFSS] You are invited to sign "+c.Contract.File.Name,
 		content,
 		[]string{"application/json"},
 		[]string{fileSmallHash + ".json"},
@@ -177,11 +177,11 @@ func (c *Builder) sendPendingContractMail() {
 	}
 	defer func() { _ = conn.Close() }()
 
-	content, err := templates.Get("invitation", c)
+	content, err := templates.Get("invitation", c.Contract)
 	if err != nil {
 		log.Println(err)
 		return
 	}
 
-	_ = conn.Send(c.missingSigners, "[DFSS] You are invited to sign "+c.contract.File.Name, content, nil, nil, nil)
+	_ = conn.Send(c.missingSigners, "[DFSS] You are invited to sign "+c.Contract.File.Name, content, nil, nil, nil)
 }

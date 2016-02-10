@@ -3,16 +3,16 @@ package user
 import (
 	"crypto/rand"
 	"crypto/rsa"
-	"crypto/sha512"
 	"crypto/x509"
 	"errors"
 	"fmt"
-	"io"
+	"log"
 	"time"
 
 	"dfss/auth"
 	"dfss/dfssp/api"
 	"dfss/dfssp/authority"
+	"dfss/dfssp/contract"
 	"dfss/dfssp/entities"
 	"dfss/dfssp/templates"
 	"dfss/mgdb"
@@ -167,12 +167,8 @@ func generateUserCert(csr string, certDuration int, parent *x509.Certificate, ke
 		return nil, nil, err
 	}
 
-	h := sha512.New()
-	_, err = io.WriteString(h, string(cert))
-	if err != nil {
-		return nil, nil, err
-	}
-	certHash := h.Sum(nil)
+	c, _ := auth.PEMToCertificate(cert)
+	certHash := auth.GetCertificateHash(c)
 
 	return cert, certHash, nil
 }
@@ -227,7 +223,8 @@ func Auth(pid *authority.PlatformID, manager *mgdb.MongoManager, certDuration in
 	}
 
 	user.Certificate = string(cert)
-	user.CertHash = string(certHash)
+	user.CertHash = fmt.Sprintf("%x", certHash)
+	user.Expiration = time.Now().AddDate(0, 0, certDuration)
 
 	// Updating the database
 	ok, err := manager.Get("users").UpdateByID(user)
@@ -235,6 +232,46 @@ func Auth(pid *authority.PlatformID, manager *mgdb.MongoManager, certDuration in
 		return nil, err
 	}
 
+	// Update missed contracts in background
+	go launchMissedContracts(manager, &user)
+
 	// Returning the RegisteredUser message
 	return &api.RegisteredUser{ClientCert: user.Certificate}, nil
+}
+
+func launchMissedContracts(manager *mgdb.MongoManager, user *entities.User) {
+
+	repository := entities.NewContractRepository(manager.Get("contracts"))
+	contracts, err := repository.GetWaitingForUser(user.Email)
+	if err != nil {
+		log.Println("Cannot get missed contracts for user", user.Email + ":", err)
+	}
+
+	for _, c := range contracts {
+
+		c.Ready = true
+		for i := range c.Signers {
+			if c.Signers[i].Email == user.Email {
+				c.Signers[i].Hash = user.CertHash
+				c.Signers[i].UserID = user.ID
+			}
+			if len(c.Signers[i].Hash) == 0 {
+				c.Ready = false
+			}
+		}
+
+		// Update contract in database
+		_, err = repository.Collection.UpdateByID(c)
+		if err != nil {
+			log.Println("Cannot update missed contract", c.ID, "for user", user.Email + ":", err)
+		}
+
+		if c.Ready {
+			// Send required mails
+			builder := contract.NewContractBuilder(manager, nil)
+			builder.Contract = &c
+			builder.SendNewContractMail()
+		}
+	}
+
 }

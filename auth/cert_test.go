@@ -145,6 +145,16 @@ func TestGetCertificate(t *testing.T) {
 
 }
 
+func TestGetCertificateHash(t *testing.T) {
+	crt, _ := PEMToCertificate([]byte(crtFixture))
+	res := GetCertificateHash(crt)
+	expected := "5c68072d750aa6c24c96e0b984ed399b726f8664456ed74259841b207b43159c5eaddf436d8f28c48b3ef6c83e69d68d115f0f0e4cf71001c2ca599a6ff7a0c1"
+
+	if fmt.Sprintf("%x", res) != expected {
+		t.Fatalf("Bad hash")
+	}
+}
+
 func ExampleGetCertificate() {
 
 	// Load elements from PEM files

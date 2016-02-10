@@ -34,7 +34,7 @@ func TestMain(m *testing.M) {
 		os.Exit(1)
 	}
 
-	collection = manager.Get("demo")
+	collection = manager.Get("contracts")
 	repository = entities.NewContractRepository(collection)
 
 	// Start platform server
@@ -83,6 +83,7 @@ func assertContractEqual(t *testing.T, contract, fetched entities.Contract) {
 
 // Insert a contract with 2 users and check the fields are correctly persisted
 func TestInsertContract(t *testing.T) {
+	dropDataset()
 	c := entities.NewContract()
 	c.AddSigner(nil, "mail1", "hash1")
 	c.AddSigner(nil, "mail1", "hash1")
@@ -108,4 +109,33 @@ func TestInsertContract(t *testing.T) {
 	}
 
 	assertContractEqual(t, *c, fetched)
+}
+
+// Insert some contracts with missing user and test waiting contracts for this user
+func TestGetWaitingForUser(t *testing.T) {
+
+	knownID := bson.NewObjectId()
+
+	dropDataset()
+	c1 := entities.NewContract()
+	c1.AddSigner(nil, "mail1", "")
+	c1.Ready = false
+
+	c2 := entities.NewContract()
+	c2.AddSigner(nil, "mail1", "")
+	c2.AddSigner(&knownID, "mail2", "hash")
+	c2.Ready = false
+
+	c3 := entities.NewContract()
+	c3.AddSigner(nil, "mail2", "")
+	c3.AddSigner(&knownID, "mail1", "hash")
+	c3.Ready = false
+
+	_, _ = repository.Collection.Insert(c1)
+	_, _ = repository.Collection.Insert(c2)
+	_, _ = repository.Collection.Insert(c3)
+
+	contracts, err := repository.GetWaitingForUser("mail1")
+	assert.Equal(t, nil, err)
+	assert.Equal(t, 2, len(contracts))
 }
