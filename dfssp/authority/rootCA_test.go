@@ -16,26 +16,6 @@ func TestMain(m *testing.M) {
 	os.Exit(m.Run())
 }
 
-func TestGetHomeDir(t *testing.T) {
-	res := GetHomeDir()
-
-	if res == "" {
-		t.Fatal("Result is empty")
-	}
-}
-
-func TestGenerateRootCA(t *testing.T) {
-	res, err := GenerateRootCA(365, "country", "organization", "unit", "cn", pkey)
-
-	if res == nil || err != nil {
-		t.Fatal(err)
-	}
-
-	if res[0] != '-' {
-		t.Fatalf("Bad format\n%s", res)
-	}
-}
-
 func TestInitialize(t *testing.T) {
 	path := os.TempDir()
 	keyPath := filepath.Join(path, PkeyFileName)
