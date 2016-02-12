@@ -77,8 +77,8 @@ func (manager *MongoCollection) Insert(entity interface{}) (bool, error) {
 // UpdateByID updates the entity with the new value provided.
 // The _id of an Entity cannot be changed this way
 func (manager *MongoCollection) UpdateByID(entity interface{}) (bool, error) {
-	m := manager.factory.ToMap(entity)
-	err := manager.Collection.Update(map[string]interface{}{"_id": m["_id"]}, entity)
+	m := manager.factory.GetID(entity)
+	err := manager.Collection.Update(map[string]interface{}{"_id": m}, entity)
 	return err == nil, err
 }
 
@@ -93,8 +93,8 @@ func (manager *MongoCollection) UpdateAll(selector interface{}, update interface
 
 // FindByID fill the entity from the document with matching id
 func (manager *MongoCollection) FindByID(id interface{}, result interface{}) error {
-	m := manager.factory.ToMap(id)
-	err := manager.Collection.Find(map[string]interface{}{"_id": m["_id"]}).One(result)
+	m := manager.factory.GetID(id)
+	err := manager.Collection.Find(map[string]interface{}{"_id": m}).One(result)
 	return err
 }
 
@@ -114,8 +114,8 @@ func (manager *MongoCollection) FindAll(query interface{}, result interface{}) e
 // DeleteByID deletes the entity matching the id
 // Return true if the delection was successful
 func (manager *MongoCollection) DeleteByID(id interface{}) (bool, error) {
-	m := manager.factory.ToMap(id)
-	err := manager.Collection.Remove(bson.M{"_id": m["_id"]})
+	m := manager.factory.GetID(id)
+	err := manager.Collection.Remove(bson.M{"_id": m})
 	return err == nil, err
 }
 

@@ -1,6 +1,9 @@
 package mgdb
 
-import "reflect"
+import (
+	"fmt"
+	"reflect"
+)
 
 /****************
  MetadataFactory
@@ -29,22 +32,15 @@ func (factory *MetadataFactory) Metadata(element interface{}) *Metadata {
 	return metadata
 }
 
-// ToMap uses the metadata associated to the struct to returns the map
-// of the struct. Keys are the database fields and values are the values
-// stored in the struct
-func (factory *MetadataFactory) ToMap(element interface{}) map[string]interface{} {
-	data := factory.Metadata(element)
-	m := make(map[string]interface{})
-	v := reflect.ValueOf(element)
-	for key, value := range data.Mapping {
-		fieldValue := v.FieldByName(key).Interface()
-		if _, ok := data.Nested[key]; ok {
-			m[value] = factory.ToMap(fieldValue)
-		} else {
-			m[value] = fieldValue
+// GetID gets the id field of an entity
+func (factory *MetadataFactory) GetID(entity interface{}) interface{} {
+	mapping := factory.Metadata(entity).Mapping
+	for k, v := range mapping {
+		if v == "_id" {
+			return reflect.ValueOf(entity).FieldByName(k).Interface()
 		}
 	}
-	return m
+	return nil
 }
 
 /*********
@@ -69,18 +65,23 @@ func newMetadata(element interface{}, visited map[string]bool) *Metadata {
 	m := make(map[string]string)
 	n := make(map[string]*Metadata)
 	t := reflect.TypeOf(element)
+	fmt.Println("I build the Metadata for element " + t.String() + " of Kind " + t.Kind().String())
 	visited[t.String()] = true
 	for i := 0; i < t.NumField(); i++ {
 		field := t.Field(i)
 		if tag := field.Tag.Get("key"); tag != "" {
+			fmt.Println("Processing field ", field.Name)
 			m[field.Name] = tag
 			if _, ok := visited[field.Type.String()]; !ok {
 				kind := field.Type.Kind()
 				// Handle nested types. Does not handle maps
 				if kind == reflect.Struct {
+					fmt.Println("I want the metadata of struct", reflect.New(field.Type).Elem().Interface())
 					n[field.Name] = newMetadata(reflect.New(field.Type).Elem().Interface(), visited)
-				} else if kind == reflect.Array || kind == reflect.Slice {
-					n[field.Name] = newMetadata(reflect.New(field.Type.Elem()).Elem().Interface(), visited)
+				} else if kind == reflect.Array || kind == reflect.Slice || kind == reflect.Ptr {
+					fmt.Println("Studying type ", field.Type)
+					fmt.Println("Field elem type is ", reflect.TypeOf(reflect.Indirect(reflect.New(field.Type.Elem())).Interface()))
+					n[field.Name] = newMetadata(reflect.Indirect(reflect.New(field.Type.Elem())).Interface(), visited)
 				}
 			}
 		}
