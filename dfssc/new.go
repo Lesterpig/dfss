@@ -19,6 +19,8 @@ func newContract() {
 // getContractInfo asks user for contract informations
 func getContractInfo() (passphrase string, path string, comment string, signers []string) {
 
+	signers = make([]string, 1)
+
 	var signersBuf string
 	_ = readPassword(&passphrase, false)
 	readStringParam("Contract path", "", &path)

@@ -3,6 +3,7 @@ package auth
 import (
 	"crypto/rand"
 	"crypto/rsa"
+	"crypto/sha512"
 	"crypto/x509"
 	"crypto/x509/pkix"
 	"encoding/pem"
@@ -114,6 +115,12 @@ func GetSelfSignedCertificate(days int, serial uint64, country, organization, un
 func PEMToCertificate(data []byte) (*x509.Certificate, error) {
 	block, _ := pem.Decode(data)
 	return x509.ParseCertificate(block.Bytes)
+}
+
+// GetCertificateHash returns the SHA512 hash of a certificate
+func GetCertificateHash(cert *x509.Certificate) []byte {
+	h := sha512.Sum512(cert.Raw)
+	return h[:]
 }
 
 // GenerateUID generates a unique identifier as a uint64

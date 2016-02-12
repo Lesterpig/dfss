@@ -69,3 +69,17 @@ func NewContractRepository(collection *mgdb.MongoCollection) *ContractRepository
 		collection,
 	}
 }
+
+// GetWaitingForUser returns contracts waiting a specific unauthenticated user to start
+func (r *ContractRepository) GetWaitingForUser(email string) ([]Contract, error) {
+	var res []Contract
+	err := r.Collection.FindAll(bson.M{
+		"ready": false,
+		"signers": bson.M{
+			"$elemMatch": bson.M{
+				"email" : email,
+				"hash" : "",
+			}},
+	}, &res)
+	return res, err
+}
