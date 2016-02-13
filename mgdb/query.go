@@ -1,7 +1,5 @@
 package mgdb
 
-import "reflect"
-
 // Selector allow a user to build a selector like an struct
 type Selector struct {
 	factory  *MetadataFactory       // The MetadataFactory for getting nested metadata
@@ -27,7 +25,7 @@ func (s *Selector) AddChild(name string) *Selector {
 	nestedType, ok := s.metadata.Nested[name]
 	mapped, _ := s.metadata.Mapping[name]
 	if ok {
-		selector := NewSelector(s.factory, factory.Metadata(reflect.New(nestedType).Interface()), s)
+		selector := NewSelector(s.factory, s.factory.metadatas[nestedType], s)
 		s.maps[mapped] = selector.childs
 		s.childs[mapped] = selector
 		return selector
