@@ -77,9 +77,9 @@ func TestNestedTypes(t *testing.T) {
 	// Struct to check right mapping with nested types
 	type node struct {
 		u       user      `key:"u"`
-		ptr     *node     `key:"ptr"`
 		animals [3]animal `key:"animals"`
 		persons []person  `key:"persons"`
+		ptr     *node     `key:"ptr"`
 	}
 
 	f := NewMetadataFactory()
@@ -94,31 +94,39 @@ func TestNestedTypes(t *testing.T) {
 	persons = append(persons, person{"Adam", "Douglas", "Earth", animals[0]})
 	n := node{
 		user,
-		ptr,
 		animals,
 		persons,
+		ptr,
 	}
 
 	metadata := f.Metadata(n)
 	nestedNode := metadata.Nested
-	if len(nestedNode) != 3 {
-		t.Error("Expected only 3 nested entities")
+	fmt.Printf("%s\n", nestedNode)
+	// We check that all the nested types are there
+	if len(nestedNode) != 4 {
+		t.Error("Expected nested entities")
 	}
-	metaUser, ok := nestedNode["u"]
+	typeUser, ok := nestedNode["u"]
 	if !ok {
-		t.Error("Expected mapping of User entity")
+		t.Error("Expected a nested user")
 	}
-	metaAnimals, ok := nestedNode["animals"]
+	typeAnimal, ok := nestedNode["animals"]
 	if !ok {
-		t.Error("Expected mapping of Animal entity")
+		t.Error("Expected a nested animal")
 	}
-	metaPersons, ok := nestedNode["persons"]
+	typePerson, ok := nestedNode["persons"]
 	if !ok {
-		t.Error("Expected mapping of Person entity")
+		t.Error("Expected a nested person")
+	}
+	typeNode, ok := nestedNode["ptr"]
+	if !ok {
+		t.Error("Expected a nested node")
 	}
 
-	checkMapping(t, []string{"mail", "login"}, []string{"_id", "login"}, metaUser)
-	checkMapping(t, []string{"Name", "Race", "Age"}, []string{"Name", "Race", "Age"}, metaAnimals)
-	checkMapping(t, []string{"firstName", "lastName", "address", "ani"}, []string{"f", "l", "a", "ani"}, metaPersons)
+	// We check that the mapping has been done
+	checkMapping(t, []string{"mail", "login"}, []string{"_id", "login"}, f.metadatas[typeUser])
+	checkMapping(t, []string{"Name", "Race", "Age"}, []string{"Name", "Race", "Age"}, f.metadatas[typeAnimal])
+	checkMapping(t, []string{"firstName", "lastName", "address", "ani"}, []string{"f", "l", "a", "ani"}, f.metadatas[typePerson])
+	checkMapping(t, []string{"u", "animals", "persons", "ptr"}, []string{"u", "animals", "persons", "ptr"}, f.metadatas[typeNode])
 
 }
