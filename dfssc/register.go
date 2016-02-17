@@ -80,6 +80,15 @@ func readIntParam(message, def string, ptr *int) {
 
 // Get the password from standard input
 func readPassword(ptr *string, needConfirm bool) error {
+
+	if !terminal.IsTerminal(0) {
+		fmt.Println("+------------------------- WARNING --------------------------+")
+		fmt.Println("| This is not a UNIX terminal, your password will be visible |")
+		fmt.Println("+------------------------- WARNING --------------------------+")
+		readStringParam("Enter your passphrase", "", ptr)
+		return nil
+	}
+
 	oldState, err := terminal.MakeRaw(0)
 	if err != nil {
 		return err
