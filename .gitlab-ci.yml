@@ -71,7 +71,7 @@ Code lint:
     - "./build/deps.sh"
     - "cd $GOPATH/src/dfss && go install ./..."
     - "gometalinter --install"
-    - "gometalinter -t --deadline=600s -j1 --skip=api --skip=fixtures ./..."
+    - "gometalinter -t --deadline=600s -j1 --skip=api --skip=fixtures --disable=aligncheck ./..."
 
 Deploy:
   stage: deploy
