@@ -35,6 +35,7 @@ func registerUser() {
 	err = readPassword(&passphrase, true)
 	if err != nil {
 		fmt.Println("An error occurred:", err.Error())
+		os.Exit(1)
 		return
 	}
 
@@ -42,8 +43,12 @@ func registerUser() {
 	err = user.Register(fca, fcert, fkey, addrPort, passphrase, country, organization, unit, mail, bits)
 	if err != nil {
 		fmt.Println("An error occurred:", err.Error())
+		os.Exit(2)
 	}
 }
+
+// We need to use ONLY ONE reader: buffio buffers some data (= consumes from stdin)
+var reader *bufio.Reader
 
 // Get a string parameter from standard input
 func readStringParam(message, def string, ptr *string) {
@@ -53,7 +58,9 @@ func readStringParam(message, def string, ptr *string) {
 	}
 	fmt.Print(": ")
 
-	reader := bufio.NewReader(os.Stdin)
+	if reader == nil {
+		reader = bufio.NewReader(os.Stdin)
+	}
 	value, _ := reader.ReadString('\n')
 
 	// Trim newline symbols

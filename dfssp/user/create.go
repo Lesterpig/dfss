@@ -42,10 +42,11 @@ func checkRegisterRequest(in *api.RegisterRequest) *api.ErrorCode {
 // Send the verification email in response to the specified registration request
 //
 // This method should only be called AFTER checking the RegisterRequest for validity
-func sendVerificationMail(in *api.RegisterRequest, token string) error {
+func sendVerificationMail(in *api.RegisterRequest, token string) {
 	conn := templates.MailConn()
 	if conn == nil {
-		return errors.New("Couldn't connect to the dfssp mail server")
+		log.Println("Couldn't connect to the dfssp mail server")
+		return
 	}
 	defer func() { _ = conn.Close() }()
 
@@ -54,7 +55,8 @@ func sendVerificationMail(in *api.RegisterRequest, token string) error {
 	mail := templates.VerificationMail{Token: token}
 	content, err := templates.Get("verificationMail", mail)
 	if err != nil {
-		return err
+		log.Println(err)
+		return
 	}
 
 	err = conn.Send(
@@ -66,10 +68,9 @@ func sendVerificationMail(in *api.RegisterRequest, token string) error {
 		nil,
 	)
 	if err != nil {
-		return err
+		log.Println(err)
+		return
 	}
-
-	return nil
 }
 
 // Register checks if the registration request is valid, and if so,
@@ -117,10 +118,7 @@ func Register(manager *mgdb.MongoManager, in *api.RegisterRequest) (*api.ErrorCo
 	}
 
 	// Sending the email
-	err = sendVerificationMail(in, token)
-	if err != nil {
-		return &api.ErrorCode{Code: api.ErrorCode_INTERR, Message: "Error during the sending of the email"}, err
-	}
+	sendVerificationMail(in, token)
 
 	return &api.ErrorCode{Code: api.ErrorCode_SUCCESS, Message: "Registration successful ; email sent"}, nil
 }
