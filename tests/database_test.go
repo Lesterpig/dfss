@@ -9,7 +9,6 @@ import (
 var dbURI string
 var dbManager *mgdb.MongoManager
 
-// EraseDatabase drops the test database.
 func eraseDatabase() {
 	_ = dbManager.Database.DropDatabase()
 }
@@ -24,4 +23,12 @@ func getRegistrationToken(mail string) string {
 		return "badToken"
 	}
 	return user.RegToken
+}
+
+func getContract(file string, skip int) *entities.Contract {
+	var contract entities.Contract
+	_ = dbManager.Get("contracts").Collection.Find(bson.M{
+		"file.name": file,
+	}).Sort("_id").Skip(skip).One(&contract)
+	return &contract
 }

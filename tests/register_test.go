@@ -23,6 +23,9 @@ import (
 // client5 : wrong key size
 // client6 : wrong mail during auth
 // client7 : wrong token during auth
+//
+// TODO Add expired accounts test
+// TODO Add Stderr test
 func TestRegisterAuth(t *testing.T) {
 	// Cleanup
 	eraseDatabase()

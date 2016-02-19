@@ -43,6 +43,8 @@ Integration tests:
   tags:
     - golang
     - mongo
+  services:
+    - "lesterpig/mongo:latest"
   script:
     - "ln -s -f $(pwd) $GOPATH/src/dfss"
     - "./build/deps.sh"

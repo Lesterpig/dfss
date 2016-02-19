@@ -1,18 +1,22 @@
 package tests
 
 import (
+	"bytes"
 	"io/ioutil"
 	"os"
 	"os/exec"
 	"path/filepath"
 	"strconv"
+	"testing"
+
+	"github.com/bmizerany/assert"
 )
 
 const testPort = "9090"
 
 var currentClient = 0
 
-// StartPlatform creates root certificate for the platform and starts the platform.
+// startPlatform creates root certificate for the platform and starts the platform.
 func startPlatform(tmpDir string) (*exec.Cmd, []byte, error) {
 	path := filepath.Join(os.Getenv("GOPATH"), "bin", "dfssp")
 
@@ -44,7 +48,7 @@ func startPlatform(tmpDir string) (*exec.Cmd, []byte, error) {
 	return cmd, ca, err
 }
 
-// CreateClient creates a new working directory for a client, creating ca.pem.
+// createClient creates a new working directory for a client, creating ca.pem.
 // It returns a ready-to-run command, but you probably want to set the last argument of the command.
 func createClient(tmpDir string, ca []byte) (*exec.Cmd, error) {
 	path := filepath.Join(os.Getenv("GOPATH"), "bin", "dfssc")
@@ -71,12 +75,11 @@ func createClient(tmpDir string, ca []byte) (*exec.Cmd, error) {
 	// The last argument is up to you!
 	cmd := exec.Command(path, "-ca", caPath, "-cert", certPath, "-host", "localhost:"+testPort, "-key", keyPath, "-v")
 
-	cmd.Stdout = os.Stdout
-	cmd.Stderr = os.Stderr
-
 	return cmd, nil
 }
 
+// newClient clones the current command to another one.
+// It's very useful when doing several commands on the same client.
 func newClient(old *exec.Cmd) *exec.Cmd {
 	cmd := exec.Command(old.Path)
 	cmd.Args = old.Args
@@ -85,10 +88,26 @@ func newClient(old *exec.Cmd) *exec.Cmd {
 	return cmd
 }
 
-// SetLastArg sets or updates the last argument of a command.
+// setLastArg sets or updates the last argument of a command.
 func setLastArg(cmd *exec.Cmd, str string, override bool) {
 	if override {
 		cmd.Args = cmd.Args[:(len(cmd.Args) - 1)]
 	}
 	cmd.Args = append(cmd.Args, str)
+}
+
+// checkStderr runs the provided command and compares the stderr output with the given one.
+// It returns the value of cmd.Wait()
+func checkStderr(t *testing.T, cmd *exec.Cmd, value string) error {
+	cmd.Stderr = nil
+	stderr, _ := cmd.StderrPipe()
+	err := cmd.Start()
+	assert.Equal(t, nil, err)
+
+	buf := new(bytes.Buffer)
+	_, _ = buf.ReadFrom(stderr)
+	s := buf.String()
+	assert.Equal(t, value, s)
+
+	return cmd.Wait()
 }

@@ -13,8 +13,8 @@ func newContract() {
 	passphrase, filepath, comment, signers := getContractInfo()
 	err := sign.NewCreateManager(fca, fcert, fkey, addrPort, passphrase, filepath, comment, signers)
 	if err != nil {
-		fmt.Println(err)
-		os.Exit(4)
+		fmt.Fprintln(os.Stderr, err)
+		os.Exit(1)
 	}
 }
 
