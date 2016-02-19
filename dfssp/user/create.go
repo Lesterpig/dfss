@@ -244,7 +244,7 @@ func launchMissedContracts(manager *mgdb.MongoManager, user *entities.User) {
 	repository := entities.NewContractRepository(manager.Get("contracts"))
 	contracts, err := repository.GetWaitingForUser(user.Email)
 	if err != nil {
-		log.Println("Cannot get missed contracts for user", user.Email + ":", err)
+		log.Println("Cannot get missed contracts for user", user.Email+":", err)
 	}
 
 	for _, c := range contracts {
@@ -263,7 +263,7 @@ func launchMissedContracts(manager *mgdb.MongoManager, user *entities.User) {
 		// Update contract in database
 		_, err = repository.Collection.UpdateByID(c)
 		if err != nil {
-			log.Println("Cannot update missed contract", c.ID, "for user", user.Email + ":", err)
+			log.Println("Cannot update missed contract", c.ID, "for user", user.Email+":", err)
 		}
 
 		if c.Ready {

@@ -29,7 +29,7 @@ type TTPJSON struct {
 // JSON is the structure used to store contract information in JSON format
 type JSON struct {
 	UUID     string
-	Date     time.Time
+	Date     *time.Time
 	Comment  string
 	File     *FileJSON
 	Signers  []SignerJSON
@@ -42,7 +42,7 @@ func GetJSON(c *entities.Contract, ttp *TTPJSON) ([]byte, error) {
 
 	data := JSON{
 		UUID:    c.ID.Hex(),
-		Date:    c.Date,
+		Date:    &c.Date,
 		Comment: c.Comment,
 		File: &FileJSON{
 			Name:   c.File.Name,
