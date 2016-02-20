@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"os"
 
 	"dfss/dfssc/user"
 )
@@ -16,5 +17,6 @@ func authUser() {
 	err := user.Authenticate(fca, fcert, addrPort, mail, token)
 	if err != nil {
 		fmt.Println("An error occurred : ", err.Error())
+		os.Exit(3)
 	}
 }

@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"os"
 
 	"dfss/dfssc/sign"
 )
@@ -12,7 +13,8 @@ func newContract() {
 	passphrase, filepath, comment, signers := getContractInfo()
 	err := sign.NewCreateManager(fca, fcert, fkey, addrPort, passphrase, filepath, comment, signers)
 	if err != nil {
-		fmt.Println(err)
+		fmt.Fprintln(os.Stderr, err)
+		os.Exit(1)
 	}
 }
 
