@@ -13,7 +13,7 @@ clean:
 
 build_all:
 	go get github.com/mitchellh/gox
-	gox -os "linux darwin windows" -parallel 1 -output "release/dfss_${VERSION}_{{.OS}}_{{.Arch}}/{{.Dir}}" dfss/dfssc dfss/dfssd dfss/dfssp
+	gox -os "linux darwin windows" -parallel 1 -output "release/dfss_${VERSION}_{{.OS}}_{{.Arch}}/{{.Dir}}" dfss/dfssc dfss/dfssd dfss/dfssp dfss/dfsst
 
 package:
 	echo "$(VERSION) $(REVISION)" > build/embed/VERSION
