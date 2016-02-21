@@ -56,8 +56,8 @@ func TestAddSigner(t *testing.T) {
 
 	id := bson.NewObjectId()
 
-	c.AddSigner(nil, "mail1", "hash1")
-	c.AddSigner(&id, "mail2", "hash2")
+	c.AddSigner(nil, "mail1", []byte{0xaa})
+	c.AddSigner(&id, "mail2", []byte{})
 
 	signers := c.Signers
 
@@ -66,10 +66,10 @@ func TestAddSigner(t *testing.T) {
 	}
 
 	assert.Equal(t, signers[0].Email, "mail1")
-	assert.Equal(t, signers[0].Hash, "hash1")
+	assert.Equal(t, signers[0].Hash, []byte{0xaa})
 	assert.Equal(t, signers[0].UserID.Hex(), "000000000000000000000000")
 	assert.Equal(t, signers[1].Email, "mail2")
-	assert.Equal(t, signers[1].Hash, "hash2")
+	assert.Equal(t, signers[1].Hash, []byte{})
 	assert.Equal(t, signers[1].UserID.Hex(), id.Hex())
 }
 
@@ -85,10 +85,10 @@ func assertContractEqual(t *testing.T, contract, fetched entities.Contract) {
 func TestInsertContract(t *testing.T) {
 	dropDataset()
 	c := entities.NewContract()
-	c.AddSigner(nil, "mail1", "hash1")
-	c.AddSigner(nil, "mail1", "hash1")
+	c.AddSigner(nil, "mail1", []byte{0xaa})
+	c.AddSigner(nil, "mail1", []byte{0xaa})
 	c.File.Name = "file"
-	c.File.Hash = "hashFile"
+	c.File.Hash = []byte{0xff}
 	c.File.Hosted = false
 	c.Comment = "comment"
 	c.Ready = true
@@ -118,17 +118,17 @@ func TestGetWaitingForUser(t *testing.T) {
 
 	dropDataset()
 	c1 := entities.NewContract()
-	c1.AddSigner(nil, "mail1", "")
+	c1.AddSigner(nil, "mail1", []byte{})
 	c1.Ready = false
 
 	c2 := entities.NewContract()
-	c2.AddSigner(nil, "mail1", "")
-	c2.AddSigner(&knownID, "mail2", "hash")
+	c2.AddSigner(nil, "mail1", []byte{})
+	c2.AddSigner(&knownID, "mail2", []byte{0x12})
 	c2.Ready = false
 
 	c3 := entities.NewContract()
-	c3.AddSigner(nil, "mail2", "")
-	c3.AddSigner(&knownID, "mail1", "hash")
+	c3.AddSigner(nil, "mail2", []byte{})
+	c3.AddSigner(&knownID, "mail1", []byte{0xaa})
 	c3.Ready = false
 
 	_, _ = repository.Collection.Insert(c1)

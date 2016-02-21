@@ -57,7 +57,7 @@ message Empty {
 // PostContractRequest message contains the contract as SHA-512 hash, its filename,
 // the list of signers as an array of strings, and a comment
 message PostContractRequest {
-	string hash = 1;
+	bytes hash = 1;
 	string filename = 2;
 	repeated string signer = 3;
 	string comment = 4;

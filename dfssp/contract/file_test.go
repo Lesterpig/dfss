@@ -20,12 +20,12 @@ func TestGetJSON(t *testing.T) {
 allow multiline and accents: éÉ`,
 		File: &entities.File{
 			Name:   "filename.pdf",
-			Hash:   "hash",
+			Hash:   []byte{0x01, 0x02},
 			Hosted: false,
 		},
 		Signers: []entities.Signer{
-			entities.Signer{Email: "a", Hash: "ha"},
-			entities.Signer{Email: "b", Hash: "hb"},
+			entities.Signer{Email: "a", Hash: []byte{0xaa}},
+			entities.Signer{Email: "b", Hash: []byte{0xbb}},
 		},
 	}
 
@@ -35,17 +35,17 @@ allow multiline and accents: éÉ`,
   "Comment": "A test comment\nallow multiline and accents: éÉ",
   "File": {
     "Name": "filename.pdf",
-    "Hash": "hash",
+    "Hash": "0102",
     "Hosted": false
   },
   "Signers": [
     {
       "Email": "a",
-      "Hash": "ha"
+      "Hash": "aa"
     },
     {
       "Email": "b",
-      "Hash": "hb"
+      "Hash": "bb"
     }
   ],
   "Sequence": null,

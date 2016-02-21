@@ -10,7 +10,7 @@ import (
 // File : Represents a file structure
 type File struct {
 	Name   string `key:"name" bson:"name"`     // Name of the File
-	Hash   string `key:"hash" bson:"hash"`     // Hash of the File
+	Hash   []byte `key:"hash" bson:"hash"`     // Hash of the File
 	Hosted bool   `key:"hosted" bson:"hosted"` // True if hosted on the platform, else false
 }
 
@@ -18,7 +18,7 @@ type File struct {
 type Signer struct {
 	UserID bson.ObjectId `key:"userId" bson:"userId"`
 	Email  string        `key:"email" bson:"email"`
-	Hash   string        `key:"hash" bson:"hash"`
+	Hash   []byte        `key:"hash" bson:"hash"`
 }
 
 // Contract : Informations about a contract to be signed
@@ -44,7 +44,7 @@ func NewContract() *Contract {
 }
 
 // AddSigner : Add a signer to the contract
-func (c *Contract) AddSigner(id *bson.ObjectId, email, hash string) {
+func (c *Contract) AddSigner(id *bson.ObjectId, email string, hash []byte) {
 	signer := &Signer{}
 	signer.Email = email
 
@@ -78,7 +78,7 @@ func (r *ContractRepository) GetWaitingForUser(email string) ([]Contract, error)
 		"signers": bson.M{
 			"$elemMatch": bson.M{
 				"email": email,
-				"hash":  "",
+				"hash":  []byte{},
 			}},
 	}, &res)
 	return res, err

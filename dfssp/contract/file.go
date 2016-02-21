@@ -2,6 +2,7 @@ package contract
 
 import (
 	"encoding/json"
+	"fmt"
 	"time"
 
 	"dfss/dfssp/entities"
@@ -46,7 +47,7 @@ func GetJSON(c *entities.Contract, ttp *TTPJSON) ([]byte, error) {
 		Comment: c.Comment,
 		File: &FileJSON{
 			Name:   c.File.Name,
-			Hash:   c.File.Hash,
+			Hash:   fmt.Sprintf("%x", c.File.Hash),
 			Hosted: c.File.Hosted,
 		},
 		Signers: make([]SignerJSON, len(c.Signers)),
@@ -55,7 +56,7 @@ func GetJSON(c *entities.Contract, ttp *TTPJSON) ([]byte, error) {
 
 	for i, s := range c.Signers {
 		data.Signers[i].Email = s.Email
-		data.Signers[i].Hash = s.Hash
+		data.Signers[i].Hash = fmt.Sprintf("%x", s.Hash)
 	}
 
 	return json.MarshalIndent(data, "", "  ")

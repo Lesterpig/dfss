@@ -199,7 +199,7 @@ func Auth(pid *authority.PlatformID, manager *mgdb.MongoManager, certDuration in
 	}
 
 	// If the user already has a certificate and certificate hash in the database, does nothing
-	if user.Certificate != "" || user.CertHash != "" {
+	if user.Certificate != "" || len(user.CertHash) != 0 {
 		return nil, errors.New("User is already registered")
 	}
 
@@ -221,7 +221,7 @@ func Auth(pid *authority.PlatformID, manager *mgdb.MongoManager, certDuration in
 	}
 
 	user.Certificate = string(cert)
-	user.CertHash = fmt.Sprintf("%x", certHash)
+	user.CertHash = certHash
 	user.Expiration = time.Now().AddDate(0, 0, certDuration)
 
 	// Updating the database

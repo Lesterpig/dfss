@@ -1,6 +1,7 @@
 package tests
 
 import (
+	"fmt"
 	"io/ioutil"
 	"os"
 	"path/filepath"
@@ -63,7 +64,7 @@ func TestNewContract(t *testing.T) {
 	contract := getContract("contract.txt", 0)
 	assert.Equal(t, false, contract.Ready)
 	assert.Equal(t, "A very nice comment", contract.Comment)
-	assert.Equal(t, "6a95f6bcd6282186a7b1175fbaab4809ca5f665f7c4d55675de2399c83e67252069d741a88c766b1a79206d6dfbd5552cd7f9bc69b43bee161d1337228b4a4a8", contract.File.Hash)
+	assert.Equal(t, "6a95f6bcd6282186a7b1175fbaab4809ca5f665f7c4d55675de2399c83e67252069d741a88c766b1a79206d6dfbd5552cd7f9bc69b43bee161d1337228b4a4a8", fmt.Sprintf("%x", contract.File.Hash))
 	assert.Equal(t, 2, len(contract.Signers))
 	assert.Equal(t, "client1@example.com", contract.Signers[0].Email)
 	assert.Equal(t, "client2@example.com", contract.Signers[1].Email)

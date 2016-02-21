@@ -28,7 +28,7 @@ type User struct {
 	RegToken     string         `key:"regToken" bson:"regToken"`         // Token used for registering a User
 	Csr          string         `key:"csr" bson:"csr"`                   // Certificate request at PEM format
 	Certificate  string         `key:"certificate" bson:"certificate"`   // Certificate of the User
-	CertHash     string         `key:"certHash" bson:"certHash"`         // Hash of the certificate
+	CertHash     []byte         `key:"certHash" bson:"certHash"`         // Hash of the certificate
 	ConnInfo     ConnectionInfo `key:"connInfo" bson:"connInfo"`         // Information about the connection
 }
 
@@ -54,7 +54,7 @@ func NewUserRepository(collection *mgdb.MongoCollection) *UserRepository {
 }
 
 // FetchByMailAndHash : Fetches a User from its email and certificate hash
-func (repository *UserRepository) FetchByMailAndHash(email, hash string) (*User, error) {
+func (repository *UserRepository) FetchByMailAndHash(email string, hash []byte) (*User, error) {
 	var users []User
 	err := repository.Collection.FindAll(bson.M{"email": email, "certHash": hash}, &users)
 	if err != nil || len(users) == 0 {

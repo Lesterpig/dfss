@@ -2,7 +2,6 @@ package sign
 
 import (
 	"crypto/sha512"
-	"fmt"
 	"io/ioutil"
 	"path/filepath"
 	"time"
@@ -26,7 +25,7 @@ type CreateManager struct {
 	filepath   string
 	comment    string
 	signers    []string
-	hash       string
+	hash       []byte
 	filename   string
 }
 
@@ -64,7 +63,7 @@ func (m *CreateManager) computeFile() error {
 	}
 
 	hash := sha512.Sum512(data)
-	m.hash = fmt.Sprintf("%x", hash)
+	m.hash = hash[:]
 	m.filename = filepath.Base(m.filepath)
 
 	return nil

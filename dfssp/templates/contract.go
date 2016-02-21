@@ -13,6 +13,6 @@ const contractDetails = `Signers :
 {{range .Signers}}  - {{.Email}}
 {{end}}
 Contract name : {{.File.Name}}
-SHA-512 hash  : {{.File.Hash}}
+SHA-512 hash  : {{printf "%x" .File.Hash}}
 Comment       : {{.Comment}}
 `
