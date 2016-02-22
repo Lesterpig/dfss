@@ -75,11 +75,8 @@ func TestMain(m *testing.M) {
 	go func() { _ = net.Listen(InvalidServ, srv2) }()
 
 	// Run
+	err = collection.Drop()
 	code := m.Run()
-
-	// Teardown
-	// The collection is created automatically on
-	// first connection, that's why we do not recreate it manually
 	err = collection.Drop()
 
 	if err != nil {
@@ -91,7 +88,7 @@ func TestMain(m *testing.M) {
 }
 
 func TestMongoFetchInexistantUser(t *testing.T) {
-	user, erro := repository.FetchByMailAndHash("dummyMail", "dummyHash")
+	user, erro := repository.FetchByMailAndHash("dummyMail", []byte{0x01})
 	if user != nil || erro != nil {
 		t.Fatal("User should not have been found and error should  be nil")
 	}
@@ -100,7 +97,7 @@ func TestMongoFetchInexistantUser(t *testing.T) {
 func TestMongoInsertUser(t *testing.T) {
 	user := entities.NewUser()
 	user.Email = "dfss1@mpcs.tk"
-	user.CertHash = "dummy_hash"
+	user.CertHash = []byte{0x01, 0x02}
 	user.ConnInfo.IP = "127.0.0.1"
 	user.ConnInfo.Port = 1111
 	user.Csr = "csr1"
@@ -117,7 +114,7 @@ func equalUsers(t *testing.T, user1, user2 *entities.User) {
 		t.Fatal("ID doesn't match : received ", user1.ID, " and ", user2.ID)
 	}
 
-	if user1.CertHash != user2.CertHash {
+	if string(user1.CertHash) != string(user2.CertHash) {
 		t.Fatal("CertHash doesn't match : received ", user1.CertHash, " and ", user2.CertHash)
 	}
 
@@ -153,7 +150,7 @@ func equalUsers(t *testing.T, user1, user2 *entities.User) {
 func TestMongoFetchUser(t *testing.T) {
 	user := entities.NewUser()
 	user.Email = "dfss2@mpcs.tk"
-	user.CertHash = "dummy_hash"
+	user.CertHash = nil
 	user.ConnInfo.IP = "127.0.0.2"
 	user.ConnInfo.Port = 2222
 	user.Csr = "csr2"
@@ -240,7 +237,7 @@ func TestWrongAuthRequestContext(t *testing.T) {
 	}
 
 	assert.Equal(t, res.Certificate, "")
-	assert.Equal(t, res.CertHash, "")
+	assert.Equal(t, res.CertHash, []byte{})
 
 	// Invalid certificate request (none here)
 	request.Token = token
@@ -255,7 +252,7 @@ func TestWrongAuthRequestContext(t *testing.T) {
 		t.Fatal(err)
 	}
 	assert.Equal(t, res.Certificate, "")
-	assert.Equal(t, res.CertHash, "")
+	assert.Equal(t, res.CertHash, []byte{})
 }
 
 func ExampleAuth() {
@@ -305,7 +302,7 @@ func ExampleAuth() {
 		fmt.Println(err)
 	}
 
-	if res.Certificate == "" || res.CertHash == "" {
+	if res.Certificate == "" || res.CertHash == nil {
 		fmt.Println("The database should have been updated")
 	}
 
@@ -347,7 +344,7 @@ func TestAuthTwice(t *testing.T) {
 	user.RegToken = token
 	user.Csr = string(csr)
 	user.Certificate = "foo"
-	user.CertHash = "foo"
+	user.CertHash = []byte{0xaa}
 
 	_, err = repository.Collection.Insert(*user)
 	if err != nil {

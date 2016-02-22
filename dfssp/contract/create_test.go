@@ -2,7 +2,6 @@ package contract_test
 
 import (
 	"crypto/sha512"
-	"fmt"
 	"io/ioutil"
 	"path/filepath"
 	"testing"
@@ -18,7 +17,6 @@ import (
 
 var user1, user2, user3 *entities.User
 var defaultHash = sha512.Sum512([]byte{0})
-var defaultHashStr = fmt.Sprintf("%x", defaultHash)
 
 func createDataset() {
 
@@ -29,17 +27,17 @@ func createDataset() {
 	user1.Email = "user1@example.com"
 	user1.Expiration = time.Now().AddDate(1, 0, 0)
 	user1.Certificate = "Certificate1"
-	user1.CertHash = "Hash1"
+	user1.CertHash = []byte{0x01}
 
 	user2.Email = "user2@example.com"
 	user2.Expiration = time.Now().AddDate(1, 0, 0)
 	user2.Certificate = "Certificate2"
-	user2.CertHash = "Hash2"
+	user2.CertHash = []byte{0x02}
 
 	user3.Email = "user3@example.com"
 	user3.Expiration = time.Now().AddDate(0, 0, -1)
 	user3.Certificate = "Certificate3"
-	user3.CertHash = "Hash3"
+	user3.CertHash = []byte{0x03}
 
 	_, _ = manager.Get("users").Insert(user1)
 	_, _ = manager.Get("users").Insert(user2)
@@ -91,7 +89,7 @@ func TestAddContract(t *testing.T) {
 
 	client := clientTest(t)
 	errorCode, err := client.PostContract(context.Background(), &api.PostContractRequest{
-		Hash:     defaultHashStr,
+		Hash:     defaultHash[:],
 		Filename: "ContractFilename",
 		Signer:   []string{user1.Email, user2.Email},
 		Comment:  "ContractComment",
@@ -107,7 +105,7 @@ func TestAddContract(t *testing.T) {
 	}
 
 	assert.Equal(t, 1, len(contracts))
-	assert.Equal(t, defaultHashStr, contracts[0].File.Hash)
+	assert.Equal(t, defaultHash[:], contracts[0].File.Hash)
 	assert.Equal(t, "ContractFilename", contracts[0].File.Name)
 	assert.Equal(t, "ContractComment", contracts[0].Comment)
 	assert.T(t, contracts[0].Ready)
@@ -127,7 +125,7 @@ func TestAddContractMissingUser(t *testing.T) {
 
 	client := clientTest(t)
 	errorCode, err := client.PostContract(context.Background(), &api.PostContractRequest{
-		Hash:     defaultHashStr,
+		Hash:     defaultHash[:],
 		Filename: "ContractFilename",
 		Signer:   []string{user1.Email, user3.Email},
 	})
@@ -142,7 +140,7 @@ func TestAddContractMissingUser(t *testing.T) {
 	}
 
 	assert.Equal(t, 1, len(contracts))
-	assert.Equal(t, defaultHashStr, contracts[0].File.Hash)
+	assert.Equal(t, defaultHash[:], contracts[0].File.Hash)
 	assert.Equal(t, "ContractFilename", contracts[0].File.Name)
 	assert.Equal(t, "", contracts[0].Comment)
 	assert.T(t, !contracts[0].Ready)
@@ -152,7 +150,7 @@ func TestAddContractMissingUser(t *testing.T) {
 	assert.Equal(t, user1.CertHash, contracts[0].Signers[0].Hash)
 	assert.Equal(t, user1.Email, contracts[0].Signers[0].Email)
 	assert.Equal(t, "000000000000000000000000", contracts[0].Signers[1].UserID.Hex())
-	assert.Equal(t, "", contracts[0].Signers[1].Hash)
+	assert.Equal(t, []byte{}, contracts[0].Signers[1].Hash)
 	assert.Equal(t, user3.Email, contracts[0].Signers[1].Email)
 }
 
@@ -162,7 +160,7 @@ func TestAddContractNoUser(t *testing.T) {
 
 	client := clientTest(t)
 	errorCode, err := client.PostContract(context.Background(), &api.PostContractRequest{
-		Hash:     defaultHashStr,
+		Hash:     defaultHash[:],
 		Filename: "ContractFilename",
 		Signer:   []string{},
 	})
@@ -185,7 +183,7 @@ func TestAddContractDuplicatedUser(t *testing.T) {
 
 	client := clientTest(t)
 	errorCode, err := client.PostContract(context.Background(), &api.PostContractRequest{
-		Hash:     defaultHashStr,
+		Hash:     defaultHash[:],
 		Filename: "ContractFilename",
 		Signer:   []string{user1.Email, user1.Email, user2.Email},
 	})
@@ -209,7 +207,7 @@ func TestAddContractNoFilename(t *testing.T) {
 
 	client := clientTest(t)
 	errorCode, err := client.PostContract(context.Background(), &api.PostContractRequest{
-		Hash:   defaultHashStr,
+		Hash:   defaultHash[:],
 		Signer: []string{user1.Email},
 	})
 	assert.Equal(t, nil, err)
@@ -231,7 +229,7 @@ func TestAddContractBadHash(t *testing.T) {
 
 	client := clientTest(t)
 	errorCode, err := client.PostContract(context.Background(), &api.PostContractRequest{
-		Hash:     "aVeryBadHash",
+		Hash:     []byte{0xba, 0xd},
 		Filename: "ContractFilename",
 		Signer:   []string{user1.Email},
 	})

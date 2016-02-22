@@ -14,11 +14,11 @@ func TestInit(t *testing.T) {
 func TestGet(t *testing.T) {
 
 	contract := entities.NewContract()
-	contract.File.Hash = "hash"
+	contract.File.Hash = []byte{0x01, 0x02, 0x11, 0xaa}
 	contract.File.Name = "name.pdf"
 	contract.Comment = "comment"
-	contract.AddSigner(nil, "mail@example.com", "")
-	contract.AddSigner(nil, "mail2@example.com", "")
+	contract.AddSigner(nil, "mail@example.com", nil)
+	contract.AddSigner(nil, "mail2@example.com", nil)
 
 	s, err := Get("contract", contract)
 
@@ -32,7 +32,7 @@ Signers :
   - mail2@example.com
 
 Contract name : name.pdf
-SHA-512 hash  : hash
+SHA-512 hash  : 010211aa
 Comment       : comment
 
 Yours faithfully,

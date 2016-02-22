@@ -70,7 +70,7 @@ func (c *Builder) checkInput() *api.ErrorCode {
 		return &api.ErrorCode{Code: api.ErrorCode_INVARG, Message: "Expecting a valid filename"}
 	}
 
-	if len(c.in.Hash) != sha512.Size*2 { // *2 because string format doubles the length
+	if len(c.in.Hash) != sha512.Size {
 		return &api.ErrorCode{Code: api.ErrorCode_INVARG, Message: "Expecting a valid sha512 hash"}
 	}
 
@@ -117,7 +117,7 @@ func (c *Builder) addContract() error {
 		contract.AddSigner(&s.ID, s.Email, s.CertHash)
 	}
 	for _, s := range c.missingSigners {
-		contract.AddSigner(nil, s, "")
+		contract.AddSigner(nil, s, nil)
 	}
 
 	contract.Comment = c.in.Comment
