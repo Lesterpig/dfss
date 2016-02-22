@@ -27,7 +27,7 @@ func startPlatform(tmpDir string) (*exec.Cmd, []byte, error) {
 	}
 
 	// Init
-	cmd := exec.Command(path, "-cn", "localhost", "-path", dir, "-v", "init")
+	cmd := exec.Command(path, "-path", dir, "-v", "init")
 	err = cmd.Run()
 	if err != nil {
 		return nil, nil, err
