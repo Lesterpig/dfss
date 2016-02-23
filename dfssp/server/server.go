@@ -60,15 +60,15 @@ func (s *platformServer) PostContract(ctx context.Context, in *api.PostContractR
 // JoinSignature handler
 //
 // Handle incoming JoinSignatureRequest messages
-func (s *platformServer) JoinSignature(ctx context.Context, in *api.JoinSignatureRequest) (*api.ErrorCode, error) {
+func (s *platformServer) JoinSignature(in *api.JoinSignatureRequest, stream api.Platform_JoinSignatureServer) error {
 	// TODO
-	return nil, nil
+	return nil
 }
 
 // ReadySign handler
 //
 // Handle incoming ReadySignRequest messages
-func (s *platformServer) ReadySign(ctx context.Context, in *api.ReadySignRequest) (*api.ErrorCode, error) {
+func (s *platformServer) ReadySign(ctx context.Context, in *api.ReadySignRequest) (*api.LaunchSignature, error) {
 	// TODO
 	return nil, nil
 }

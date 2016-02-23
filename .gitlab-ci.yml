@@ -31,6 +31,7 @@ Unit tests:
     - "go test -coverprofile dfssp_user.part -v dfss/dfssp/user"
     - "go test -coverprofile dfssp_contract.part -v dfss/dfssp/contract"
     - "go test -coverprofile dfssp_templates.part -v dfss/dfssp/templates"
+    - "go test -coverprofile dfssp_common.part -v dfss/dfssp/common"
     - "go test -coverprofile dfssd.part -v dfss/dfssd"
     - "go test -coverprofile dfssc_common.part -v dfss/dfssc/common"
     - "go test -coverprofile dfssc_security.part -v dfss/dfssc/security"

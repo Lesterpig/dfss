@@ -7,8 +7,8 @@ service Platform {
 	rpc Auth(AuthRequest) returns (RegisteredUser) {}
 	rpc Unregister(Empty) returns (ErrorCode) {}
 	rpc PostContract(PostContractRequest) returns (ErrorCode) {}
-	rpc JoinSignature(JoinSignatureRequest) returns (ErrorCode) {}
-	rpc ReadySign(ReadySignRequest) returns (ErrorCode) {}
+	rpc JoinSignature(JoinSignatureRequest) returns (stream UserConnected) {}
+	rpc ReadySign(ReadySignRequest) returns (LaunchSignature) {} // Warning, LaunchSignature can be emitted with a very high delay
 }
 
 // RegisterRequest message contains the client's email adress and his
@@ -70,7 +70,26 @@ message JoinSignatureRequest {
 	uint32 port = 2;
 }
 
+// UserConnected is emitted by the platform to the client to announce a new client connection
+message UserConnected {
+	ErrorCode errorCode = 1;
+	string contractUuid = 2;
+	message User {
+		bytes KeyHash = 1;
+		string email = 2;
+		string ip = 3;
+		uint32 port = 4;
+	}
+}
+
 // ReadySignRequest contains the contract unique identitier that is ready to be signed
 message ReadySignRequest {
 	string contractUuid = 1;
+}
+
+// LaunchSignature is emitted by the platform when every signers are ready
+message LaunchSignature {
+	ErrorCode errorCode = 1;
+	string signatureUuid = 2;
+	repeated string keyHash = 3;
 }
