@@ -113,10 +113,9 @@ func TestInsertContract(t *testing.T) {
 
 // Insert some contracts with missing user and test waiting contracts for this user
 func TestGetWaitingForUser(t *testing.T) {
-
 	knownID := bson.NewObjectId()
-
 	dropDataset()
+
 	c1 := entities.NewContract()
 	c1.AddSigner(nil, "mail1", []byte{})
 	c1.Ready = false
@@ -138,4 +137,23 @@ func TestGetWaitingForUser(t *testing.T) {
 	contracts, err := repository.GetWaitingForUser("mail1")
 	assert.Equal(t, nil, err)
 	assert.Equal(t, 2, len(contracts))
+}
+
+func TestCheckAuthorization(t *testing.T) {
+	dropDataset()
+	createDataset()
+	id := addTestContract()
+
+	assert.T(t, repository.CheckAuthorization(user1.CertHash, id))
+	assert.T(t, !repository.CheckAuthorization(user1.CertHash, bson.NewObjectId()))
+	assert.T(t, !repository.CheckAuthorization(user2.CertHash, id))
+	assert.T(t, !repository.CheckAuthorization(user2.CertHash, bson.NewObjectId()))
+
+	contract := entities.Contract{}
+	_ = repository.Collection.FindByID(entities.Contract{ID: id}, &contract)
+	contract.Ready = false
+	_, _ = repository.Collection.UpdateByID(contract)
+
+	// Not valid if contract is not ready
+	assert.T(t, !repository.CheckAuthorization(user1.CertHash, id))
 }

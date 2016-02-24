@@ -74,14 +74,15 @@ message JoinSignatureRequest {
 message UserConnected {
 	ErrorCode errorCode = 1;
 	string contractUuid = 2;
-	message User {
-		bytes KeyHash = 1;
-		string email = 2;
-		string ip = 3;
-		uint32 port = 4;
-	}
+	User user = 3;
 }
 
+message User {
+	bytes keyHash = 1;
+	string email = 2;
+	string ip = 3;
+	uint32 port = 4;
+}
 // ReadySignRequest contains the contract unique identitier that is ready to be signed
 message ReadySignRequest {
 	string contractUuid = 1;

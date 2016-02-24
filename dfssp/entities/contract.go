@@ -83,3 +83,17 @@ func (r *ContractRepository) GetWaitingForUser(email string) ([]Contract, error)
 	}, &res)
 	return res, err
 }
+
+// CheckAuthorization checks that a client is allowed to sign a specific contract
+func (r *ContractRepository) CheckAuthorization(signerHash []byte, contractID bson.ObjectId) bool {
+
+	count, _ := r.Collection.Collection.Find(bson.M{
+		"_id":   contractID,
+		"ready": true,
+		"signers": bson.M{
+			"$elemMatch": bson.M{"hash": signerHash},
+		},
+	}).Count()
+
+	return count == 1
+}
