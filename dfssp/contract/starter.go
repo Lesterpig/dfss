@@ -2,6 +2,7 @@ package contract
 
 import (
 	n "net"
+	"time"
 
 	"dfss/auth"
 	"dfss/dfssp/api"
@@ -19,28 +20,11 @@ import (
 // Please note that the current user will also receive it's own information.
 // There is no timeout, this function will shut down on stream disconnection or on error.
 func JoinSignature(db *mgdb.MongoManager, rooms *common.WaitingGroupMap, in *api.JoinSignatureRequest, stream api.Platform_JoinSignatureServer) {
-	repository := entities.NewContractRepository(db.Get("contracts"))
 	ctx := stream.Context()
 	state, addr, _ := net.GetTLSState(&ctx)
 	hash := auth.GetCertificateHash(state.VerifiedChains[0][0])
 
-	if !bson.IsObjectIdHex(in.ContractUuid) {
-		_ = stream.Send(&api.UserConnected{
-			ErrorCode: &api.ErrorCode{
-				Code:    api.ErrorCode_INVARG,
-				Message: "invalid contract uuid",
-			},
-		})
-		return
-	}
-
-	if !repository.CheckAuthorization(hash, bson.ObjectIdHex(in.ContractUuid)) {
-		_ = stream.Send(&api.UserConnected{
-			ErrorCode: &api.ErrorCode{
-				Code:    api.ErrorCode_INVARG,
-				Message: "unauthorized signature",
-			},
-		})
+	if !checkJoinSignatureRequest(db, &stream, in.ContractUuid, hash) {
 		return
 	}
 
@@ -70,7 +54,7 @@ func JoinSignature(db *mgdb.MongoManager, rooms *common.WaitingGroupMap, in *api
 	for {
 		select {
 		case user, ok := <-channel:
-			if !ok { // channel is closed, means that the room is closed
+			if !ok { // Channel is closed, means that the room is closed
 				return
 			}
 			err := sendUserToStream(&stream, in.ContractUuid, user.(*api.User))
@@ -78,11 +62,38 @@ func JoinSignature(db *mgdb.MongoManager, rooms *common.WaitingGroupMap, in *api
 				rooms.Unjoin(roomID, channel)
 				return
 			}
-		case <-ctx.Done():
+		case <-ctx.Done(): // Disconnect
+			rooms.Unjoin(roomID, channel)
+			return
+		case <-time.After(time.Hour): // Timeout
 			rooms.Unjoin(roomID, channel)
 			return
 		}
 	}
+}
+
+func checkJoinSignatureRequest(db *mgdb.MongoManager, stream *api.Platform_JoinSignatureServer, contractUUID string, clientHash []byte) bool {
+	if !bson.IsObjectIdHex(contractUUID) {
+		_ = (*stream).Send(&api.UserConnected{
+			ErrorCode: &api.ErrorCode{
+				Code:    api.ErrorCode_INVARG,
+				Message: "invalid contract uuid",
+			},
+		})
+		return false
+	}
+
+	repository := entities.NewContractRepository(db.Get("contracts"))
+	if !repository.CheckAuthorization(clientHash, bson.ObjectIdHex(contractUUID)) {
+		_ = (*stream).Send(&api.UserConnected{
+			ErrorCode: &api.ErrorCode{
+				Code:    api.ErrorCode_INVARG,
+				Message: "unauthorized signature",
+			},
+		})
+		return false
+	}
+	return true
 }
 
 func sendUserToStream(stream *api.Platform_JoinSignatureServer, contractUUID string, user *api.User) error {
