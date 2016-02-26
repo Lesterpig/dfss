@@ -6,6 +6,7 @@ import (
 	"crypto/rsa"
 	"crypto/x509"
 	"encoding/pem"
+	"fmt"
 )
 
 // Cipher used to encrypt private key content in PEM format
@@ -50,6 +51,9 @@ func EncryptedPEMToPrivateKey(data []byte, pwd string) (*rsa.PrivateKey, error) 
 	var err error
 
 	block, _ := pem.Decode(data)
+	if block == nil {
+		return nil, fmt.Errorf("Data is not a valid pem-encoding")
+	}
 	decodedData := block.Bytes
 
 	if pwd != "" {

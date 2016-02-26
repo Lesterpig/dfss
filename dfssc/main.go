@@ -31,12 +31,14 @@ func init() {
 		fmt.Println("  dfssc [flags] command")
 
 		fmt.Println("\nThe commands are:")
-		fmt.Println("  help      print this help")
-		fmt.Println("  version   print dfss client version")
-		fmt.Println("  register  register a new client")
-		fmt.Println("  auth      authenticate a new client")
-		fmt.Println("  new       create a new contract")
-		fmt.Println("  show <c>  print contract information from file c")
+		fmt.Println("  help       print this help")
+		fmt.Println("  version    print dfss client version")
+		fmt.Println("  register   register a new client")
+		fmt.Println("  auth       authenticate a new client")
+		fmt.Println("  new        create a new contract")
+		fmt.Println("  show <c>   print contract information from file c")
+		fmt.Println("  export <c> export certificate and private key of the user to file c")
+		fmt.Println("  import <c> import private key and certificate from file c")
 
 		fmt.Println("\nFlags:")
 		flag.PrintDefaults()
@@ -61,6 +63,10 @@ func main() {
 		newContract()
 	case "show":
 		showContract(flag.Arg(1))
+	case "export":
+		exportConf(flag.Arg(1))
+	case "import":
+		importConf(flag.Arg(1))
 	default:
 		flag.Usage()
 	}
