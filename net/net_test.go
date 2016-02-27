@@ -85,7 +85,6 @@ func startTestServer(c chan bool) {
 		_ = Listen("localhost:9000", server)
 	}()
 	<-c
-	server.TestingCloseConns()
 	server.Stop()
 }
 
