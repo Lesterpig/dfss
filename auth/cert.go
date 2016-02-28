@@ -8,9 +8,11 @@ import (
 	"crypto/x509/pkix"
 	"encoding/pem"
 	"errors"
-	"github.com/pborman/uuid"
+	"fmt"
 	"math/big"
 	"time"
+
+	"github.com/pborman/uuid"
 )
 
 // GetCertificateRequest creates a request to be sent to any authoritative signer, as a PEM-encoded array of bytes.
@@ -116,6 +118,9 @@ func GetSelfSignedCertificate(days int, serial uint64, country, organization, un
 // PEMToCertificate tries to decode a PEM-encoded array of bytes to a certificate
 func PEMToCertificate(data []byte) (*x509.Certificate, error) {
 	block, _ := pem.Decode(data)
+	if block == nil {
+		return nil, fmt.Errorf("Data is not a valid pem-encoding")
+	}
 	return x509.ParseCertificate(block.Bytes)
 }
 
