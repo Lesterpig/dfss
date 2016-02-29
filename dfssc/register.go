@@ -8,7 +8,6 @@ import (
 	osuser "os/user"
 	"strconv"
 	"strings"
-	"time"
 
 	"dfss/dfssc/user"
 	"golang.org/x/crypto/ssh/terminal"
@@ -20,17 +19,17 @@ func registerUser() {
 	var country, mail, organization, unit, passphrase string
 	var bits int
 
+	name := "Jon Doe"
 	u, err := osuser.Current()
-	if err != nil {
-		fmt.Println("An error occurred : ", err.Error())
-		return
+	if err == nil {
+		name = u.Name
 	}
 
 	// Get all the necessary parameters
 	readStringParam("Mail", "", &mail)
-	readStringParam("Country", time.Now().Location().String(), &country)
-	readStringParam("Organization", u.Name, &organization)
-	readStringParam("Organizational unit", u.Name, &unit)
+	readStringParam("Country", "FR", &country)
+	readStringParam("Organization", name, &organization)
+	readStringParam("Organizational unit", name, &unit)
 	readIntParam("Length of the key (2048 or 4096)", "2048", &bits)
 	err = readPassword(&passphrase, true)
 	if err != nil {
