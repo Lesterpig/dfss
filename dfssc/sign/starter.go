@@ -6,6 +6,7 @@ import (
 	"errors"
 	"fmt"
 	"strconv"
+	"time"
 
 	"dfss"
 	cAPI "dfss/dfssc/api"
@@ -124,4 +125,25 @@ func (m *SignatureManager) addPeer(user *pAPI.User) (ready bool, err error) {
 	}
 
 	return true, nil
+}
+
+// SendReadySign sends the READY signal to the platform, and wait (potentially a long time) for START signal.
+func (m *SignatureManager) SendReadySign() (signatureUUID string, err error) {
+	ctx, cancel := context.WithTimeout(context.Background(), 10 * time.Minute)
+	defer cancel()
+	launch, err := m.platform.ReadySign(ctx, &api.ReadySignRequest{
+		ContractUuid: m.contract.UUID,
+	})
+	if err != nil {
+		return
+	}
+
+	errorCode := launch.GetErrorCode()
+	if errorCode.Code != api.ErrorCode_SUCCESS {
+		err = errors.New(errorCode.Code.String() + " " + errorCode.Message)
+		return
+	}
+
+	signatureUUID = launch.SignatureUuid
+	return
 }

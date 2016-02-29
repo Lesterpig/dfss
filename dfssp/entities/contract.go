@@ -58,6 +58,16 @@ func (c *Contract) AddSigner(id *bson.ObjectId, email string, hash []byte) {
 	c.Signers = append(c.Signers, *signer)
 }
 
+// GetHashChain returns the ordered slice of signers hashes.
+// It's used to check the dfss file if needed.
+func (c *Contract) GetHashChain() [][]byte {
+	chain := make([][]byte, len(c.Signers))
+	for i, s := range c.Signers {
+		chain[i] = s.Hash
+	}
+	return chain
+}
+
 // ContractRepository to contains every complex methods related to contract
 type ContractRepository struct {
 	Collection *mgdb.MongoCollection

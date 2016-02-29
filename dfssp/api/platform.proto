@@ -93,5 +93,5 @@ message ReadySignRequest {
 message LaunchSignature {
 	ErrorCode errorCode = 1;
 	string signatureUuid = 2;
-	repeated string keyHash = 3;
+	repeated bytes keyHash = 3;
 }

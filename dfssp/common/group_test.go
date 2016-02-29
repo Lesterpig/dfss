@@ -19,7 +19,7 @@ func TestWaitingGroup(t *testing.T) {
 			// Add some virtual latency
 			time.Sleep(time.Duration(i) * time.Millisecond)
 			// Join the waitingGroupMap
-			myChan, nbs := w.Join("A")
+			myChan, nbs, _ := w.Join("A")
 			w.Broadcast("A", i)
 			// Wait for other msg
 			for m := range myChan {
@@ -43,7 +43,7 @@ func TestCloseWaitingGroup(t *testing.T) {
 	waitGroup.Add(1)
 
 	go func() {
-		myChan, _ := w.Join("A")
+		myChan, _, _ := w.Join("A")
 		for _ = range myChan {
 			t.Fatal("Should not be here")
 		}

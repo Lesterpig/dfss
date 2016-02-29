@@ -47,7 +47,6 @@ func TestExport(t *testing.T) {
 		"pass\n" +
 			"password\n",
 	)
-	cmd.Stdout = os.Stdout
 	err = cmd.Run()
 	assert.Equal(t, nil, err)
 	assert.T(t, common.FileExists(confPath))

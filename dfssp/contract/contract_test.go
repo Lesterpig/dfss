@@ -73,6 +73,19 @@ func TestAddSigner(t *testing.T) {
 	assert.Equal(t, signers[1].UserID.Hex(), id.Hex())
 }
 
+func TestGetHashChain(t *testing.T) {
+	c := entities.NewContract()
+	c.AddSigner(nil, "mail1", []byte{0xaa})
+	c.AddSigner(nil, "mail2", []byte{0xbb, 0xcc})
+	c.AddSigner(nil, "mail3", []byte{})
+
+	chain := c.GetHashChain()
+	assert.Equal(t, 3, len(chain))
+	assert.Equal(t, []byte{0xaa}, chain[0])
+	assert.Equal(t, []byte{0xbb, 0xcc}, chain[1])
+	assert.Equal(t, []byte{}, chain[2])
+}
+
 func assertContractEqual(t *testing.T, contract, fetched entities.Contract) {
 	assert.Equal(t, contract.File, fetched.File)
 	assert.Equal(t, contract.Date.Unix(), fetched.Date.Unix())

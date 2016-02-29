@@ -29,8 +29,8 @@ func JoinSignature(db *mgdb.MongoManager, rooms *common.WaitingGroupMap, in *api
 	}
 
 	// Join room
-	roomID := "contract_" + in.ContractUuid
-	channel, pendingSigners := rooms.Join(roomID)
+	roomID := "connect_" + in.ContractUuid
+	channel, pendingSigners, _ := rooms.Join(roomID)
 
 	// Send pendingSigners
 	for _, p := range pendingSigners {
@@ -103,3 +103,4 @@ func sendUserToStream(stream *api.Platform_JoinSignatureServer, contractUUID str
 		User:         user,
 	})
 }
+

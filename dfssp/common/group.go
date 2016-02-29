@@ -33,7 +33,7 @@ func NewWaitingGroupMap() *WaitingGroupMap {
 // Join permits the current goroutine to join a room.
 // It returns the listenning channel and a slice containing messages already sent by other members of the room.
 // The room is automatically created if unknown.
-func (g *WaitingGroupMap) Join(room string) (listen chan interface{}, oldMessages []interface{}) {
+func (g *WaitingGroupMap) Join(room string) (listen chan interface{}, oldMessages []interface{}, newRoom bool) {
 	// Check if the current waiting group knows this room
 	g.mutex.Lock()
 	_, present := g.data[room]
@@ -42,6 +42,7 @@ func (g *WaitingGroupMap) Join(room string) (listen chan interface{}, oldMessage
 			channels:    list.New(),
 			oldMessages: make([]interface{}, 0),
 		}
+		newRoom = true
 	}
 	g.mutex.Unlock()
 

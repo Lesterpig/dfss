@@ -37,6 +37,14 @@ func signContract(filename string) {
 	}
 
 	// Ignition
+	fmt.Println("Waiting for other signers to be ready...")
+	signatureUUID, err := manager.SendReadySign()
+	if err != nil {
+		fmt.Fprintln(os.Stderr, err)
+		os.Exit(5)
+	}
+
+	fmt.Println("Everybody is ready, starting the signature", signatureUUID)
 
 	// Signature
 }

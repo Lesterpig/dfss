@@ -56,3 +56,20 @@ func TestJoinSignatureBadContract(t *testing.T) {
 	assert.Equal(t, "unauthorized signature", user.ErrorCode.Message)
 	assert.Equal(t, api.ErrorCode_INVARG, user.ErrorCode.Code)
 }
+
+func TestJoinSignatureBadUUID(t *testing.T) {
+	dropDataset()
+	createDataset()
+
+	client := clientTest(t)
+	stream, err := client.JoinSignature(context.Background(), &api.JoinSignatureRequest{
+		ContractUuid: "VERY_BAD",
+		Port:         5050,
+	})
+	assert.Equal(t, nil, err)
+
+	user, err := stream.Recv()
+	assert.Equal(t, nil, err)
+	assert.Equal(t, "invalid contract uuid", user.ErrorCode.Message)
+	assert.Equal(t, api.ErrorCode_INVARG, user.ErrorCode.Code)
+}

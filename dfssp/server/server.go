@@ -81,8 +81,11 @@ func (s *platformServer) JoinSignature(in *api.JoinSignatureRequest, stream api.
 //
 // Handle incoming ReadySignRequest messages
 func (s *platformServer) ReadySign(ctx context.Context, in *api.ReadySignRequest) (*api.LaunchSignature, error) {
-	// TODO
-	return nil, nil
+	cn := net.GetCN(&ctx)
+	if len(cn) == 0 {
+		return &api.LaunchSignature{ErrorCode: &api.ErrorCode{Code: api.ErrorCode_BADAUTH}}, nil
+	}
+	return contract.ReadySign(s.DB, s.Rooms, &ctx, in), nil
 }
 
 // GetServer returns the GRPC server associated with the platform
