@@ -1,0 +1,9 @@
+CHANGELOG
+=========
+
+v0.0.2
+------
+> 29/02/2016
+
+- Fix cross-compilation for unix targets
+- Fix build error due to grpc upstream update
