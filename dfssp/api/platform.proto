@@ -83,6 +83,7 @@ message User {
 	string ip = 3;
 	uint32 port = 4;
 }
+
 // ReadySignRequest contains the contract unique identitier that is ready to be signed
 message ReadySignRequest {
 	string contractUuid = 1;

@@ -1,0 +1,35 @@
+syntax = "proto3";
+
+package api;
+
+import "dfss/dfssp/api/platform.proto";
+
+service Client {
+	rpc TreatPromise(Promise) returns (ErrorCode) {}
+	rpc TreatSignature(Signature) returns (ErrorCode) {}
+	rpc Discover(Hello) returns (Hello) {}
+}
+
+// Promise message contains all the required information to verify
+// the identity of the sender and reciever, and the actual promess
+message Promise {
+	bytes recipientKeyHash = 1;	// SHA-512
+	bytes senderKeyHash = 2;	// SHA-512
+	string signatureUuid = 3;
+	string contractUuid = 4;
+}
+
+// Signature message contains all the required information to verify
+// the identity of the sender and reciever, and the actual signature
+message Signature {
+	bytes recipientKeyHash = 1;	// SHA-512
+	bytes senderKeyHash = 2;	// SHA-512
+	string signature = 3;		// Cryptographic signature
+	string signatureUuid = 4;
+	string contractUuid = 5;
+}
+
+// Hello message is used when discovering peers. It contains the current version of the software.
+message Hello {
+	string version = 1;
+}
