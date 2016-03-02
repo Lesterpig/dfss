@@ -43,43 +43,43 @@ func TestRegisterAuth(t *testing.T) {
 	time.Sleep(2 * time.Second)
 
 	// Register client1
-	client1, err := createClient(workingDir, ca)
+	client1, err := createClient(workingDir, ca, 0)
 	assert.Equal(t, nil, err)
 	err = registerAndAuth(client1, "test@example.com", "password", "", true, true)
 	assert.Equal(t, nil, err)
 
 	// Register client2
-	client2, err := createClient(workingDir, ca)
+	client2, err := createClient(workingDir, ca, 0)
 	assert.Equal(t, nil, err)
 	err = registerAndAuth(client2, "test2@example.com", "", "2048", true, true)
 	assert.Equal(t, nil, err)
 
 	// Register client3
-	client3, err := createClient(workingDir, ca)
+	client3, err := createClient(workingDir, ca, 0)
 	assert.Equal(t, nil, err)
 	err = registerAndAuth(client3, "test@example.com", "", "", true, true)
 	assert.NotEqual(t, nil, err)
 
 	// Register client4
-	client4, err := createClient(workingDir, ca)
+	client4, err := createClient(workingDir, ca, 0)
 	assert.Equal(t, nil, err)
 	err = registerAndAuth(client4, "test wrong mail", "", "", true, true)
 	assert.NotEqual(t, nil, err)
 
 	// Register client5
-	client5, err := createClient(workingDir, ca)
+	client5, err := createClient(workingDir, ca, 0)
 	assert.Equal(t, nil, err)
 	err = registerAndAuth(client5, "wrong@key.fr", "", "1024", true, true)
 	assert.NotEqual(t, nil, err)
 
 	// Register client6
-	client6, err := createClient(workingDir, ca)
+	client6, err := createClient(workingDir, ca, 0)
 	assert.Equal(t, nil, err)
 	err = registerAndAuth(client6, "bad@auth.com", "", "", false, true)
 	assert.NotEqual(t, nil, err)
 
 	// Register client7
-	client7, err := createClient(workingDir, ca)
+	client7, err := createClient(workingDir, ca, 0)
 	assert.Equal(t, nil, err)
 	err = registerAndAuth(client7, "bad@auth2.com", "", "", true, false)
 	assert.NotEqual(t, nil, err)

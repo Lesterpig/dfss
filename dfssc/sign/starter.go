@@ -131,7 +131,7 @@ func (m *SignatureManager) addPeer(user *pAPI.User) (ready bool, err error) {
 func (m *SignatureManager) SendReadySign() (signatureUUID string, err error) {
 	ctx, cancel := context.WithTimeout(context.Background(), 10 * time.Minute)
 	defer cancel()
-	launch, err := m.platform.ReadySign(ctx, &api.ReadySignRequest{
+	launch, err := m.platform.ReadySign(ctx, &pAPI.ReadySignRequest{
 		ContractUuid: m.contract.UUID,
 	})
 	if err != nil {
@@ -139,7 +139,7 @@ func (m *SignatureManager) SendReadySign() (signatureUUID string, err error) {
 	}
 
 	errorCode := launch.GetErrorCode()
-	if errorCode.Code != api.ErrorCode_SUCCESS {
+	if errorCode.Code != pAPI.ErrorCode_SUCCESS {
 		err = errors.New(errorCode.Code.String() + " " + errorCode.Message)
 		return
 	}

@@ -41,7 +41,7 @@ func TestNewContract(t *testing.T) {
 	time.Sleep(2 * time.Second)
 
 	// Register client1
-	client1, err := createClient(workingDir, ca)
+	client1, err := createClient(workingDir, ca, 0)
 	assert.Equal(t, nil, err)
 	err = registerAndAuth(client1, "client1@example.com", "password", "", true, true)
 	assert.Equal(t, nil, err)
@@ -72,7 +72,7 @@ func TestNewContract(t *testing.T) {
 	assert.T(t, len(contract.Signers[1].Hash) == 0)
 
 	// Register second signer
-	client2, err := createClient(workingDir, ca)
+	client2, err := createClient(workingDir, ca, 0)
 	assert.Equal(t, nil, err)
 	err = registerAndAuth(client2, "client2@example.com", "password2", "", true, true)
 	assert.Equal(t, nil, err)
@@ -119,7 +119,7 @@ func TestNewContract(t *testing.T) {
 	assert.NotEqual(t, nil, err)
 
 	// Bad case: no authentication
-	client3, err := createClient(workingDir, ca)
+	client3, err := createClient(workingDir, ca, 0)
 	setLastArg(client3, "new", false)
 	client3.Stdin = strings.NewReader(
 		"\n" +
