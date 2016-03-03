@@ -48,7 +48,6 @@ allow multiline and accents: éÉ`,
       "Hash": "bb"
     }
   ],
-  "Sequence": null,
   "TTP": null
 }`
 

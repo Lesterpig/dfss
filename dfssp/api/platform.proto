@@ -94,4 +94,5 @@ message LaunchSignature {
 	ErrorCode errorCode = 1;
 	string signatureUuid = 2;
 	repeated bytes keyHash = 3;
+	repeated uint32 sequence = 4;
 }

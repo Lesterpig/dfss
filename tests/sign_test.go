@@ -32,15 +32,15 @@ func TestSignContract(t *testing.T) {
 
 	// Register clients
 	clients := make([]*exec.Cmd, 3)
-	client1, err := createClient(workingDir, ca, 0)
+	client1, err := createClient(workingDir, ca, 9091)
 	assert.Equal(t, nil, err)
 	err = registerAndAuth(client1, "client1@example.com", "password", "", true, true)
 	assert.Equal(t, nil, err)
-	client2, err := createClient(workingDir, ca, 0)
+	client2, err := createClient(workingDir, ca, 9092)
 	assert.Equal(t, nil, err)
 	err = registerAndAuth(client2, "client2@example.com", "password", "", true, true)
 	assert.Equal(t, nil, err)
-	client3, err := createClient(workingDir, ca, 0)
+	client3, err := createClient(workingDir, ca, 9093)
 	assert.Equal(t, nil, err)
 	err = registerAndAuth(client3, "client3@example.com", "password", "", true, true)
 	assert.Equal(t, nil, err)
@@ -80,6 +80,7 @@ func TestSignContract(t *testing.T) {
 		go func(c *exec.Cmd, i int) {
 			time.Sleep(time.Duration(i*2) * time.Second)
 			c.Stdin = strings.NewReader("password\nyes\n")
+			c.Stderr = os.Stderr
 			output, err := c.Output()
 			if err != nil {
 				output = nil

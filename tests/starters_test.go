@@ -73,7 +73,7 @@ func createClient(tmpDir string, ca []byte, port int) (*exec.Cmd, error) {
 
 	// Prepare the client command.
 	// The last argument is up to you!
-	cmd := exec.Command(path, "-ca", caPath, "-cert", certPath, "-host", "127.0.0.1:"+testPort, "-key", keyPath, "-port", strconv.Itoa(port),  "-v")
+	cmd := exec.Command(path, "-ca", caPath, "-cert", certPath, "-host", "127.0.0.1:"+testPort, "-key", keyPath, "-port", strconv.Itoa(port), "-v")
 
 	return cmd, nil
 }

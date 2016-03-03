@@ -103,4 +103,3 @@ func sendUserToStream(stream *api.Platform_JoinSignatureServer, contractUUID str
 		User:         user,
 	})
 }
-

@@ -1,13 +1,10 @@
 package sign
 
 import (
-	"fmt"
-
 	"dfss"
 	cAPI "dfss/dfssc/api"
 	pAPI "dfss/dfssp/api"
 	"dfss/net"
-
 	"golang.org/x/net/context"
 	"google.golang.org/grpc"
 )
@@ -34,7 +31,6 @@ func (s *clientServer) TreatSignature(ctx context.Context, in *cAPI.Signature) (
 //
 // Handle incoming Discover messages
 func (s *clientServer) Discover(ctx context.Context, in *cAPI.Hello) (*cAPI.Hello, error) {
-	fmt.Println("Recieved:", in.Version)
 	return &cAPI.Hello{Version: dfss.Version}, nil
 }
 
