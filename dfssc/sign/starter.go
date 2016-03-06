@@ -1,8 +1,6 @@
 package sign
 
 import (
-	"crypto/rsa"
-	"crypto/x509"
 	"errors"
 	"fmt"
 	"log"
@@ -26,9 +24,8 @@ type SignatureManager struct {
 	contract  *contract.JSON
 	platform  pAPI.PlatformClient
 	peers     map[string]*cAPI.ClientClient
+	nbReady   int
 	cServer   *grpc.Server
-	cert, ca  *x509.Certificate
-	key       *rsa.PrivateKey
 	sequence  []uint32
 	uuid      string
 }
@@ -41,7 +38,7 @@ func NewSignatureManager(fileCA, fileCert, fileKey, addrPort, passphrase string,
 		contract:  c,
 	}
 	var err error
-	m.ca, m.cert, m.key, err = m.auth.LoadFiles()
+	_, _, _, err = m.auth.LoadFiles()
 	if err != nil {
 		return nil, err
 	}
@@ -49,7 +46,7 @@ func NewSignatureManager(fileCA, fileCert, fileKey, addrPort, passphrase string,
 	m.cServer = m.GetServer()
 	go func() { log.Fatalln(net.Listen("0.0.0.0:"+strconv.Itoa(port), m.cServer)) }()
 
-	conn, err := net.Connect(m.auth.AddrPort, m.cert, m.key, m.ca)
+	conn, err := net.Connect(m.auth.AddrPort, m.auth.Cert, m.auth.Key, m.auth.CA)
 	if err != nil {
 		return nil, err
 	}
@@ -58,7 +55,7 @@ func NewSignatureManager(fileCA, fileCert, fileKey, addrPort, passphrase string,
 
 	m.peers = make(map[string]*cAPI.ClientClient)
 	for _, u := range c.Signers {
-		if u.Email != m.cert.Subject.CommonName {
+		if u.Email != m.auth.Cert.Subject.CommonName {
 			m.peers[u.Email] = nil
 		}
 	}
@@ -110,13 +107,14 @@ func (m *SignatureManager) addPeer(user *pAPI.User) (ready bool, err error) {
 	addrPort := user.Ip + ":" + strconv.Itoa(int(user.Port))
 	fmt.Println("- Trying to connect with", user.Email, "/", addrPort)
 
-	conn, err := net.Connect(addrPort, m.cert, m.key, m.ca)
+	conn, err := net.Connect(addrPort, m.auth.Cert, m.auth.Key, m.auth.CA)
 	if err != nil {
 		return false, err
 	}
 
 	// Sending Hello message
 	client := cAPI.NewClientClient(conn)
+	lastConnection := m.peers[user.Email]
 	m.peers[user.Email] = &client
 
 	ctx, cancel := context.WithTimeout(context.Background(), time.Minute)
@@ -131,13 +129,14 @@ func (m *SignatureManager) addPeer(user *pAPI.User) (ready bool, err error) {
 	fmt.Println("  Successfully connected!", "[", msg.Version, "]")
 
 	// Check if we have any other peer to connect to
-	for _, u := range m.peers {
-		if u == nil {
-			return false, nil
+	if lastConnection == nil {
+		m.nbReady++
+		if m.nbReady == len(m.contract.Signers)-1 {
+			return true, nil
 		}
 	}
 
-	return true, nil
+	return false, nil
 }
 
 // SendReadySign sends the READY signal to the platform, and wait (potentially a long time) for START signal.

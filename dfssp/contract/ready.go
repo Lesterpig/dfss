@@ -21,7 +21,7 @@ type readySignal struct {
 }
 
 // ReadySign is the last job of the platform before the signature can occur.
-// When a new client is ready, it joins a waitingGroup a waits for a master broadcast announcing that everybody is ready.
+// When a new client is ready, it joins a waitingGroup and waits for a master broadcast announcing that everybody is ready.
 //
 // Doing it this way is efficient in time, as only one goroutine deals with the database and do global checks.
 func ReadySign(db *mgdb.MongoManager, rooms *common.WaitingGroupMap, ctx *context.Context, in *api.ReadySignRequest) *api.LaunchSignature {

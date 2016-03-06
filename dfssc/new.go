@@ -11,7 +11,7 @@ func newContract() {
 	fmt.Println("Creating a new contract")
 
 	passphrase, filepath, comment, signers := getContractInfo()
-	err := sign.NewCreateManager(fca, fcert, fkey, addrPort, passphrase, filepath, comment, signers)
+	err := sign.SendNewContract(fca, fcert, fkey, addrPort, passphrase, filepath, comment, signers)
 	if err != nil {
 		fmt.Fprintln(os.Stderr, err)
 		os.Exit(1)

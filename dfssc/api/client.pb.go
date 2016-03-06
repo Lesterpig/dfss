@@ -35,7 +35,7 @@ var _ = math.Inf
 const _ = proto.ProtoPackageIsVersion1
 
 // Promise message contains all the required information to verify
-// the identity of the sender and reciever, and the actual promess
+// the identity of the sender and reciever, and the actual promise
 type Promise struct {
 	RecipientKeyHash []byte `protobuf:"bytes,1,opt,name=recipientKeyHash,proto3" json:"recipientKeyHash,omitempty"`
 	SenderKeyHash    []byte `protobuf:"bytes,2,opt,name=senderKeyHash,proto3" json:"senderKeyHash,omitempty"`

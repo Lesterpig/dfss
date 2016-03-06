@@ -34,9 +34,9 @@ func (s *clientServer) Discover(ctx context.Context, in *cAPI.Hello) (*cAPI.Hell
 	return &cAPI.Hello{Version: dfss.Version}, nil
 }
 
-// GetServer create and registers a ClientServer, returning the associted GRPC server
+// GetServer create and registers a ClientServer, returning the associated GRPC server
 func (m *SignatureManager) GetServer() *grpc.Server {
-	server := net.NewServer(m.cert, m.key, m.ca)
+	server := net.NewServer(m.auth.Cert, m.auth.Key, m.auth.CA)
 	cAPI.RegisterClientServer(server, &clientServer{})
 	return server
 }

@@ -19,7 +19,7 @@ type AuthContainer struct {
 	Key  *rsa.PrivateKey
 }
 
-// NewAuthContainer is a shortcut to build a AuthContainer
+// NewAuthContainer is a shortcut to build an AuthContainer
 func NewAuthContainer(fileCA, fileCert, fileKey, addrPort, passphrase string) *AuthContainer {
 	return &AuthContainer{
 		FileCA:     fileCA,

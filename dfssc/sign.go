@@ -44,6 +44,7 @@ func signContract(filename string) {
 		os.Exit(5)
 	}
 
+	// TODO Warning, integration tests are checking Stdout
 	fmt.Println("Everybody is ready, starting the signature", signatureUUID)
 
 	// Signature

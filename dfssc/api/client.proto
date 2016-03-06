@@ -11,7 +11,7 @@ service Client {
 }
 
 // Promise message contains all the required information to verify
-// the identity of the sender and reciever, and the actual promess
+// the identity of the sender and reciever, and the actual promise
 message Promise {
 	bytes recipientKeyHash = 1;	// SHA-512
 	bytes senderKeyHash = 2;	// SHA-512

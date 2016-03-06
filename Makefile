@@ -28,4 +28,5 @@ protobuf:
 	cd .. && \
 	protoc --go_out=plugins=grpc:. dfss/dfssc/api/client.proto && \
 	protoc --go_out=plugins=grpc:. dfss/dfssd/api/demonstrator.proto && \
-	protoc --go_out=plugins=grpc:. dfss/dfssp/api/platform.proto
+	protoc --go_out=plugins=grpc:. dfss/dfssp/api/platform.proto && \
+	protoc --go_out=plugins=grpc:. dfss/dfsst/api/resolution.proto

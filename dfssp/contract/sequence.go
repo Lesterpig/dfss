@@ -14,7 +14,7 @@ func SquaredSignEngine(n uint32) []uint32 {
 	var i, k uint32
 	for i = 0; i < n; i++ {
 		for k = 0; k < n; k++ {
-			sequence[i*n+k] = uint32(k)
+			sequence[i*n+k] = k
 		}
 	}
 

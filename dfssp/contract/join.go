@@ -17,7 +17,7 @@ import (
 // Firstly, every client present BEFORE the call of this function is sent to the stream.
 // Then, client information is sent to the stream as it's available.
 //
-// Please note that the current user will also receive it's own information.
+// Please note that the current user will also receive its own information.
 // There is no timeout, this function will shut down on stream disconnection or on error.
 func JoinSignature(db *mgdb.MongoManager, rooms *common.WaitingGroupMap, in *api.JoinSignatureRequest, stream api.Platform_JoinSignatureServer) {
 	ctx := stream.Context()

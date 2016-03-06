@@ -23,8 +23,8 @@ type CreateManager struct {
 	filename string
 }
 
-// NewCreateManager tries to create a contract on the platform and returns an error or nil
-func NewCreateManager(fileCA, fileCert, fileKey, addrPort, passphrase, filepath, comment string, signers []string) error {
+// SendNewContract tries to create a contract on the platform and returns an error or nil
+func SendNewContract(fileCA, fileCert, fileKey, addrPort, passphrase, filepath, comment string, signers []string) error {
 	m := &CreateManager{
 		auth:     security.NewAuthContainer(fileCA, fileCert, fileKey, addrPort, passphrase),
 		filepath: filepath,
