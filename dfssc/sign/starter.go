@@ -9,6 +9,7 @@ import (
 
 	"dfss"
 	cAPI "dfss/dfssc/api"
+	"dfss/dfssc/common"
 	"dfss/dfssc/security"
 	pAPI "dfss/dfssp/api"
 	"dfss/dfssp/contract"
@@ -28,6 +29,7 @@ type SignatureManager struct {
 	cServer   *grpc.Server
 	sequence  []uint32
 	uuid      string
+	mail	  string
 }
 
 // NewSignatureManager populates a SignatureManager and connects to the platform.
@@ -38,10 +40,12 @@ func NewSignatureManager(fileCA, fileCert, fileKey, addrPort, passphrase string,
 		contract:  c,
 	}
 	var err error
-	_, _, _, err = m.auth.LoadFiles()
+	_, x509cert, _, err := m.auth.LoadFiles()
 	if err != nil {
 		return nil, err
 	}
+
+	m.mail = x509cert.Subject.CommonName
 
 	m.cServer = m.GetServer()
 	go func() { log.Fatalln(net.Listen("0.0.0.0:"+strconv.Itoa(port), m.cServer)) }()
@@ -173,4 +177,95 @@ func (m *SignatureManager) SendReadySign() (signatureUUID string, err error) {
 	m.uuid = launch.SignatureUuid
 	signatureUUID = m.uuid
 	return
+}
+
+// Sign make the SignatureManager perform its specified signature
+func (m *SignatureManager) Sign() error {
+	mySeqId, err := m.FindId()
+	if (err != nil) {
+		return err
+	}
+
+	curIndex, err := common.FindNextIndex(m.sequence, mySeqId, -1)
+	if (err != nil) {
+		return err
+	}
+
+	nextIndex, err := common.FindNextIndex(m.sequence, mySeqId, curIndex)
+	
+	// Promess tounds
+	for (nextIndex != -1) {
+		pendingSet, err := common.GetPendingSet(m.sequence, mySeqId, curIndex)
+		if (err != nil) {
+			return err
+		}
+
+		sendSet, err := common.GetSendSet(m.sequence, mySeqId, curIndex)
+		if (err != nil) {
+			return err
+		}
+
+		// Reception of the due promesses
+		for (len(pendingSet) != 0) {
+			i := 0
+			// TODO
+			// Improve, because potential memory leak
+			// see https://github.com/golang/go/wiki/SliceTricks
+			pendingSet = append(pendingSet[:i], pendingSet[i+1:]...)
+		}
+
+		c := make(chan int)
+		// Sending of the due promesses
+		/*
+		for _, id := range sendSet {
+			go func(id) {
+				promise := m.CreatePromise(id)
+				recpt := m.SendPromise(promise, id)
+				c <- id
+			}(id)
+		}
+		*/
+		
+		// Verifying we sent all the due promesses
+		for _ = range sendSet {
+			<- c
+		}
+	}
+
+	// Signature round
+	m.SendAllSigns()
+	m.RecieveAllSigns()
+
+	return nil
+}
+
+// findId finds the sequence id for the user's email and the contract to sign
+func (m *SignatureManager) FindId() (uint32, error) {
+	signers := m.contract.Signers
+	for id, signer := range signers {
+		if (signer.Email == m.mail) {
+			return uint32(id), nil
+		}
+	}
+	return 0, errors.New("Mail couldn't be found amongst signers")
+}
+
+// TODO
+func (m *SignatureManager) CreatePromise(id uint32) error {
+	return nil
+}
+
+// TODO
+func (m *SignatureManager) SendPromise(id uint32) error {
+	return nil
+}
+
+// TODO
+func (m *SignatureManager) SendAllSigns() error {
+	return nil
+}
+
+// TODO
+func (m *SignatureManager) RecieveAllSigns() error {
+	return nil
 }
