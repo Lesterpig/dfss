@@ -1,12 +1,13 @@
 package main
 
 import (
-	api "dfss/dfssd/api"
 	"golang.org/x/net/context"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/grpclog"
 	"log"
 	"net"
+
+	api "dfss/dfssd/api"
 )
 
 type server struct{}
@@ -15,8 +16,7 @@ type server struct{}
 //
 // Handle incoming log messages
 func (s *server) SendLog(ctx context.Context, in *api.Log) (*api.Ack, error) {
-	// TODO send message to log management
-	log.Printf("[%d] %s:: %s", in.Timestamp, in.Identifier, in.Log)
+	addMessage(in)
 	return &api.Ack{}, nil
 }
 
@@ -29,6 +29,9 @@ func listen(addrPort string) error {
 		return err
 	}
 	log.Printf("Server listening on %s", addrPort)
+
+	// log display manager
+	go displayHandler()
 
 	// bootstrap gRPC service !
 	grpcServer := grpc.NewServer()

@@ -24,4 +24,11 @@ func TestServerAndClient(t *testing.T) {
 		// this one fails silently, so you can't really test it
 		dapi.DLog("This is a log message from a client")
 	}()
+
+	// Start another client
+	go func() {
+		defer dapi.DClose()
+		// this one fails silently, so you can't really test it
+		dapi.DLog("This is a log message from another client")
+	}()
 }
