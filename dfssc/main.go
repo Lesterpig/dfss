@@ -8,11 +8,12 @@ import (
 )
 
 var (
-	verbose  bool
-	fca      string // Path to the CA
-	fcert    string // Path to the certificate
-	fkey     string // Path to the private key
-	addrPort string // Address and port of the platform
+	verbose   bool
+	fca       string // Path to the CA
+	fcert     string // Path to the certificate
+	fkey      string // Path to the private key
+	addrPort  string // Address and port of the platform
+	localPort int    // Port to open for P2P communication
 )
 
 func init() {
@@ -22,6 +23,7 @@ func init() {
 	flag.StringVar(&fcert, "cert", "cert.pem", "Path to the user certificate")
 	flag.StringVar(&fkey, "key", "key.pem", "Path to the private key")
 	flag.StringVar(&addrPort, "host", "localhost:9000", "Host of the DFSS platform")
+	flag.IntVar(&localPort, "port", 9005, "Port to use for P2P communication between clients")
 
 	flag.Usage = func() {
 		fmt.Println("DFSS client command line v" + dfss.Version)
@@ -39,6 +41,7 @@ func init() {
 		fmt.Println("  show <c>   print contract information from file c")
 		fmt.Println("  export <c> export certificate and private key of the user to file c")
 		fmt.Println("  import <c> import private key and certificate from file c")
+		fmt.Println("  sign <c>   sign contract from file c")
 
 		fmt.Println("\nFlags:")
 		flag.PrintDefaults()
@@ -67,6 +70,8 @@ func main() {
 		exportConf(flag.Arg(1))
 	case "import":
 		importConf(flag.Arg(1))
+	case "sign":
+		signContract(flag.Arg(1))
 	default:
 		flag.Usage()
 	}

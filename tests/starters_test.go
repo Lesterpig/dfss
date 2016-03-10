@@ -50,7 +50,7 @@ func startPlatform(tmpDir string) (*exec.Cmd, []byte, error) {
 
 // createClient creates a new working directory for a client, creating ca.pem.
 // It returns a ready-to-run command, but you probably want to set the last argument of the command.
-func createClient(tmpDir string, ca []byte) (*exec.Cmd, error) {
+func createClient(tmpDir string, ca []byte, port int) (*exec.Cmd, error) {
 	path := filepath.Join(os.Getenv("GOPATH"), "bin", "dfssc")
 
 	// Create temporary directory for client
@@ -73,7 +73,7 @@ func createClient(tmpDir string, ca []byte) (*exec.Cmd, error) {
 
 	// Prepare the client command.
 	// The last argument is up to you!
-	cmd := exec.Command(path, "-ca", caPath, "-cert", certPath, "-host", "localhost:"+testPort, "-key", keyPath, "-v")
+	cmd := exec.Command(path, "-ca", caPath, "-cert", certPath, "-host", "127.0.0.1:"+testPort, "-key", keyPath, "-port", strconv.Itoa(port), "-v")
 
 	return cmd, nil
 }

@@ -73,6 +73,19 @@ func TestAddSigner(t *testing.T) {
 	assert.Equal(t, signers[1].UserID.Hex(), id.Hex())
 }
 
+func TestGetHashChain(t *testing.T) {
+	c := entities.NewContract()
+	c.AddSigner(nil, "mail1", []byte{0xaa})
+	c.AddSigner(nil, "mail2", []byte{0xbb, 0xcc})
+	c.AddSigner(nil, "mail3", []byte{})
+
+	chain := c.GetHashChain()
+	assert.Equal(t, 3, len(chain))
+	assert.Equal(t, []byte{0xaa}, chain[0])
+	assert.Equal(t, []byte{0xbb, 0xcc}, chain[1])
+	assert.Equal(t, []byte{}, chain[2])
+}
+
 func assertContractEqual(t *testing.T, contract, fetched entities.Contract) {
 	assert.Equal(t, contract.File, fetched.File)
 	assert.Equal(t, contract.Date.Unix(), fetched.Date.Unix())
@@ -113,10 +126,9 @@ func TestInsertContract(t *testing.T) {
 
 // Insert some contracts with missing user and test waiting contracts for this user
 func TestGetWaitingForUser(t *testing.T) {
-
 	knownID := bson.NewObjectId()
-
 	dropDataset()
+
 	c1 := entities.NewContract()
 	c1.AddSigner(nil, "mail1", []byte{})
 	c1.Ready = false
@@ -138,4 +150,23 @@ func TestGetWaitingForUser(t *testing.T) {
 	contracts, err := repository.GetWaitingForUser("mail1")
 	assert.Equal(t, nil, err)
 	assert.Equal(t, 2, len(contracts))
+}
+
+func TestCheckAuthorization(t *testing.T) {
+	dropDataset()
+	createDataset()
+	id := addTestContract()
+
+	assert.T(t, repository.CheckAuthorization(user1.CertHash, id))
+	assert.T(t, !repository.CheckAuthorization(user1.CertHash, bson.NewObjectId()))
+	assert.T(t, !repository.CheckAuthorization(user2.CertHash, id))
+	assert.T(t, !repository.CheckAuthorization(user2.CertHash, bson.NewObjectId()))
+
+	contract := entities.Contract{}
+	_ = repository.Collection.FindByID(entities.Contract{ID: id}, &contract)
+	contract.Ready = false
+	_, _ = repository.Collection.UpdateByID(contract)
+
+	// Not valid if contract is not ready
+	assert.T(t, !repository.CheckAuthorization(user1.CertHash, id))
 }

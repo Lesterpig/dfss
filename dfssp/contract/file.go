@@ -29,13 +29,12 @@ type TTPJSON struct {
 
 // JSON is the structure used to store contract information in JSON format
 type JSON struct {
-	UUID     string
-	Date     *time.Time
-	Comment  string
-	File     *FileJSON
-	Signers  []SignerJSON
-	Sequence []uint
-	TTP      *TTPJSON
+	UUID    string
+	Date    *time.Time
+	Comment string
+	File    *FileJSON
+	Signers []SignerJSON
+	TTP     *TTPJSON
 }
 
 // GetJSON returns indented json from a contract and some ttp information (nil allowed)

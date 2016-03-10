@@ -2,6 +2,7 @@ package contract_test
 
 import (
 	"crypto/sha512"
+	"fmt"
 	"io/ioutil"
 	"path/filepath"
 	"testing"
@@ -27,7 +28,7 @@ func createDataset() {
 	user1.Email = "user1@example.com"
 	user1.Expiration = time.Now().AddDate(1, 0, 0)
 	user1.Certificate = "Certificate1"
-	user1.CertHash = []byte{0x01}
+	_, _ = fmt.Sscanf("23a012afa19d5892f66ae9681afb3bb010e61c8bb4afdedd6a407fa40dbb7d4d1ad94953ca25866b6b07e25f8bf604cc94b13fb9dc1e7fa53980040db2a7f787", "%x", &user1.CertHash)
 
 	user2.Email = "user2@example.com"
 	user2.Expiration = time.Now().AddDate(1, 0, 0)

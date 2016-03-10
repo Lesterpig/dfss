@@ -52,15 +52,15 @@ func (s *mockServer) PostContract(ctx context.Context, in *api.PostContractReque
 // JoinSignature handler
 //
 // Handle incoming JoinSignatureRequest messages
-func (s *mockServer) JoinSignature(ctx context.Context, in *api.JoinSignatureRequest) (*api.ErrorCode, error) {
+func (s *mockServer) JoinSignature(in *api.JoinSignatureRequest, stream api.Platform_JoinSignatureServer) error {
 	// TODO
-	return nil, nil
+	return nil
 }
 
 // ReadySign handler
 //
 // Handle incoming ReadySignRequest messages
-func (s *mockServer) ReadySign(ctx context.Context, in *api.ReadySignRequest) (*api.ErrorCode, error) {
+func (s *mockServer) ReadySign(ctx context.Context, in *api.ReadySignRequest) (*api.LaunchSignature, error) {
 	// TODO
 	return nil, nil
 }

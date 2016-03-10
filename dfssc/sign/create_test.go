@@ -44,10 +44,10 @@ func TestMain(m *testing.M) {
 }
 
 func TestNewCreateManager(t *testing.T) {
-	err := NewCreateManager(fca, fcert, fkey, addrPort, "password", fcontract, "success", []string{"a@example.com", "b@example.com"})
+	err := SendNewContract(fca, fcert, fkey, addrPort, "password", fcontract, "success", []string{"a@example.com", "b@example.com"})
 	assert.Equal(t, nil, err)
 
-	err = NewCreateManager(fca, fcert, fkey, addrPort, "password", fcontract, "warning", []string{"a@example.com", "b@example.com"})
+	err = SendNewContract(fca, fcert, fkey, addrPort, "password", fcontract, "warning", []string{"a@example.com", "b@example.com"})
 	assert.Equal(t, "Operation succeeded with a warning message: Some users are not ready yet", err.Error())
 }
 

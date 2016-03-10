@@ -7,6 +7,7 @@ import (
 	"text/template"
 
 	"dfss/dfssc/common"
+	"dfss/dfssp/contract"
 )
 
 const contractShowTemplate = `UUID       : {{.UUID}}
@@ -21,24 +22,24 @@ Signers    :
 {{range .Signers}}  - {{.Email}}
 {{end}}`
 
-func showContract(filename string) {
+func showContract(filename string) *contract.JSON {
 
 	data, err := ioutil.ReadFile(filename)
 	if err != nil {
 		fmt.Println("Cannot open file:", err)
-		return
+		return nil
 	}
 
 	c, err := common.UnmarshalDFSSFile(data)
 	if err != nil {
 		fmt.Println("Corrupted file:", err)
-		return
+		return nil
 	}
 
 	tmpl, err := template.New("contract").Parse(contractShowTemplate)
 	if err != nil {
 		fmt.Println("Internal error:", err)
-		return
+		return nil
 	}
 
 	b := new(bytes.Buffer)
@@ -48,5 +49,5 @@ func showContract(filename string) {
 	}
 
 	fmt.Print(b.String())
-
+	return c
 }

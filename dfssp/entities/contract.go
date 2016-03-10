@@ -58,6 +58,16 @@ func (c *Contract) AddSigner(id *bson.ObjectId, email string, hash []byte) {
 	c.Signers = append(c.Signers, *signer)
 }
 
+// GetHashChain returns the ordered slice of signers hashes.
+// It's used to check the dfss file if needed.
+func (c *Contract) GetHashChain() [][]byte {
+	chain := make([][]byte, len(c.Signers))
+	for i, s := range c.Signers {
+		chain[i] = s.Hash
+	}
+	return chain
+}
+
 // ContractRepository to contains every complex methods related to contract
 type ContractRepository struct {
 	Collection *mgdb.MongoCollection
@@ -82,4 +92,18 @@ func (r *ContractRepository) GetWaitingForUser(email string) ([]Contract, error)
 			}},
 	}, &res)
 	return res, err
+}
+
+// CheckAuthorization checks that a client is allowed to sign a specific contract
+func (r *ContractRepository) CheckAuthorization(signerHash []byte, contractID bson.ObjectId) bool {
+
+	count, _ := r.Collection.Collection.Find(bson.M{
+		"_id":   contractID,
+		"ready": true,
+		"signers": bson.M{
+			"$elemMatch": bson.M{"hash": signerHash},
+		},
+	}).Count()
+
+	return count == 1
 }

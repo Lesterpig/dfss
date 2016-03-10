@@ -6,6 +6,7 @@ import (
 
 	"dfss/dfssp/api"
 	"dfss/dfssp/authority"
+	"dfss/dfssp/common"
 	"dfss/dfssp/contract"
 	"dfss/dfssp/user"
 	"dfss/mgdb"
@@ -17,6 +18,7 @@ import (
 type platformServer struct {
 	Pid          *authority.PlatformID
 	DB           *mgdb.MongoManager
+	Rooms        *common.WaitingGroupMap
 	CertDuration int
 	Verbose      bool
 }
@@ -60,17 +62,30 @@ func (s *platformServer) PostContract(ctx context.Context, in *api.PostContractR
 // JoinSignature handler
 //
 // Handle incoming JoinSignatureRequest messages
-func (s *platformServer) JoinSignature(ctx context.Context, in *api.JoinSignatureRequest) (*api.ErrorCode, error) {
-	// TODO
-	return nil, nil
+func (s *platformServer) JoinSignature(in *api.JoinSignatureRequest, stream api.Platform_JoinSignatureServer) error {
+
+	ctx := stream.Context()
+	cn := net.GetCN(&ctx)
+	if len(cn) == 0 {
+		_ = stream.Send(&api.UserConnected{
+			ErrorCode: &api.ErrorCode{Code: api.ErrorCode_BADAUTH},
+		})
+		return nil
+	}
+
+	contract.JoinSignature(s.DB, s.Rooms, in, stream)
+	return nil
 }
 
 // ReadySign handler
 //
 // Handle incoming ReadySignRequest messages
-func (s *platformServer) ReadySign(ctx context.Context, in *api.ReadySignRequest) (*api.ErrorCode, error) {
-	// TODO
-	return nil, nil
+func (s *platformServer) ReadySign(ctx context.Context, in *api.ReadySignRequest) (*api.LaunchSignature, error) {
+	cn := net.GetCN(&ctx)
+	if len(cn) == 0 {
+		return &api.LaunchSignature{ErrorCode: &api.ErrorCode{Code: api.ErrorCode_BADAUTH}}, nil
+	}
+	return contract.ReadySign(s.DB, s.Rooms, &ctx, in), nil
 }
 
 // GetServer returns the GRPC server associated with the platform
@@ -91,6 +106,7 @@ func GetServer(keyPath, db string, certValidity int, verbose bool) *grpc.Server 
 	api.RegisterPlatformServer(server, &platformServer{
 		Pid:          pid,
 		DB:           dbManager,
+		Rooms:        common.NewWaitingGroupMap(),
 		CertDuration: certValidity,
 		Verbose:      verbose,
 	})

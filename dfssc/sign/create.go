@@ -14,32 +14,22 @@ import (
 )
 
 // CreateManager handles the creation of a new contract.
-//
-// TODO create a specific structure containing crypto information
 type CreateManager struct {
-	fileCA     string
-	fileCert   string
-	fileKey    string
-	addrPort   string
-	passphrase string
-	filepath   string
-	comment    string
-	signers    []string
-	hash       []byte
-	filename   string
+	auth     *security.AuthContainer
+	filepath string
+	comment  string
+	signers  []string
+	hash     []byte
+	filename string
 }
 
-// NewCreateManager tries to create a contract on the platform and returns an error or nil
-func NewCreateManager(fileCA, fileCert, fileKey, addrPort, passphrase, filepath, comment string, signers []string) error {
+// SendNewContract tries to create a contract on the platform and returns an error or nil
+func SendNewContract(fileCA, fileCert, fileKey, addrPort, passphrase, filepath, comment string, signers []string) error {
 	m := &CreateManager{
-		fileCA:     fileCA,
-		fileCert:   fileCert,
-		fileKey:    fileKey,
-		addrPort:   addrPort,
-		passphrase: passphrase,
-		filepath:   filepath,
-		comment:    comment,
-		signers:    signers,
+		auth:     security.NewAuthContainer(fileCA, fileCert, fileKey, addrPort, passphrase),
+		filepath: filepath,
+		comment:  comment,
+		signers:  signers,
 	}
 
 	err := m.computeFile()
@@ -71,22 +61,13 @@ func (m *CreateManager) computeFile() error {
 
 // sendRequest sends a new contract request for the platform and send it
 func (m *CreateManager) sendRequest() (*api.ErrorCode, error) {
-	ca, err := security.GetCertificate(m.fileCA)
+
+	ca, cert, key, err := m.auth.LoadFiles()
 	if err != nil {
 		return nil, err
 	}
 
-	cert, err := security.GetCertificate(m.fileCert)
-	if err != nil {
-		return nil, err
-	}
-
-	key, err := security.GetPrivateKey(m.fileKey, m.passphrase)
-	if err != nil {
-		return nil, err
-	}
-
-	conn, err := net.Connect(m.addrPort, cert, key, ca)
+	conn, err := net.Connect(m.auth.AddrPort, cert, key, ca)
 	if err != nil {
 		return nil, err
 	}

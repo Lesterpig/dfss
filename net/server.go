@@ -56,18 +56,18 @@ func Listen(addrPort string, grpcServer *grpc.Server) error {
 
 // GetTLSState returns the current tls connection state from a grpc context.
 // If you just need to check that the connected peer provides its certificate, use `GetCN`.
-func GetTLSState(ctx *context.Context) (tls.ConnectionState, bool) {
+func GetTLSState(ctx *context.Context) (tls.ConnectionState, net.Addr, bool) {
 	p, ok := peer.FromContext(*ctx)
 	if !ok {
-		return tls.ConnectionState{}, false
+		return tls.ConnectionState{}, nil, false
 	}
-	return p.AuthInfo.(credentials.TLSInfo).State, true
+	return p.AuthInfo.(credentials.TLSInfo).State, p.Addr, true
 }
 
 // GetCN returns the current common name of connected peer from grpc context.
 // The returned string is empty if encountering a non-auth peer.
 func GetCN(ctx *context.Context) string {
-	state, ok := GetTLSState(ctx)
+	state, _, ok := GetTLSState(ctx)
 	if !ok || len(state.VerifiedChains) == 0 {
 		return ""
 	}
