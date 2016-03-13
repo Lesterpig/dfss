@@ -3,9 +3,11 @@ package authority
 import (
 	"crypto/rsa"
 	"crypto/x509"
-	"dfss/auth"
 	"io/ioutil"
+	"os"
 	"path/filepath"
+
+	"dfss/auth"
 )
 
 const (
@@ -21,50 +23,52 @@ type PlatformID struct {
 	RootCA *x509.Certificate
 }
 
-// GenerateRootCA constructs a self-signed certificate, using a unique serial number randomly generated
-func GenerateRootCA(days int, country, organization, unit, cn string, key *rsa.PrivateKey) ([]byte, error) {
-	serial := auth.GenerateUID()
-
-	cert, err := auth.GetSelfSignedCertificate(days, serial, country, organization, unit, cn, key)
-
-	if err != nil {
-		return nil, err
-	}
-
-	return cert, nil
-}
-
 // Initialize creates and saves the platform's private key and root certificate to a PEM format.
-//
+// If ca and rKey are not nil, they will be used as the root certificate and root private key instead of creating a ones.
 // The files are saved at the specified path.
-func Initialize(bits, days int, country, organization, unit, cn, path string) error {
-	// Generating the private key.
+func Initialize(bits, days int, country, organization, unit, cn, path string, ca *x509.Certificate, rKey *rsa.PrivateKey) error {
+	// Generate the private key.
 	key, err := auth.GeneratePrivateKey(bits)
 
 	if err != nil {
 		return err
 	}
 
-	// Generating the root certificate, using the private key.
-	cert, err := GenerateRootCA(days, country, organization, unit, cn, key)
-
-	if err != nil {
-		return err
-	}
-
-	// Converting the private key to a PEM format, and saving it.
-	keyPem := auth.PrivateKeyToPEM(key)
-	keyPath := filepath.Join(path, PkeyFileName)
-	err = ioutil.WriteFile(keyPath, keyPem, 0600)
-
-	if err != nil {
-		return err
-	}
-
-	// Saving the root certificate.
+	var cert []byte
 	certPath := filepath.Join(path, RootCAFileName)
-	err = ioutil.WriteFile(certPath, cert, 0600)
+	keyPath := filepath.Join(path, PkeyFileName)
 
+	if ca == nil {
+		// Generate the root certificate, using the private key.
+		cert, err = auth.GetSelfSignedCertificate(days, auth.GenerateUID(), country, organization, unit, cn, key)
+	} else {
+		csr, _ := auth.GetCertificateRequest(country, organization, unit, cn, key)
+		request, _ := auth.PEMToCertificateRequest(csr)
+		cert, err = auth.GetCertificate(days, auth.GenerateUID(), request, ca, rKey)
+		// Override default path values
+		certPath = filepath.Join(path, "cert.pem")
+		keyPath = filepath.Join(path, "key.pem")
+	}
+
+	if err != nil {
+		return err
+	}
+
+	// Create missing folders, if needed
+	err = os.MkdirAll(path, os.ModeDir|0700)
+	if err != nil {
+		return err
+	}
+
+	// Convert the private key to a PEM format, and save it.
+	keyPem := auth.PrivateKeyToPEM(key)
+	err = ioutil.WriteFile(keyPath, keyPem, 0600)
+	if err != nil {
+		return err
+	}
+
+	// Save the root certificate.
+	err = ioutil.WriteFile(certPath, cert, 0600)
 	if err != nil {
 		return err
 	}
@@ -81,28 +85,24 @@ func Start(path string) (*PlatformID, error) {
 	keyPath := filepath.Join(path, PkeyFileName)
 	certPath := filepath.Join(path, RootCAFileName)
 
-	// Recovering the private rsa key from file.
+	// Recover the private rsa key from file.
 	keyBytes, err := ioutil.ReadFile(keyPath)
-
 	if err != nil {
 		return nil, err
 	}
 
 	key, err := auth.PEMToPrivateKey(keyBytes)
-
 	if err != nil {
 		return nil, err
 	}
 
-	// Recovering the root certificate from file.
+	// Recover the root certificate from file.
 	certBytes, err := ioutil.ReadFile(certPath)
-
 	if err != nil {
 		return nil, err
 	}
 
 	cert, err := auth.PEMToCertificate(certBytes)
-
 	if err != nil {
 		return nil, err
 	}

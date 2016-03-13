@@ -1,24 +1,36 @@
 package main
 
 import (
-	"dfss"
-	dapi "dfss/dfssd/api"
 	"flag"
 	"fmt"
+	"os"
 	"runtime"
+
+	"dfss"
+	dapi "dfss/dfssd/api"
+	"dfss/dfsst/server"
+	"dfss/net"
 )
 
 var (
-	verbose, demo        bool
-	port, address, dbURI string
+	verbose, demo bool
+	fca           string // Path to the CA
+	fcert         string // Path to the certificate
+	fkey          string // Path to the private key
+	address       string
+	dbURI         string
+	port          string
 )
 
 func init() {
 
 	flag.BoolVar(&verbose, "v", false, "Print verbose messages")
+	flag.StringVar(&fca, "ca", "ca.pem", "Path to the root certificate")
+	flag.StringVar(&fcert, "cert", "cert.pem", "Path to the user certificate")
+	flag.StringVar(&fkey, "key", "key.pem", "Path to the private key")
 	flag.BoolVar(&demo, "d", false, "Enable demonstrator")
 
-	flag.StringVar(&port, "p", "9010", "Default port listening")
+	flag.StringVar(&port, "p", "9020", "Default port listening")
 	flag.StringVar(&address, "a", "0.0.0.0", "Default address to bind for listening")
 
 	flag.StringVar(&dbURI, "db", "mongodb://localhost/dfss", "Name of the environment variable containing the server url in standard MongoDB format")
@@ -31,8 +43,8 @@ func init() {
 		fmt.Println("  dfssp [flags] command")
 
 		fmt.Println("\nThe commands are:")
-		fmt.Println("  start    [db, a, p]")
-		fmt.Println("           start the TTP service")
+		fmt.Println("  start    start the TTP service")
+		fmt.Println("           fill the `DFSS_TTP_PASSWORD` environment variable if the private key is enciphered")
 		fmt.Println("  help     print this help")
 		fmt.Println("  version  print dfss protocol version")
 
@@ -52,13 +64,16 @@ func main() {
 	case "version":
 		fmt.Println("v"+dfss.Version, runtime.GOOS, runtime.GOARCH)
 	case "start":
-		// srv := server.GetServer(dbURI, verbose)
-		// fmt.Println("Listening on " + address + ":" + port)
-		// dapi.DLog("TTP server started on " + address + ":" + port)
-		// err := net.Listen(address+":"+port, srv)
-		// if err != nil {
-		//	  fmt.Println(err)
-		// }
+		password := os.Getenv("DFSS_TTP_PASSWORD")
+		srv := server.GetServer(fca, fcert, fkey, password, dbURI, verbose)
+
+		addrPort := address + ":" + port
+		fmt.Println("Listening on " + addrPort)
+		dapi.DLog("TTP server started on " + addrPort)
+		err := net.Listen(addrPort, srv)
+		if err != nil {
+			fmt.Fprintln(os.Stderr, err)
+		}
 	default:
 		flag.Usage()
 	}
