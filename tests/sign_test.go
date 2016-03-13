@@ -21,10 +21,11 @@ func TestSignContract(t *testing.T) {
 	// Start the platform
 	workingDir, err := ioutil.TempDir("", "dfss_")
 	assert.Equal(t, nil, err)
-	platform, ca, err := startPlatform(workingDir)
+	platform, ttp, ca, err := startPlatform(workingDir)
 	assert.Equal(t, nil, err)
 	defer func() {
 		_ = platform.Process.Kill()
+		_ = ttp.Process.Kill()
 		_ = os.RemoveAll(workingDir)
 	}()
 

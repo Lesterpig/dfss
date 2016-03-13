@@ -2,11 +2,13 @@ package authority
 
 import (
 	"crypto/rsa"
-	"dfss/auth"
 	"fmt"
+	"io/ioutil"
 	"os"
 	"path/filepath"
 	"testing"
+
+	"dfss/auth"
 )
 
 var pkey *rsa.PrivateKey
@@ -17,11 +19,11 @@ func TestMain(m *testing.M) {
 }
 
 func TestInitialize(t *testing.T) {
-	path := os.TempDir()
+	path, _ := ioutil.TempDir("", "")
 	keyPath := filepath.Join(path, PkeyFileName)
 	certPath := filepath.Join(path, RootCAFileName)
 
-	err := Initialize(1024, 365, "country", "organization", "unit", "cn", path)
+	err := Initialize(1024, 365, "country", "organization", "unit", "cn", path, nil, nil)
 
 	if err != nil {
 		t.Fatal(err)
@@ -29,36 +31,54 @@ func TestInitialize(t *testing.T) {
 
 	if _, err = os.Stat(keyPath); os.IsNotExist(err) {
 		t.Fatal("Private key file couldn't be found")
-	} else {
-		_ = os.Remove(keyPath)
 	}
 
 	if _, err = os.Stat(certPath); os.IsNotExist(err) {
 		t.Fatal("Root certificate file couldn't be found")
-	} else {
-		_ = os.Remove(certPath)
 	}
+
+	_ = os.RemoveAll(path)
 }
 
-func ExampleInitialize() {
-	path := os.TempDir()
+func Example() {
+	path, _ := ioutil.TempDir("", "")
 	keyPath := filepath.Join(path, PkeyFileName)
 	certPath := filepath.Join(path, RootCAFileName)
 
-	err := Initialize(1024, 365, "country", "organization", "unit", "cn", path)
-
+	// Generate root certificate and key
+	err := Initialize(1024, 365, "UK", "DFSS", "unit", "ROOT", path, nil, nil)
 	if err != nil {
 		fmt.Println(err)
+		return
 	}
 
 	CheckFile(keyPath, "Private key")
 	CheckFile(certPath, "Certificate")
 
+	// Fetch files into memory
+	pid, err := Start(path)
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
+
+	// Generate child certificate and key
+	childPath := filepath.Join(path, "child")
+	err = Initialize(1024, 10, "FR", "DFSS", "unit", "CHILD", childPath, pid.RootCA, pid.Pkey)
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
+
+	CheckFile(filepath.Join(childPath, "key.pem"), "Child private key")
+	CheckFile(filepath.Join(childPath, "cert.pem"), "Child certificate")
+
+	_ = os.RemoveAll(path)
 	// Output:
 	// Private key file has been found
-	// Private key file has been deleted
 	// Certificate file has been found
-	// Certificate file has been deleted
+	// Child private key file has been found
+	// Child certificate file has been found
 }
 
 func CheckFile(path, name string) {
@@ -66,24 +86,14 @@ func CheckFile(path, name string) {
 		fmt.Println(name + " file couldn't be found")
 	} else {
 		fmt.Println(name + " file has been found")
-		err = os.Remove(path)
-		if err != nil {
-			fmt.Println(err)
-		} else {
-			fmt.Println(name + " file has been deleted")
-		}
 	}
 }
 
 func TestStart(t *testing.T) {
-	path := os.TempDir()
-	keyPath := filepath.Join(path, PkeyFileName)
-	certPath := filepath.Join(path, RootCAFileName)
-
-	_ = Initialize(1024, 365, "country", "organization", "unit", "cn", path)
+	path, _ := ioutil.TempDir("", "")
+	_ = Initialize(1024, 365, "country", "organization", "unit", "cn", path, nil, nil)
 
 	pid, err := Start(path)
-
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -91,6 +101,5 @@ func TestStart(t *testing.T) {
 		t.Fatal("Data was not recovered from saved files")
 	}
 
-	_ = os.Remove(keyPath)
-	_ = os.Remove(certPath)
+	_ = os.RemoveAll(path)
 }

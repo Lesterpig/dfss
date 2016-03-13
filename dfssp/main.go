@@ -1,15 +1,17 @@
 package main
 
 import (
+	"flag"
+	"fmt"
+	"os"
+	"path/filepath"
+	"runtime"
+
 	"dfss"
 	dapi "dfss/dfssd/api"
 	"dfss/dfssp/authority"
 	"dfss/dfssp/server"
 	"dfss/net"
-	"flag"
-	"fmt"
-	"os"
-	"runtime"
 )
 
 var (
@@ -48,7 +50,9 @@ func init() {
 		fmt.Println("\nThe commands are:")
 		fmt.Println("  init     [cn, country, keySize, org, path, unit, rootValidity]")
 		fmt.Println("           create and save the platform's private key and root certificate")
-		fmt.Println("  start    [path, db, a, p]")
+		fmt.Println("  ttp      [cn, country, keySize, org, path, unit, certValidity]")
+		fmt.Println("           create and save the TTP's private key and certificate")
+		fmt.Println("  start    [path, db, a, p, certValidity]")
 		fmt.Println("           start the platform after loading its private key and root certificate")
 		fmt.Println("  help     print this help")
 		fmt.Println("  version  print dfss client version")
@@ -69,19 +73,30 @@ func main() {
 	case "version":
 		fmt.Println("v"+dfss.Version, runtime.GOOS, runtime.GOARCH)
 	case "init":
-		err := authority.Initialize(keySize, rootValidity, country, org, unit, cn, path)
+		err := authority.Initialize(keySize, rootValidity, country, org, unit, cn, path, nil, nil)
 		if err != nil {
-			fmt.Println("An error occured during the initialization operation:", err)
+			fmt.Fprintln(os.Stderr, "An error occured during the initialization operation:", err)
 			os.Exit(1)
 		}
-		dapi.DLog("Private key generated !")
+		dapi.DLog("Private key and root certificate generated")
+	case "ttp":
+		pid, err := authority.Start(path)
+		if err != nil {
+			fmt.Fprintln(os.Stderr, "Bad root CA or key; please use the `init` command before the `ttp` one.\n", err)
+		}
+		ttpPath := filepath.Join(path, "ttp")
+		err = authority.Initialize(keySize, certValidity, country, org, unit, cn, ttpPath, pid.RootCA, pid.Pkey)
+		if err != nil {
+			fmt.Fprintln(os.Stderr, "An error occured during TTP credentials generation:", err)
+		}
+		dapi.DLog("Private key and certificate generated for TTP")
 	case "start":
 		srv := server.GetServer(path, dbURI, certValidity, verbose)
 		fmt.Println("Listening on " + address + ":" + port)
 		dapi.DLog("Platform server started on " + address + ":" + port)
 		err := net.Listen(address+":"+port, srv)
 		if err != nil {
-			fmt.Println(err)
+			fmt.Fprintln(os.Stderr, err)
 		}
 	default:
 		flag.Usage()

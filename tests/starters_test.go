@@ -16,36 +16,52 @@ const testPort = "9090"
 
 var currentClient = 0
 
-// startPlatform creates root certificate for the platform and starts the platform.
-func startPlatform(tmpDir string) (*exec.Cmd, []byte, error) {
+// startPlatform creates root certificate for the platform and the TTP, and starts both modules
+func startPlatform(tmpDir string) (platform, ttp *exec.Cmd, ca []byte, err error) {
 	path := filepath.Join(os.Getenv("GOPATH"), "bin", "dfssp")
+	ttpPath := filepath.Join(os.Getenv("GOPATH"), "bin", "dfsst")
 
 	// Create temporary directory for platform
 	dir, err := ioutil.TempDir(tmpDir, "p_")
 	if err != nil {
-		return nil, nil, err
+		return
 	}
 
 	// Init
 	cmd := exec.Command(path, "-path", dir, "-v", "init")
 	err = cmd.Run()
 	if err != nil {
-		return nil, nil, err
+		return
+	}
+
+	// Create TTP working directory
+	cmd = exec.Command(path, "-path", dir, "-v", "-cn", "ttp", "ttp")
+	err = cmd.Run()
+	if err != nil {
+		return
 	}
 
 	// Get root certificate
-	ca, err := ioutil.ReadFile(filepath.Join(dir, "dfssp_rootCA.pem"))
+	ca, err = ioutil.ReadFile(filepath.Join(dir, "dfssp_rootCA.pem"))
 	if err != nil {
-		return nil, nil, err
+		return
 	}
 
-	// Start
-	cmd = exec.Command(path, "-db", dbURI, "-path", dir, "-p", testPort, "-v", "start")
-	cmd.Stdout = os.Stdout
-	cmd.Stderr = os.Stderr
-	err = cmd.Start()
+	// Start platform
+	platform = exec.Command(path, "-db", dbURI, "-path", dir, "-p", testPort, "-v", "start")
+	platform.Stdout = os.Stdout
+	platform.Stderr = os.Stderr
+	err = platform.Start()
 
-	return cmd, ca, err
+	// Start TTP
+	ttp = exec.Command(ttpPath, "-db", dbURI, "-p", "9098", "start")
+	ttp.Dir = filepath.Join(dir, "ttp")
+	ttp.Stdout = os.Stdout
+	ttp.Stderr = os.Stderr
+	_ = ioutil.WriteFile(filepath.Join(ttp.Dir, "ca.pem"), ca, 0600)
+	err = ttp.Start()
+
+	return
 }
 
 // createClient creates a new working directory for a client, creating ca.pem.

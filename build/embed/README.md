@@ -22,12 +22,13 @@ You just have to untar the archive and run the following binaries:
 ```bash
 ./dfssc help # Client
 ./dfssp help # Platform
+./dfsst help # TTP
 ./dfssd help # Demonstrator
 ```
 
 Here is a basic tutorial to setup a new DFSS environment.
 
-### Setup platform
+### Setup platform and TTP (Trusted Third Party)
 
 The first thing to do is to create the *root certificate of authentication* for the platform.
 You can configure several parameters for that (check the `help` command of `dfssp`).
@@ -36,6 +37,13 @@ For instance, if we are running the plaform on the `example.com` host:
 
 ```bash
 ./dfssp -cn example.com -country FR -rootValidity 3650 init
+```
+
+Then, it is possible to create TTP credentials from generated root credentials.
+The generated files are stored in a subdirectory "ttp".
+
+```bash
+./dfssp -cn ttp.example.com -country FR -certValidity 365 ttp
 ```
 
 You can then start the platform. Here we are considering a mongoDB database running on the same host.
@@ -53,6 +61,12 @@ Then:
 
 ```bash
 ./dfssp start
+```
+
+You can also start the TTP:
+
+```bash
+./dfsst -cert ttp/cert.pem -key ttp/cert.pem start
 ```
 
 ### Setup clients
