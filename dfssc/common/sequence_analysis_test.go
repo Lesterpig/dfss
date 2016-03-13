@@ -2,8 +2,8 @@ package common
 
 import (
 	"fmt"
-	"testing"
 	"github.com/bmizerany/assert"
+	"testing"
 )
 
 func TestFindNextIndex(t *testing.T) {
@@ -120,6 +120,22 @@ func TestGetSendSet(t *testing.T) {
 	res, err = GetSendSet(s, id, len(s))
 	assert.Equal(t, len(res), 0)
 	assert.Equal(t, err.Error(), "Index out of range")
+}
+
+func TestGetAllButOne(t *testing.T) {
+	s := []uint32{0, 1, 2, 0, 1, 2}
+	id := uint32(2)
+
+	res := GetAllButOne(s, id)
+	assert.Equal(t, len(res), 2)
+	assert.Equal(t, res[0], uint32(0))
+	assert.Equal(t, res[1], uint32(1))
+
+	res = GetAllButOne(s, uint32(42))
+	assert.Equal(t, len(res), 3)
+	assert.Equal(t, res[0], uint32(0))
+	assert.Equal(t, res[1], uint32(1))
+	assert.Equal(t, res[2], uint32(2))
 }
 
 func ExampleSequenceAnalysis() {

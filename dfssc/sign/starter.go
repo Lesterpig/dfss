@@ -29,7 +29,17 @@ type SignatureManager struct {
 	cServer   *grpc.Server
 	sequence  []uint32
 	uuid      string
-	mail	  string
+	keyHash   [][]byte
+	mail      string
+	archives  *Archives
+}
+
+// Archives stores the recieved and sent messages, as evidence if needed
+type Archives struct {
+	sentPromises       []*cAPI.Promise
+	recievedPromises   []*cAPI.Promise
+	sentSignatures     []*cAPI.Signature
+	recievedSignatures []*cAPI.Signature
 }
 
 // NewSignatureManager populates a SignatureManager and connects to the platform.
@@ -38,14 +48,20 @@ func NewSignatureManager(fileCA, fileCert, fileKey, addrPort, passphrase string,
 		auth:      security.NewAuthContainer(fileCA, fileCert, fileKey, addrPort, passphrase),
 		localPort: port,
 		contract:  c,
+		archives: &Archives{
+			sentPromises:       make([]*cAPI.Promise, 0),
+			recievedPromises:   make([]*cAPI.Promise, 0),
+			sentSignatures:     make([]*cAPI.Signature, 0),
+			recievedSignatures: make([]*cAPI.Signature, 0),
+		},
 	}
 	var err error
-	_, x509cert, _, err := m.auth.LoadFiles()
+	_, _, _, err = m.auth.LoadFiles()
 	if err != nil {
 		return nil, err
 	}
 
-	m.mail = x509cert.Subject.CommonName
+	m.mail = m.auth.Cert.Subject.CommonName
 
 	m.cServer = m.GetServer()
 	go func() { log.Fatalln(net.Listen("0.0.0.0:"+strconv.Itoa(port), m.cServer)) }()
@@ -175,38 +191,32 @@ func (m *SignatureManager) SendReadySign() (signatureUUID string, err error) {
 
 	m.sequence = launch.Sequence
 	m.uuid = launch.SignatureUuid
+	m.keyHash = launch.KeyHash
 	signatureUUID = m.uuid
 	return
 }
 
-// Sign make the SignatureManager perform its specified signature
+// Sign makes the SignatureManager perform its specified signature
 func (m *SignatureManager) Sign() error {
-	mySeqId, err := m.FindId()
-	if (err != nil) {
+	myID, currentIndex, nextIndex, err := m.Initialize()
+	if err != nil {
 		return err
 	}
 
-	curIndex, err := common.FindNextIndex(m.sequence, mySeqId, -1)
-	if (err != nil) {
-		return err
-	}
-
-	nextIndex, err := common.FindNextIndex(m.sequence, mySeqId, curIndex)
-	
-	// Promess tounds
-	for (nextIndex != -1) {
-		pendingSet, err := common.GetPendingSet(m.sequence, mySeqId, curIndex)
-		if (err != nil) {
+	// Promess rounds
+	for nextIndex != -1 {
+		pendingSet, err := common.GetPendingSet(m.sequence, myID, currentIndex)
+		if err != nil {
 			return err
 		}
 
-		sendSet, err := common.GetSendSet(m.sequence, mySeqId, curIndex)
-		if (err != nil) {
+		sendSet, err := common.GetSendSet(m.sequence, myID, currentIndex)
+		if err != nil {
 			return err
 		}
 
 		// Reception of the due promesses
-		for (len(pendingSet) != 0) {
+		for len(pendingSet) != 0 {
 			i := 0
 			// TODO
 			// Improve, because potential memory leak
@@ -217,54 +227,188 @@ func (m *SignatureManager) Sign() error {
 		c := make(chan int)
 		// Sending of the due promesses
 		/*
-		for _, id := range sendSet {
-			go func(id) {
-				promise := m.CreatePromise(id)
-				recpt := m.SendPromise(promise, id)
-				c <- id
-			}(id)
-		}
+			for _, id := range sendSet {
+				go func(id) {
+					promise, err := m.CreatePromise(id)
+					recpt := m.SendPromise(promise, id)
+					c <- id
+				}(id)
+			}
 		*/
-		
+
 		// Verifying we sent all the due promesses
 		for _ = range sendSet {
-			<- c
+			<-c
+		}
+
+		currentIndex = nextIndex
+		nextIndex, err = common.FindNextIndex(m.sequence, myID, currentIndex)
+		if err != nil {
+			return err
 		}
 	}
 
 	// Signature round
-	m.SendAllSigns()
-	m.RecieveAllSigns()
+	err = m.SendAllSigns()
+	if err != nil {
+		return err
+	}
+	err = m.RecieveAllSigns()
+	if err != nil {
+		return err
+	}
 
 	return nil
 }
 
-// findId finds the sequence id for the user's email and the contract to sign
-func (m *SignatureManager) FindId() (uint32, error) {
+// Initialize computes the values needed for the start of the signing
+func (m *SignatureManager) Initialize() (uint32, int, int, error) {
+	myID, err := m.FindID()
+	if err != nil {
+		return 0, 0, 0, err
+	}
+
+	currentIndex, err := common.FindNextIndex(m.sequence, myID, -1)
+	if err != nil {
+		return 0, 0, 0, err
+	}
+
+	nextIndex, err := common.FindNextIndex(m.sequence, myID, currentIndex)
+	if err != nil {
+		return 0, 0, 0, err
+	}
+
+	return myID, currentIndex, nextIndex, nil
+}
+
+// FindID finds the sequence id for the user's email and the contract to sign
+func (m *SignatureManager) FindID() (uint32, error) {
 	signers := m.contract.Signers
 	for id, signer := range signers {
-		if (signer.Email == m.mail) {
+		if signer.Email == m.mail {
 			return uint32(id), nil
 		}
 	}
 	return 0, errors.New("Mail couldn't be found amongst signers")
 }
 
-// TODO
-func (m *SignatureManager) CreatePromise(id uint32) error {
-	return nil
+// CreatePromise creates a promise from 'from' to 'to', in the context of the SignatureManager
+// provided the specified sequence indexes are valid
+func (m *SignatureManager) CreatePromise(from, to uint32) (*cAPI.Promise, error) {
+	if int(from) >= len(m.keyHash) || int(to) >= len(m.keyHash) {
+		return &cAPI.Promise{}, errors.New("Invalid id for promise creation")
+	}
+	promise := &cAPI.Promise{
+		RecipientKeyHash: m.keyHash[to],
+		SenderKeyHash:    m.keyHash[from],
+		SignatureUuid:    m.uuid,
+		ContractUuid:     m.contract.UUID,
+	}
+	return promise, nil
 }
 
+// SendPromise sends the specified promise to the specified peer
 // TODO
-func (m *SignatureManager) SendPromise(id uint32) error {
-	return nil
+func (m *SignatureManager) SendPromise(promise *cAPI.Promise, to uint32) (*pAPI.ErrorCode, error) {
+	connection, err := m.GetClient(to)
+	if err != nil {
+		return &pAPI.ErrorCode{}, err
+	}
+
+	// TODO
+	// Handle the timeout
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Minute)
+	defer cancel()
+
+	errCode, err := (*connection).TreatPromise(ctx, promise)
+	if err != nil {
+		return &pAPI.ErrorCode{}, err
+	}
+
+	m.archives.sentPromises = append(m.archives.sentPromises, promise)
+
+	return errCode, nil
 }
 
+// GetClient retrieves the Client to the specified sequence id provided it exists
+func (m *SignatureManager) GetClient(to uint32) (*cAPI.ClientClient, error) {
+	mailto := m.contract.Signers[to].Email
+
+	if _, ok := m.peers[mailto]; !ok {
+		return nil, fmt.Errorf("No connection to user %s", mailto)
+	}
+
+	return m.peers[mailto], nil
+}
+
+// SendAllSigns creates and sends signatures to all the signers of the contract
 // TODO
+// Use goroutines to send in parallel
 func (m *SignatureManager) SendAllSigns() error {
+	myID, err := m.FindID()
+	if err != nil {
+		return err
+	}
+
+	sendSet := common.GetAllButOne(m.sequence, myID)
+
+	for _, id := range sendSet {
+		signature, err := m.CreateSignature(myID, id)
+		if err != nil {
+			return err
+		}
+
+		_, err = m.SendSignature(signature, id)
+		if err != nil {
+			return err
+		}
+	}
+
 	return nil
 }
 
+// CreateSignature creates a signature from from to to, in the context of the SignatureManager
+// provided the specified sequence indexes are valid
+// TODO
+// Implement a true cryptographic signature
+func (m *SignatureManager) CreateSignature(from, to uint32) (*cAPI.Signature, error) {
+	if int(from) >= len(m.keyHash) || int(to) >= len(m.keyHash) {
+		return &cAPI.Signature{}, errors.New("Invalid id for signature creation")
+	}
+	signature := &cAPI.Signature{
+		RecipientKeyHash: m.keyHash[to],
+		SenderKeyHash:    m.keyHash[from],
+		Signature:        "Signature",
+		SignatureUuid:    m.uuid,
+		ContractUuid:     m.contract.UUID,
+	}
+	return signature, nil
+}
+
+// SendSignature sends the specified signature to the specified peer
+// TODO
+func (m *SignatureManager) SendSignature(signature *cAPI.Signature, to uint32) (*pAPI.ErrorCode, error) {
+	connection, err := m.GetClient(to)
+	if err != nil {
+		return &pAPI.ErrorCode{}, err
+	}
+
+	// TODO
+	// Handle the timeout
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Minute)
+	defer cancel()
+
+	errCode, err := (*connection).TreatSignature(ctx, signature)
+	if err != nil {
+		return &pAPI.ErrorCode{}, err
+	}
+
+	m.archives.sentSignatures = append(m.archives.sentSignatures, signature)
+
+	return errCode, nil
+}
+
+// RecieveAllSigns is not done yet
 // TODO
 func (m *SignatureManager) RecieveAllSigns() error {
 	return nil
