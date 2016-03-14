@@ -94,7 +94,7 @@ func contains(s []uint32, e uint32) bool {
 
 // GetAllButOne creates the slice of all sequence ids, except the one specified
 func GetAllButOne(s []uint32, e uint32) []uint32 {
-	res := make([]uint32, 0)
+	var res = make([]uint32, 0)
 
 	for i := 0; i < len(s); i++ {
 		curID := s[i]

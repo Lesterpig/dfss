@@ -3,17 +3,12 @@ package sign
 import (
 	"errors"
 	"fmt"
-	"log"
-	"strconv"
 	"time"
 
-	"dfss"
 	cAPI "dfss/dfssc/api"
 	"dfss/dfssc/common"
-	"dfss/dfssc/security"
+	dAPI "dfss/dfssd/api"
 	pAPI "dfss/dfssp/api"
-	"dfss/dfssp/contract"
-	"dfss/net"
 	"golang.org/x/net/context"
 	"google.golang.org/grpc"
 )
@@ -27,14 +22,14 @@ func (m *SignatureManager) Sign() error {
 
 	// Promess rounds
 	for nextIndex != -1 {
-		pendingSet, err := common.GetPendingSet(m.sequence, myID, currentIndex)
-		if err != nil {
-			return err
+		pendingSet, err1 := common.GetPendingSet(m.sequence, myID, currentIndex)
+		if err1 != nil {
+			return err1 // err is renamed to avoid shadowing err on linter check
 		}
 
-		sendSet, err := common.GetSendSet(m.sequence, myID, currentIndex)
-		if err != nil {
-			return err
+		sendSet, err1 := common.GetSendSet(m.sequence, myID, currentIndex)
+		if err1 != nil {
+			return err1
 		}
 
 		// Reception of the due promesses
@@ -64,9 +59,9 @@ func (m *SignatureManager) Sign() error {
 		}
 
 		currentIndex = nextIndex
-		nextIndex, err = common.FindNextIndex(m.sequence, myID, currentIndex)
-		if err != nil {
-			return err
+		nextIndex, err1 = common.FindNextIndex(m.sequence, myID, currentIndex)
+		if err1 != nil {
+			return err1
 		}
 	}
 
@@ -106,14 +101,16 @@ func (m *SignatureManager) SendPromise(promise *cAPI.Promise, to uint32) (*pAPI.
 		return &pAPI.ErrorCode{}, err
 	}
 
-	// TODO
 	// Handle the timeout
-	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Minute)
+	ctx, cancel := context.WithTimeout(context.Background(), time.Minute)
 	defer cancel()
 
 	errCode, err := (*connection).TreatPromise(ctx, promise)
-	if err != nil {
-		return &pAPI.ErrorCode{}, err
+	if err == grpc.ErrClientConnTimeout {
+		dAPI.DLog("Promise timeout for [" + fmt.Sprintf("%d", to) + "]")
+		return &pAPI.ErrorCode{Code: pAPI.ErrorCode_TIMEOUT, Message: "promise timeout"}, err
+	} else if err != nil {
+		return &pAPI.ErrorCode{Code: pAPI.ErrorCode_INTERR, Message: "internal server error"}, err
 	}
 
 	m.archives.sentPromises = append(m.archives.sentPromises, promise)

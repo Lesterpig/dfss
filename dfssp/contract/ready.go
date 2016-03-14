@@ -66,7 +66,7 @@ func ReadySign(db *mgdb.MongoManager, rooms *common.WaitingGroupMap, ctx *contex
 			return nil
 		case <-time.After(10 * time.Minute):
 			rooms.Unjoin(roomID, channel)
-			return &api.LaunchSignature{ErrorCode: &api.ErrorCode{Code: api.ErrorCode_INTERR, Message: "timeout"}}
+			return &api.LaunchSignature{ErrorCode: &api.ErrorCode{Code: api.ErrorCode_TIMEOUT, Message: "timeout for ready signal"}}
 		}
 	}
 
