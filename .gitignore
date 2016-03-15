@@ -1,2 +1,5 @@
 build/embed/VERSION
 release/
+
+bin/
+*.qrc.go
