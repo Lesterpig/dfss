@@ -12,11 +12,17 @@ service Client {
 
 // Promise message contains all the required information to verify
 // the identity of the sender and reciever, and the actual promise
+//
+// * sequence is transmitted by platform and identical across clients
+// * TODO implement an global signature for content
 message Promise {
-	bytes recipientKeyHash = 1;	// SHA-512
-	bytes senderKeyHash = 2;	// SHA-512
-	string signatureUuid = 3;
-	string contractUuid = 4;
+    bytes recipientKeyHash = 1; // SHA-512
+    bytes senderKeyHash = 2;    // SHA-512
+	uint32 index = 3;  // The index of the sequence for this message
+    string contractDocumentHash = 4; // Hash of the contract to be signed
+	string signatureUuid = 5; // Avoid re-use of the promise in another ctx
+    string contractUuid = 6;
+    // TODO the crypto payload
 }
 
 // Signature message contains all the required information to verify
@@ -29,7 +35,8 @@ message Signature {
 	string contractUuid = 5;
 }
 
-// Hello message is used when discovering peers. It contains the current version of the software.
+// Hello message is used when discovering peers. 
+// It contains the current version of the software.
 message Hello {
 	string version = 1;
 }

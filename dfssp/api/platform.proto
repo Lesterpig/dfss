@@ -111,4 +111,5 @@ message LaunchSignature {
 	string signatureUuid = 2;
 	repeated bytes keyHash = 3;
 	repeated uint32 sequence = 4;
+	bytes hash = 5; // (text Hash + sequence + signatureUUID + signers' hashes ) crypted by the platform
 }

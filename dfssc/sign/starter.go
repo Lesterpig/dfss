@@ -20,18 +20,19 @@ import (
 
 // SignatureManager handles the signature of a contract.
 type SignatureManager struct {
-	auth      *security.AuthContainer
-	localPort int
-	contract  *contract.JSON
-	platform  pAPI.PlatformClient
-	peers     map[string]*cAPI.ClientClient
-	nbReady   int
-	cServer   *grpc.Server
-	sequence  []uint32
-	uuid      string
-	keyHash   [][]byte
-	mail      string
-	archives  *Archives
+	auth         *security.AuthContainer
+	localPort    int
+	contract     *contract.JSON // contains the contractUUID, the list of the signers' hashes, the hash of the contract
+	platform     pAPI.PlatformClient
+	peers        map[string]*cAPI.ClientClient
+	nbReady      int
+	cServer      *grpc.Server
+	sequence     []uint32
+	currentIndex int
+	uuid         string
+	keyHash      [][]byte
+	mail         string
+	archives     *Archives
 }
 
 // Archives stores the recieved and sent messages, as evidence if needed
@@ -197,23 +198,23 @@ func (m *SignatureManager) SendReadySign() (signatureUUID string, err error) {
 }
 
 // Initialize computes the values needed for the start of the signing
-func (m *SignatureManager) Initialize() (uint32, int, int, error) {
+func (m *SignatureManager) Initialize() (uint32, int, error) {
 	myID, err := m.FindID()
 	if err != nil {
-		return 0, 0, 0, err
+		return 0, 0, err
 	}
 
-	currentIndex, err := common.FindNextIndex(m.sequence, myID, -1)
+	m.currentIndex, err = common.FindNextIndex(m.sequence, myID, -1)
 	if err != nil {
-		return 0, 0, 0, err
+		return 0, 0, err
 	}
 
-	nextIndex, err := common.FindNextIndex(m.sequence, myID, currentIndex)
+	nextIndex, err := common.FindNextIndex(m.sequence, myID, m.currentIndex)
 	if err != nil {
-		return 0, 0, 0, err
+		return 0, 0, err
 	}
 
-	return myID, currentIndex, nextIndex, nil
+	return myID, nextIndex, nil
 }
 
 // FindID finds the sequence id for the user's email and the contract to sign

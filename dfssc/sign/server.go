@@ -15,7 +15,11 @@ type clientServer struct{}
 //
 // Handle incoming TreatPromise messages
 func (s *clientServer) TreatPromise(ctx context.Context, in *cAPI.Promise) (*pAPI.ErrorCode, error) {
-	// TODO
+	// Pass the message to Sign()
+	if incomingPromises != nil {
+		incomingPromises <- in
+	}
+
 	return nil, nil
 }
 
