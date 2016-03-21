@@ -105,3 +105,13 @@ func GetAllButOne(s []uint32, e uint32) []uint32 {
 
 	return res
 }
+
+// Remove an ID from the sequence
+func Remove(s []uint32, e uint32) ([]uint32, error) {
+	for i, a := range s {
+		if a == e {
+			return append(s[:i], s[i+1:]...), nil
+		}
+	}
+	return s, errors.New("ID not in sequence")
+}
