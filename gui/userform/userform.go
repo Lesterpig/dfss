@@ -2,11 +2,9 @@ package userform
 
 import (
 	"io/ioutil"
-	"os"
-	osuser "os/user"
-	"path/filepath"
 
 	"dfss/dfssc/user"
+	"dfss/gui/config"
 	"github.com/visualfc/goqt/ui"
 )
 
@@ -14,7 +12,7 @@ type Widget struct {
 	W *ui.QWidget
 }
 
-func NewWidget() *Widget {
+func NewWidget(conf *config.Config) *Widget {
 	file := ui.NewFileWithName(":/userform/userform.ui")
 	loader := ui.NewUiLoader()
 	form := loader.Load(file)
@@ -27,7 +25,7 @@ func NewWidget() *Widget {
 	feedbackLabel := ui.NewLabelFromDriver(form.FindChild("feedbackLabel"))
 	registerButton := ui.NewPushButtonFromDriver(form.FindChild("registerButton"))
 
-	home := getHomeDir()
+	home := config.GetHomeDir()
 	fileDialog := ui.NewFileDialogWithParentCaptionDirectoryFilter(nil, "Select the CA file for the platform", home, "Root Certificates (*.pem);;Any (*.*)")
 
 	// Events
@@ -40,13 +38,13 @@ func NewWidget() *Widget {
 
 	fileDialog.OnFileSelected(func(ca string) {
 		fileDialog.Hide()
-		caDest := home + "ca.pem"
+		caDest := home + config.CAFile
 		_ = copyCA(ca, caDest)
 
 		err := user.Register(
-			home+"ca.pem",
-			home+"cert.pem",
-			home+"key.pem",
+			caDest,
+			home+config.CertFile,
+			home+config.KeyFile,
 			hostField.Text(),
 			passwordField.Text(),
 			"", "", "", emailField.Text(), 2048,
@@ -54,7 +52,8 @@ func NewWidget() *Widget {
 		if err != nil {
 			feedbackLabel.SetText(err.Error())
 		} else {
-			feedbackLabel.SetText("Registration done! Please check your mails.")
+			conf.Platform = hostField.Text()
+			config.Save(*conf)
 		}
 		form.SetDisabled(false)
 	})
@@ -65,20 +64,6 @@ func NewWidget() *Widget {
 	})
 
 	return &Widget{W: form}
-}
-
-func getHomeDir() string {
-	u, err := osuser.Current()
-	if err != nil {
-		return ""
-	}
-
-	dfssPath := filepath.Join(u.HomeDir, ".dfss")
-	if err := os.MkdirAll(dfssPath, os.ModeDir|0700); err != nil {
-		return ""
-	}
-
-	return dfssPath + string(filepath.Separator)
 }
 
 func copyCA(from string, to string) error {
