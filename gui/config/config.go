@@ -24,6 +24,7 @@ const ConfigFile = "config.json"
 
 // Config is the structure that will be persisted in the configuration file
 type Config struct {
+	Email    string
 	Platform string
 
 	// Virtual-only fields

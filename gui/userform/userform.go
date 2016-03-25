@@ -12,7 +12,7 @@ type Widget struct {
 	W *ui.QWidget
 }
 
-func NewWidget(conf *config.Config) *Widget {
+func NewWidget(conf *config.Config, onRegistered func(pw string)) *Widget {
 	file := ui.NewFileWithName(":/userform/userform.ui")
 	loader := ui.NewUiLoader()
 	form := loader.Load(file)
@@ -52,7 +52,9 @@ func NewWidget(conf *config.Config) *Widget {
 		if err != nil {
 			feedbackLabel.SetText(err.Error())
 		} else {
+			conf.Email = emailField.Text()
 			conf.Platform = hostField.Text()
+			onRegistered(passwordField.Text())
 			config.Save(*conf)
 		}
 		form.SetDisabled(false)
