@@ -18,9 +18,10 @@ func (m *SignatureManager) createContext(from, to uint32) (*cAPI.Context, error)
 	return &cAPI.Context{
 		RecipientKeyHash:     m.keyHash[to],
 		SenderKeyHash:        m.keyHash[from],
-		ContractDocumentHash: m.contract.File.Hash,
-		SignatureUuid:        m.uuid,
-		ContractUuid:         m.contract.UUID,
+		Sequence:             m.sequence,
+		Signers:              m.keyHash,
+		ContractDocumentHash: []byte(m.contract.File.Hash),
+		SignatureUUID:        m.uuid,
 	}, nil
 }
 
