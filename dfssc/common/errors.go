@@ -21,5 +21,5 @@ func EvaluateErrorCodeResponse(code *api.ErrorCode) error {
 	if len(code.Message) == 0 {
 		return errors.New("Received error code " + (code.Code).String())
 	}
-	return errors.New("Received error code " + (code.Code).String() + ": " + code.Message)
+	return errors.New(code.Message)
 }

@@ -46,5 +46,8 @@ func main() {
 		w.SetWindowTitle("DFSS Client v" + dfss.Version)
 		w.SetFixedSizeWithWidthHeight(WIDTH, HEIGHT)
 		w.Show()
+
+		ev := ui.NewCloseEvent()
+		w.CloseEvent(ev)
 	})
 }

@@ -46,5 +46,5 @@ func TestEvaluateErrorCodeResponse(t *testing.T) {
 	}
 
 	err = EvaluateErrorCodeResponse(otherWithMessage)
-	assert.Equal(t, "Received error code INVARG: Invalid mail", err.Error())
+	assert.Equal(t, "Invalid mail", err.Error())
 }

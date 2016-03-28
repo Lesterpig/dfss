@@ -81,12 +81,25 @@
         </widget>
        </item>
        <item row="0" column="1">
-        <widget class="QLineEdit" name="tokenField"/>
+        <widget class="QLineEdit" name="tokenField">
+         <property name="autoFillBackground">
+          <bool>false</bool>
+         </property>
+        </widget>
        </item>
        <item row="1" column="0">
         <widget class="QPushButton" name="authButton">
          <property name="text">
           <string>Authenticate</string>
+         </property>
+         <property name="autoDefault">
+          <bool>false</bool>
+         </property>
+         <property name="default">
+          <bool>true</bool>
+         </property>
+         <property name="flat">
+          <bool>false</bool>
          </property>
         </widget>
        </item>

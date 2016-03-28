@@ -1,15 +1,16 @@
 package user
 
 import (
-	"dfss/dfssc/common"
-	"dfss/dfssc/security"
-	pb "dfss/dfssp/api"
-	"errors"
 	"io/ioutil"
 	"regexp"
 	"time"
 
+	"dfss/dfssc/common"
+	"dfss/dfssc/security"
+	pb "dfss/dfssp/api"
+	"errors"
 	"golang.org/x/net/context"
+	"google.golang.org/grpc"
 )
 
 // AuthManager handles the authentication of a user
@@ -102,11 +103,11 @@ func (m *AuthManager) sendRequest() (*pb.RegisteredUser, error) {
 	}
 
 	// Stop the context if it takes too long for the platform to answer
-	ctx, cancel := context.WithTimeout(context.TODO(), 10*time.Second)
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 	response, err := client.Auth(ctx, request)
 	if err != nil {
-		return nil, err
+		return nil, errors.New(grpc.ErrorDesc(err))
 	}
 
 	return response, nil
