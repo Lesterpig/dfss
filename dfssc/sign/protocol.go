@@ -2,9 +2,11 @@ package sign
 
 import (
 	"fmt"
+	"log"
 
 	cAPI "dfss/dfssc/api"
 	"dfss/dfssc/common"
+	dAPI "dfss/dfssd/api"
 )
 
 var (
@@ -35,6 +37,9 @@ func (m *SignatureManager) Sign() error {
 	// Promess rounds
 	// Follow the sequence until there is no next occurence of me
 	for nextIndex > 0 {
+
+		dAPI.DLog("Starting round at index [" + fmt.Sprintf("%d", m.currentIndex) + "]")
+		log.Println("Starting round at index [" + fmt.Sprintf("%d", m.currentIndex) + "]")
 
 		// Set of the promise we are waiting for
 		pendingSet, err1 := common.GetPendingSet(m.sequence, myID, m.currentIndex)
@@ -107,6 +112,7 @@ func (m *SignatureManager) promiseRound(pendingSet, sendSet []uint32, myID uint3
 			if err != nil {
 				// Recieve unexpected promise, ignore ?
 			}
+			dAPI.DLog("Recieved promise from [" + fmt.Sprintf("%d", senderID) + "]")
 			m.archives.recievedPromises = append(m.archives.recievedPromises, promise)
 		} else {
 			// Wrong sender keyHash
