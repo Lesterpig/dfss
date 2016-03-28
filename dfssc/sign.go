@@ -49,4 +49,7 @@ func signContract(args []string) {
 	fmt.Println("Everybody is ready, starting the signature", signatureUUID)
 
 	// Signature
+	manager.Sign()
+
+	// Persist evidencies, if any
 }
