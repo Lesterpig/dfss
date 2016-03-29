@@ -23,22 +23,22 @@ func main() {
 		var newauth *authform.Widget
 
 		newauth = authform.NewWidget(&conf, func() {
-			layout.RemoveWidget(newauth.W)
-			newauth.W.Hide()
+			layout.RemoveWidget(newauth)
+			newauth.Hide()
 		})
 
 		newuser = userform.NewWidget(&conf, func(pwd string) {
-			layout.RemoveWidget(newuser.W)
-			newuser.W.Hide()
-			layout.AddWidget(newauth.W)
+			layout.RemoveWidget(newuser)
+			newuser.Hide()
+			layout.AddWidget(newauth)
 		})
 
 		if conf.Authenticated {
 			// TODO
 		} else if conf.Registered {
-			layout.AddWidget(newauth.W)
+			layout.AddWidget(newauth)
 		} else {
-			layout.AddWidget(newuser.W)
+			layout.AddWidget(newuser)
 		}
 
 		w := ui.NewWidget()
@@ -46,8 +46,5 @@ func main() {
 		w.SetWindowTitle("DFSS Client v" + dfss.Version)
 		w.SetFixedSizeWithWidthHeight(WIDTH, HEIGHT)
 		w.Show()
-
-		ev := ui.NewCloseEvent()
-		w.CloseEvent(ev)
 	})
 }

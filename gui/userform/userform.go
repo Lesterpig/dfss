@@ -9,7 +9,7 @@ import (
 )
 
 type Widget struct {
-	W *ui.QWidget
+	*ui.QWidget
 }
 
 func NewWidget(conf *config.Config, onRegistered func(pw string)) *Widget {
@@ -65,7 +65,7 @@ func NewWidget(conf *config.Config, onRegistered func(pw string)) *Widget {
 		feedbackLabel.SetText("Registration aborted.")
 	})
 
-	return &Widget{W: form}
+	return &Widget{QWidget: form}
 }
 
 func copyCA(from string, to string) error {

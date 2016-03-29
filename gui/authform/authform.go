@@ -7,7 +7,7 @@ import (
 )
 
 type Widget struct {
-	W *ui.QWidget
+	*ui.QWidget
 }
 
 func NewWidget(conf *config.Config, onAuth func()) *Widget {
@@ -39,7 +39,5 @@ func NewWidget(conf *config.Config, onAuth func()) *Widget {
 		}
 	})
 
-	return &Widget{
-		W: form,
-	}
+	return &Widget{QWidget: form}
 }
