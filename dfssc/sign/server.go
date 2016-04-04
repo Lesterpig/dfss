@@ -5,6 +5,7 @@ import (
 	cAPI "dfss/dfssc/api"
 	pAPI "dfss/dfssp/api"
 	"dfss/net"
+	"fmt"
 	"golang.org/x/net/context"
 	"google.golang.org/grpc"
 )
@@ -18,16 +19,25 @@ func (s *clientServer) TreatPromise(ctx context.Context, in *cAPI.Promise) (*pAP
 	// Pass the message to Sign()
 	if incomingPromises != nil {
 		incomingPromises <- in
+		// Maybe we can add another channel here for better error management
+		return &pAPI.ErrorCode{Code: pAPI.ErrorCode_SUCCESS}, nil
 	}
 
-	return nil, nil
+	return &pAPI.ErrorCode{Code: pAPI.ErrorCode_INVARG}, fmt.Errorf("Cannot pass incoming promise")
 }
 
 // TreatSignature handler
 //
 // Handle incoming TreatSignature messages
 func (s *clientServer) TreatSignature(ctx context.Context, in *cAPI.Signature) (*pAPI.ErrorCode, error) {
-	// TODO
+	if incomingSignatures != nil {
+		incomingSignatures <- in
+		// Maybe we can add another channel here for better error management
+		return &pAPI.ErrorCode{Code: pAPI.ErrorCode_SUCCESS}, nil
+	}
+
+	return &pAPI.ErrorCode{Code: pAPI.ErrorCode_INVARG}, fmt.Errorf("Cannot pass incoming signature")
+
 	return nil, nil
 }
 

@@ -94,7 +94,7 @@ func (m *SignatureManager) RecieveAllSigns() error {
 	// TODO this ctx needs a timeout !
 	for len(pendingSet) > 0 {
 		signature := <-incomingSignatures
-		senderID, exist := hashToID[string(signature.SenderKeyHash)]
+		senderID, exist := hashToID[fmt.Sprintf("%x", signature.SenderKeyHash)]
 		if exist {
 			var err error
 			pendingSet, err = common.Remove(pendingSet, senderID)

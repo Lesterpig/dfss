@@ -57,6 +57,7 @@ func ReadySign(db *mgdb.MongoManager, rooms *common.WaitingGroupMap, ctx *contex
 						ErrorCode:     &api.ErrorCode{Code: api.ErrorCode_SUCCESS},
 						SignatureUuid: s.data,
 						KeyHash:       s.chain,
+						Sequence:      s.sequence,
 					}
 				} // data == "" means the contractUUID is bad
 				return &api.LaunchSignature{ErrorCode: &api.ErrorCode{Code: api.ErrorCode_INVARG}}

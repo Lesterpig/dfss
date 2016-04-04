@@ -36,7 +36,7 @@ func (m *SignatureManager) Sign() error {
 
 	// Promess rounds
 	// Follow the sequence until there is no next occurence of me
-	for nextIndex > 0 {
+	for m.currentIndex >= 0 {
 
 		dAPI.DLog("Starting round at index [" + fmt.Sprintf("%d", m.currentIndex) + "]")
 		log.Println("Starting round at index [" + fmt.Sprintf("%d", m.currentIndex) + "]")
@@ -105,7 +105,7 @@ func (m *SignatureManager) promiseRound(pendingSet, sendSet []uint32, myID uint3
 	// TODO this ctx needs a timeout !
 	for len(pendingSet) > 0 {
 		promise := <-incomingPromises
-		senderID, exist := hashToID[string(promise.SenderKeyHash)]
+		senderID, exist := hashToID[fmt.Sprintf("%x", promise.SenderKeyHash)]
 		if exist {
 			var err error
 			pendingSet, err = common.Remove(pendingSet, senderID)
