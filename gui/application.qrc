@@ -1,0 +1,6 @@
+<RCC>
+    <qresource prefix="/">
+        <file>userform/userform.ui</file>
+        <file>authform/authform.ui</file>
+    </qresource>
+</RCC>

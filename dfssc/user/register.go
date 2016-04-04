@@ -9,6 +9,7 @@ import (
 	"dfss/dfssc/security"
 	pb "dfss/dfssp/api"
 	"golang.org/x/net/context"
+	"google.golang.org/grpc"
 )
 
 // RegisterManager handles the registration of a user
@@ -153,7 +154,7 @@ func (m *RegisterManager) sendRequest(certRequest string) (*pb.ErrorCode, error)
 	defer cancel()
 	response, err := client.Register(ctx, request)
 	if err != nil {
-		return nil, err
+		return nil, errors.New(grpc.ErrorDesc(err))
 	}
 
 	return response, nil
