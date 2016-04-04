@@ -15,8 +15,11 @@ import (
 )
 
 // SendAllSigns creates and sends signatures to all the signers of the contract
-// TODO Use goroutines to send in parallel
 func (m *SignatureManager) SendAllSigns() error {
+
+	allRecieved := make(chan error)
+	go m.RecieveAllSigns(allRecieved)
+
 	myID, err := m.FindID()
 	if err != nil {
 		return err
@@ -25,16 +28,38 @@ func (m *SignatureManager) SendAllSigns() error {
 	// compute a set of all signers exept me
 	sendSet := common.GetAllButOne(m.sequence, myID)
 
-	for _, id := range sendSet {
-		signature, err := m.CreateSignature(myID, id)
-		if err != nil {
-			return err
-		}
+	errorChan := make(chan error)
 
-		_, err = m.SendSignature(signature, id)
+	for _, id := range sendSet {
+		go func(id uint32) {
+			signature, err := m.CreateSignature(myID, id)
+			if err != nil {
+				errorChan <- err
+				return
+			}
+
+			dAPI.DLog("{" + fmt.Sprintf("%d", myID) + "} Send sign to " + fmt.Sprintf("%d", id))
+			_, err = m.SendSignature(signature, id)
+			if err != nil {
+				errorChan <- err
+				return
+			}
+
+			errorChan <- nil
+			return
+		}(id)
+	}
+
+	for range sendSet {
+		err = <-errorChan
 		if err != nil {
 			return err
 		}
+	}
+
+	err = <-allRecieved
+	if err != nil {
+		return err
 	}
 
 	return nil
@@ -81,11 +106,12 @@ func (m *SignatureManager) SendSignature(signature *cAPI.Signature, to uint32) (
 	return errCode, nil
 }
 
-// RecieveAllSigns is not done yet
-func (m *SignatureManager) RecieveAllSigns() error {
+// RecieveAllSigns recieve all the signatures
+func (m *SignatureManager) RecieveAllSigns(out chan error) {
 	myID, err := m.FindID()
 	if err != nil {
-		return err
+		out <- err
+		return
 	}
 
 	// compute a set of all signers exept me
@@ -107,5 +133,6 @@ func (m *SignatureManager) RecieveAllSigns() error {
 		}
 	}
 
-	return nil
+	out <- nil
+	return
 }
