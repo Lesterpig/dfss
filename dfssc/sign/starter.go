@@ -25,8 +25,10 @@ type SignatureManager struct {
 	contract     *contract.JSON // contains the contractUUID, the list of the signers' hashes, the hash of the contract
 	platform     pAPI.PlatformClient
 	peers        map[string]*cAPI.ClientClient
+	hashToID     map[string]uint32
 	nbReady      int
 	cServer      *grpc.Server
+	cServerIface clientServer
 	sequence     []uint32
 	currentIndex int
 	uuid         string

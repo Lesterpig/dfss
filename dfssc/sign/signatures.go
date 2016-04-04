@@ -32,16 +32,16 @@ func (m *SignatureManager) SendAllSigns() error {
 
 	for _, id := range sendSet {
 		go func(id uint32) {
-			signature, err := m.CreateSignature(myID, id)
-			if err != nil {
-				errorChan <- err
+			signature, err2 := m.CreateSignature(myID, id)
+			if err2 != nil {
+				errorChan <- err2
 				return
 			}
 
 			dAPI.DLog("{" + fmt.Sprintf("%d", myID) + "} Send sign to " + fmt.Sprintf("%d", id))
-			_, err = m.SendSignature(signature, id)
-			if err != nil {
-				errorChan <- err
+			_, err2 = m.SendSignature(signature, id)
+			if err2 != nil {
+				errorChan <- err2
 				return
 			}
 
@@ -119,8 +119,9 @@ func (m *SignatureManager) RecieveAllSigns(out chan error) {
 
 	// TODO this ctx needs a timeout !
 	for len(pendingSet) > 0 {
-		signature := <-incomingSignatures
-		senderID, exist := hashToID[fmt.Sprintf("%x", signature.SenderKeyHash)]
+		signature := <-m.cServerIface.incomingSignatures
+		senderID, exist := m.hashToID[fmt.Sprintf("%x", signature.SenderKeyHash)]
+		dAPI.DLog("{" + fmt.Sprintf("%d", myID) + "} Receive sign from " + fmt.Sprintf("%d", senderID))
 		if exist {
 			var err error
 			pendingSet, err = common.Remove(pendingSet, senderID)

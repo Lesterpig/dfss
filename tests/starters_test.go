@@ -89,7 +89,7 @@ func createClient(tmpDir string, ca []byte, port int) (*exec.Cmd, error) {
 
 	// Prepare the client command.
 	// The last argument is up to you!
-	cmd := exec.Command(path, "-ca", caPath, "-cert", certPath, "-host", "127.0.0.1:"+testPort, "-key", keyPath, "-port", strconv.Itoa(port), "-v", "-d")
+	cmd := exec.Command(path, "-ca", caPath, "-cert", certPath, "-host", "127.0.0.1:"+testPort, "-key", keyPath, "-port", strconv.Itoa(port), "-v")
 
 	return cmd, nil
 }
@@ -126,4 +126,16 @@ func checkStderr(t *testing.T, cmd *exec.Cmd, value string) error {
 	assert.Equal(t, value, s)
 
 	return cmd.Wait()
+}
+
+// runDemonstrator provide a way to lanch a dfssd in the background
+//
+// It will be binded to the provided output file
+func runDemonstrator() (*exec.Cmd, error) {
+	path := filepath.Join(os.Getenv("GOPATH"), "bin", "dfssd")
+	cmd := exec.Command(path, "start")
+	cmd.Stdout = os.Stdout
+	cmd.Stderr = os.Stderr
+	err := cmd.Start()
+	return cmd, err
 }

@@ -49,7 +49,10 @@ func signContract(args []string) {
 	fmt.Println("Everybody is ready, starting the signature", signatureUUID)
 
 	// Signature
-	manager.Sign()
-
+	err = manager.Sign()
+	if err != nil {
+		fmt.Fprintln(os.Stderr, err)
+		os.Exit(5)
+	}
 	// Persist evidencies, if any
 }

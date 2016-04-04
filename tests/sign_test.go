@@ -82,8 +82,8 @@ func TestSignContract(t *testing.T) {
 			time.Sleep(time.Duration(i*2) * time.Second)
 			c.Stdin = strings.NewReader("password\nyes\n")
 			c.Stderr = os.Stderr
-			output, err := c.Output()
-			if err != nil {
+			output, err1 := c.Output()
+			if err1 != nil {
 				output = nil
 			}
 			closeChannel <- output

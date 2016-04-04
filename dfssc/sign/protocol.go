@@ -9,12 +9,6 @@ import (
 	dAPI "dfss/dfssd/api"
 )
 
-var (
-	hashToID           map[string]uint32
-	incomingPromises   chan *cAPI.Promise
-	incomingSignatures chan *cAPI.Signature
-)
-
 // Sign performe all the message exchange for the contract to be signed
 //
 // * Initialize the SignatureManager from starter.go
@@ -29,17 +23,16 @@ func (m *SignatureManager) Sign() error {
 		return err
 	}
 
-	hashToID = m.makeSignersHashToIDMap()
+	m.makeSignersHashToIDMap()
 
-	incomingPromises = make(chan *cAPI.Promise)
-	incomingSignatures = make(chan *cAPI.Signature)
+	m.cServerIface.incomingPromises = make(chan *cAPI.Promise)
+	m.cServerIface.incomingSignatures = make(chan *cAPI.Signature)
 
 	// Promess rounds
 	// Follow the sequence until there is no next occurence of me
 	for m.currentIndex >= 0 {
 
-		dAPI.DLog("Starting round at index [" + fmt.Sprintf("%d", m.currentIndex) + "]")
-		log.Println("Starting round at index [" + fmt.Sprintf("%d", m.currentIndex) + "]")
+		dAPI.DLog(fmt.Sprintf("{%d} ", myID) + "Starting round at index [" + fmt.Sprintf("%d", m.currentIndex) + "] with nextIndex=" + fmt.Sprintf("%d", nextIndex))
 
 		// Set of the promise we are waiting for
 		pendingSet, err1 := common.GetPendingSet(m.sequence, myID, m.currentIndex)
@@ -63,15 +56,15 @@ func (m *SignatureManager) Sign() error {
 		}
 	}
 
+	dAPI.DLog("{" + fmt.Sprintf("%d", myID) + "} Enter signature round")
+
 	// Signature round
 	err = m.SendAllSigns()
 	if err != nil {
 		return err
 	}
-	err = m.RecieveAllSigns()
-	if err != nil {
-		return err
-	}
+
+	dAPI.DLog("{" + fmt.Sprintf("%d", myID) + "} Exit signature round")
 
 	return nil
 }
@@ -88,34 +81,37 @@ func (m *SignatureManager) GetClient(to uint32) (*cAPI.ClientClient, error) {
 }
 
 // makeEMailMap build an association to reverse a hash to the sequence ID
-func (m *SignatureManager) makeSignersHashToIDMap() map[string]uint32 {
+func (m *SignatureManager) makeSignersHashToIDMap() {
 
-	hashToID := make(map[string]uint32)
+	m.hashToID = make(map[string]uint32)
 
 	signers := m.contract.Signers
 	for id, signer := range signers {
-		hashToID[signer.Hash] = uint32(id)
+		m.hashToID[signer.Hash] = uint32(id)
 	}
-	return hashToID
 }
 
+// promiseRound describe a promise round: reception and sending
+//
+// TODO better error management - this function should return `error` !
 func (m *SignatureManager) promiseRound(pendingSet, sendSet []uint32, myID uint32) {
 
 	// Reception of the due promises
 	// TODO this ctx needs a timeout !
 	for len(pendingSet) > 0 {
-		promise := <-incomingPromises
-		senderID, exist := hashToID[fmt.Sprintf("%x", promise.SenderKeyHash)]
+		promise := <-m.cServerIface.incomingPromises
+		senderID, exist := m.hashToID[fmt.Sprintf("%x", promise.SenderKeyHash)]
 		if exist {
 			var err error
 			pendingSet, err = common.Remove(pendingSet, senderID)
 			if err != nil {
-				// Recieve unexpected promise, ignore ?
+				_ = fmt.Errorf("Recieve unexpected promise")
 			}
-			dAPI.DLog("Recieved promise from [" + fmt.Sprintf("%d", senderID) + "]")
 			m.archives.recievedPromises = append(m.archives.recievedPromises, promise)
+			dAPI.DLog("{" + fmt.Sprintf("%d", myID) + "} Recieved promise from [" + fmt.Sprintf("%d", senderID) + "] for index " + fmt.Sprintf("%d", promise.Index))
 		} else {
 			// Wrong sender keyHash
+			log.Println("{" + fmt.Sprintf("%d", myID) + "} Wrong sender keyhash !")
 		}
 	}
 
@@ -126,11 +122,13 @@ func (m *SignatureManager) promiseRound(pendingSet, sendSet []uint32, myID uint3
 		go func(id uint32, m *SignatureManager) {
 			promise, err := m.CreatePromise(myID, id)
 			if err != nil {
-				// Failed to create promise
+				_ = fmt.Errorf("Failed to create promise from %d to %d", myID, id)
 			}
+			dAPI.DLog("{" + fmt.Sprintf("%d", myID) + "} Send promise to " + fmt.Sprintf("%d", id))
 			_, err = m.SendPromise(promise, id)
 			if err != nil {
-				// We don't check if the promise has been recieved
+				dAPI.DLog("{" + fmt.Sprintf("%d", myID) + "} Promise have not been recieved !")
+				_ = fmt.Errorf("Failed to deliver promise from %d to %d", myID, id)
 			}
 			c <- promise
 		}(id, m)
