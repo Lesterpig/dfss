@@ -1,7 +1,6 @@
 package server
 
 import (
-	"log"
 	"net"
 
 	api "dfss/dfssd/api"
@@ -21,17 +20,17 @@ func (s *Server) SendLog(ctx context.Context, in *api.Log) (*api.Ack, error) {
 }
 
 // Listen with gRPG service
-func Listen(addrPort string) error {
+func Listen(addrPort string, lfn func(string)) error {
 	// open tcp socket
 	lis, err := net.Listen("tcp", addrPort)
 	if err != nil {
 		grpclog.Fatalf("Failed to open tcp socket: %v", err)
 		return err
 	}
-	log.Printf("Server listening on %s", addrPort)
+	lfn("Server listening on " + addrPort)
 
 	// log display manager
-	go displayHandler()
+	go displayHandler(lfn)
 
 	// bootstrap gRPC service !
 	grpcServer := grpc.NewServer()

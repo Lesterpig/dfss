@@ -9,6 +9,8 @@ import (
 
 	"dfss"
 	"dfss/dfssd/server"
+	"dfss/dfssd/gui"
+	"github.com/visualfc/goqt/ui"
 )
 
 var (
@@ -49,10 +51,23 @@ func main() {
 	case "version":
 		fmt.Println("v"+dfss.Version, runtime.GOOS, runtime.GOARCH)
 	case "nogui":
-		err := server.Listen("0.0.0.0:" + strconv.Itoa(port))
+		lfn := func(str string) {
+			fmt.Println(str)
+		}
+		err := server.Listen("0.0.0.0:" + strconv.Itoa(port), lfn)
 		if err != nil {
 			os.Exit(1)
 		}
 	default:
+		ui.Run(func() {
+			window := gui.NewWindow()
+			go func() {
+				err := server.Listen("0.0.0.0:" + strconv.Itoa(port), window.Log)
+				if err != nil {
+					window.Log("!! " + err.Error())
+				}
+			}()
+			window.Show()
+		})
 	}
 }
