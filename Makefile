@@ -7,18 +7,11 @@ endif
 .PHONY:
 
 install: nocache
-	go install .
 	go install ./dfssc
-	go install ./dfssd
 	go install ./dfssp
 	go install ./dfsst
 
 release: clean build_all package
-
-clean:
-	rm -rf release
-
-# GUI Build (Docker required)
 
 # prepare_gui builds a new container from the goqt image, adding DFSS dependencies for faster builds.
 # call it once or after dependency addition.
@@ -35,11 +28,24 @@ gui: nocache
 	docker run --rm -v ${PWD}:/go/src/dfss -w /go/src/dfss/gui dfss:builder \
 		go build -ldflags "-r ." -o ../bin/gui
 
-# Release internals
+# dfssd builds the demonstrator into a docker container, outputing the result in bin/ directory
+dfssd: nocache
+	docker run --rm -v ${PWD}:/go/src/dfss -w /go/src/dfss/dfssd/gui dfss:builder \
+		../../bin/goqt_rcc -go gui -o application.qrc.go application.qrc
+	docker run --rm -v ${PWD}:/go/src/dfss -w /go/src/dfss/dfssd dfss:builder \
+		go build -ldflags "-r ." -o ../bin/dfssd
 
+protobuf:
+	cd .. && \
+	protoc --go_out=plugins=grpc:. dfss/dfssc/api/client.proto && \
+	protoc --go_out=plugins=grpc:. dfss/dfssd/api/demonstrator.proto && \
+	protoc --go_out=plugins=grpc:. dfss/dfssp/api/platform.proto && \
+	protoc --go_out=plugins=grpc:. dfss/dfsst/api/resolution.proto
+
+# Release internals
 build_all:
 	go get github.com/mitchellh/gox
-	gox -os "linux darwin windows" -parallel 1 -output "release/dfss_${VERSION}_{{.OS}}_{{.Arch}}/{{.Dir}}" dfss/dfssc dfss/dfssd dfss/dfssp dfss/dfsst
+	gox -os "linux darwin windows" -parallel 1 -output "release/dfss_${VERSION}_{{.OS}}_{{.Arch}}/{{.Dir}}" dfss/dfssc dfss/dfssp dfss/dfsst
 
 package:
 	echo "$(VERSION) $(REVISION)" > build/embed/VERSION
@@ -50,11 +56,7 @@ deploy:
 	mkdir -p /deploy/$(VERSION)
 	cp release/*.tar.gz /deploy/$(VERSION)/
 
-protobuf:
-	cd .. && \
-	protoc --go_out=plugins=grpc:. dfss/dfssc/api/client.proto && \
-	protoc --go_out=plugins=grpc:. dfss/dfssd/api/demonstrator.proto && \
-	protoc --go_out=plugins=grpc:. dfss/dfssp/api/platform.proto && \
-	protoc --go_out=plugins=grpc:. dfss/dfsst/api/resolution.proto
+clean:
+	rm -rf release
 
 nocache:
