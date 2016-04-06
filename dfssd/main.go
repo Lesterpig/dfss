@@ -1,20 +1,25 @@
 package main
 
 import (
-	"dfss"
 	"flag"
 	"fmt"
 	"os"
 	"runtime"
+	"strconv"
+
+	"dfss"
+	"dfss/dfssd/server"
+	"dfss/dfssd/gui"
+	"github.com/visualfc/goqt/ui"
 )
 
 var (
-	verbose bool
+	port int
 )
 
 func init() {
 
-	flag.BoolVar(&verbose, "v", false, "Print verbose messages")
+	flag.IntVar(&port, "p", 3000, "Network port used")
 
 	flag.Usage = func() {
 		fmt.Println("DFSS demonstrator v" + dfss.Version)
@@ -26,7 +31,8 @@ func init() {
 		fmt.Println("\nThe commands are:")
 		fmt.Println("  help     print this help")
 		fmt.Println("  version  print dfss client version")
-		fmt.Println("  start    start demonstrator server")
+		fmt.Println("  nogui    start demonstrator server without GUI")
+		fmt.Println("  gui      start demonstrator server with GUI")
 
 		fmt.Println("\nFlags:")
 		flag.PrintDefaults()
@@ -40,14 +46,28 @@ func main() {
 	command := flag.Arg(0)
 
 	switch command {
+	case "help":
+		flag.Usage()
 	case "version":
 		fmt.Println("v"+dfss.Version, runtime.GOOS, runtime.GOARCH)
-	case "start":
-		err := listen("localhost:3000")
+	case "nogui":
+		lfn := func(str string) {
+			fmt.Println(str)
+		}
+		err := server.Listen("0.0.0.0:" + strconv.Itoa(port), lfn)
 		if err != nil {
 			os.Exit(1)
 		}
 	default:
-		flag.Usage()
+		ui.Run(func() {
+			window := gui.NewWindow()
+			go func() {
+				err := server.Listen("0.0.0.0:" + strconv.Itoa(port), window.Log)
+				if err != nil {
+					window.Log("!! " + err.Error())
+				}
+			}()
+			window.Show()
+		})
 	}
 }

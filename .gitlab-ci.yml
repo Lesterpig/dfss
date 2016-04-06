@@ -22,7 +22,7 @@ Unit tests:
   script:
     - "ln -s $(pwd) $GOPATH/src/dfss"
     - "./build/deps.sh"
-    - "cd $GOPATH/src/dfss && rm -rf gui && go install ./..."
+    - "cd $GOPATH/src/dfss && make install"
     - "go test -coverprofile auth.part -v dfss/auth"
     - "go test -coverprofile mgdb.part -v dfss/mgdb"
     - "go test -coverprofile mails.part -v dfss/mails"
@@ -32,7 +32,6 @@ Unit tests:
     - "go test -coverprofile dfssp_contract.part -v dfss/dfssp/contract"
     - "go test -coverprofile dfssp_templates.part -v dfss/dfssp/templates"
     - "go test -coverprofile dfssp_common.part -v dfss/dfssp/common"
-    - "go test -coverprofile dfssd.part -v dfss/dfssd"
     - "go test -coverprofile dfssc_common.part -v dfss/dfssc/common"
     - "go test -coverprofile dfssc_security.part -v dfss/dfssc/security"
     - "go test -coverprofile dfssc_user.part -v dfss/dfssc/user"
@@ -53,7 +52,7 @@ Integration tests:
   script:
     - "ln -s -f $(pwd) $GOPATH/src/dfss"
     - "./build/deps.sh"
-    - "cd $GOPATH/src/dfss && rm -rf gui && go install ./..."
+    - "cd $GOPATH/src/dfss && make install"
     - "go test -v dfss/tests"
 
 Code lint:
@@ -68,9 +67,9 @@ Code lint:
     - "ln -s $(pwd) $GOPATH/src/dfss"
     - "go get github.com/alecthomas/gometalinter"
     - "./build/deps.sh"
-    - "cd $GOPATH/src/dfss && rm -rf gui && go install ./..."
+    - "cd $GOPATH/src/dfss && make install_all"
     - "gometalinter --install"
-    - "gometalinter -t --deadline=600s -j1 --skip=api --skip=fixtures --disable=aligncheck ./..."
+    - "gometalinter -t --deadline=600s -j1 --skip=api --skip=fixtures --skip=gui --skip=dfssd --disable=aligncheck ./..."
 
 Deploy:
   stage: deploy
