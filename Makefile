@@ -11,6 +11,15 @@ install: nocache
 	go install ./dfssp
 	go install ./dfsst
 
+# install_all installs everything, including libraries. It's mandatory for linter, but should be improved in the future.
+install_all: install
+	git stash
+	rm -rf gui
+	rm -rf dfssd/gui
+	rm -f dfssd/main.go
+	go install ./...
+	git reset --hard
+
 release: clean build_all package
 
 # prepare_gui builds a new container from the goqt image, adding DFSS dependencies for faster builds.

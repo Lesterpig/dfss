@@ -67,7 +67,7 @@ Code lint:
     - "ln -s $(pwd) $GOPATH/src/dfss"
     - "go get github.com/alecthomas/gometalinter"
     - "./build/deps.sh"
-    - "cd $GOPATH/src/dfss && make install"
+    - "cd $GOPATH/src/dfss && make install_all"
     - "gometalinter --install"
     - "gometalinter -t --deadline=600s -j1 --skip=api --skip=fixtures --skip=gui --skip=dfssd --disable=aligncheck ./..."
 
