@@ -70,10 +70,22 @@ func (w *Window) addActions() {
 	openAct := ui.NewActionWithTextParent("&Open", w)
 	openAct.SetShortcuts(ui.QKeySequence_Open)
 	openAct.SetStatusTip("Open a demonstration file")
+	openAct.OnTriggered(func() {
+		filename := ui.QFileDialogGetOpenFileName()
+		if filename != "" {
+			w.Open(filename)
+		}
+	})
 
 	saveAct := ui.NewActionWithTextParent("&Save", w)
 	saveAct.SetShortcuts(ui.QKeySequence_Save)
 	saveAct.SetStatusTip("Save a demonstration file")
+	saveAct.OnTriggered(func() {
+		filename := ui.QFileDialogGetSaveFileName()
+		if filename != "" {
+			w.Save(filename)
+		}
+	})
 
 	w.MenuBar().AddAction(openAct)
 	w.MenuBar().AddAction(saveAct)
