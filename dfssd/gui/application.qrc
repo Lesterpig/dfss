@@ -1,5 +1,8 @@
 <RCC>
     <qresource prefix="/">
         <file>widget.ui</file>
+        <file>images/server_key.png</file>
+        <file>images/server_connect.png</file>
+        <file>images/node_magnifier.png</file>
     </qresource>
 </RCC>

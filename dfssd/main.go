@@ -8,8 +8,8 @@ import (
 	"strconv"
 
 	"dfss"
-	"dfss/dfssd/server"
 	"dfss/dfssd/gui"
+	"dfss/dfssd/server"
 	"github.com/visualfc/goqt/ui"
 )
 
@@ -54,7 +54,7 @@ func main() {
 		lfn := func(str string) {
 			fmt.Println(str)
 		}
-		err := server.Listen("0.0.0.0:" + strconv.Itoa(port), lfn)
+		err := server.Listen("0.0.0.0:"+strconv.Itoa(port), lfn)
 		if err != nil {
 			os.Exit(1)
 		}
@@ -62,7 +62,7 @@ func main() {
 		ui.Run(func() {
 			window := gui.NewWindow()
 			go func() {
-				err := server.Listen("0.0.0.0:" + strconv.Itoa(port), window.Log)
+				err := server.Listen("0.0.0.0:"+strconv.Itoa(port), window.Log)
 				if err != nil {
 					window.Log("!! " + err.Error())
 				}
