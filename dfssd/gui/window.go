@@ -47,19 +47,6 @@ func NewWindow() *Window {
 	w.initScene()
 	w.initTimer()
 
-	// TEST ONLY
-	w.scene.Clients = []Client{
-		Client{"signer1@lesterpig.com"},
-		Client{"signer2@insa-rennes.fr"},
-		Client{"signer3@dfss.com"},
-	}
-	w.scene.Events = []Event{
-		Event{PROMISE, 0, 1, time.Unix(0, 5)},
-		Event{SIGNATURE, 1, 2, time.Unix(0, 15)},
-		Event{PROMISE, 1, 0, time.Unix(0, 134)},
-		Event{OTHER, 0, 1, time.Unix(0, 402)},
-	}
-
 	w.StatusBar().ShowMessage("Ready")
 	w.PrintQuantumInformation()
 	return w
@@ -71,6 +58,7 @@ func (w *Window) OnResizeEvent(ev *ui.QResizeEvent) bool {
 }
 
 func (w *Window) Log(str string) {
+	str = time.Now().Format("[15:04:05.000] ") + str
 	w.logField.Append(str)
 	w.logField.EnsureCursorVisible()
 }
@@ -120,15 +108,13 @@ func (w *Window) addActions() {
 	w.playButton.OnClicked(func() {
 		w.playButton.SetDisabled(true)
 		w.stopButton.SetDisabled(false)
-		w.timer.StartWithMsec(500)
-		w.Log("Started simulation")
+		w.timer.StartWithMsec(speed)
 	})
 
 	w.stopButton.OnClicked(func() {
 		w.playButton.SetDisabled(false)
 		w.stopButton.SetDisabled(true)
 		w.timer.Stop()
-		w.Log("Paused simulation")
 	})
 	w.stopButton.SetDisabled(true)
 
@@ -136,7 +122,6 @@ func (w *Window) addActions() {
 		w.RemoveArrows()
 		w.scene.currentEvent = 0
 		w.PrintQuantumInformation()
-		w.Log("Restarting simulation")
 	})
 }
 

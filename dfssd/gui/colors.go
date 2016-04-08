@@ -4,8 +4,8 @@ import "github.com/visualfc/goqt/ui"
 
 var colors = map[string]uint32{
 	"red":   0x00ff0000,
-	"blue":  0x0000ff00,
-	"green": 0x000000ff,
+	"green": 0x0000aa00,
+	"blue":  0x000000ff,
 	"black": 0x00000000,
 }
 

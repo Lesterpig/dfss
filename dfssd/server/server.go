@@ -20,17 +20,16 @@ func (s *Server) SendLog(ctx context.Context, in *api.Log) (*api.Ack, error) {
 }
 
 // Listen with gRPG service
-func Listen(addrPort string, lfn func(string)) error {
+func Listen(addrPort string, fn func(*api.Log)) error {
 	// open tcp socket
 	lis, err := net.Listen("tcp", addrPort)
 	if err != nil {
 		grpclog.Fatalf("Failed to open tcp socket: %v", err)
 		return err
 	}
-	lfn("Server listening on " + addrPort)
 
 	// log display manager
-	go displayHandler(lfn)
+	go displayHandler(fn)
 
 	// bootstrap gRPC service !
 	grpcServer := grpc.NewServer()

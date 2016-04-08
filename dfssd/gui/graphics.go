@@ -26,6 +26,10 @@ func (w *Window) DrawClients() {
 }
 
 func (w *Window) GetClientPosition(i int) (x, y float64) {
+	if i < 0 {
+		return w.GetServerPosition(i == -1)
+	}
+
 	nbClients := float64(len(w.scene.Clients))
 	angle := 2 * math.Pi * float64(i) / nbClients
 	return math.Cos(angle) * (w.circleSize / 2), math.Sin(angle) * (w.circleSize / 2)
@@ -33,7 +37,7 @@ func (w *Window) GetClientPosition(i int) (x, y float64) {
 
 func (w *Window) GetServerPosition(platform bool) (x, y float64) {
 	x = w.circleSize/2 + 150
-	y = -16
+	y = 0
 	if !platform {
 		x *= -1
 	}
@@ -45,12 +49,12 @@ func (w *Window) DrawServers() {
 
 	ttp := scene.AddPixmap(w.pixmaps["ttp"])
 	x, y := w.GetServerPosition(false)
-	ttp.SetPosFWithXY(x, y)
+	ttp.SetPosFWithXY(x-32, y-16)
 	ttp.SetToolTip("TTP")
 
 	platform := scene.AddPixmap(w.pixmaps["platform"])
-	platform.SetX(w.circleSize/2 + 150)
-	platform.SetY(-16)
+	x, y = w.GetServerPosition(true)
+	platform.SetPosFWithXY(x, y-16)
 	platform.SetToolTip("Platform")
 }
 

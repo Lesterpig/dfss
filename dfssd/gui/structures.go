@@ -12,15 +12,15 @@ import (
 type Window struct {
 	*ui.QMainWindow
 
-	logField   *ui.QTextEdit
-	graphics   *ui.QGraphicsView
-	progress   *ui.QLabel
-	playButton *ui.QPushButton
-	stopButton *ui.QPushButton
+	logField     *ui.QTextEdit
+	graphics     *ui.QGraphicsView
+	progress     *ui.QLabel
+	playButton   *ui.QPushButton
+	stopButton   *ui.QPushButton
 	replayButton *ui.QPushButton
-	scene      *Scene
-	circleSize float64
-	pixmaps    map[string]*ui.QPixmap
+	scene        *Scene
+	circleSize   float64
+	pixmaps      map[string]*ui.QPixmap
 
 	currentArrows []*ui.QGraphicsPathItem
 	timer         *ui.QTimer
@@ -53,6 +53,6 @@ type Scene struct {
 	Clients []Client
 	Events  []Event
 
-	currentTime   time.Time
-	currentEvent  int
+	currentTime  time.Time
+	currentEvent int
 }

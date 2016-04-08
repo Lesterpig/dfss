@@ -2,20 +2,64 @@ package gui
 
 import (
 	"fmt"
-	"time"
 	"math"
+	"time"
 
+	"dfss/dfssd/api"
 	"github.com/visualfc/goqt/ui"
 )
 
 // TEMPORARY
 const quantum = 100 // discretization argument for events (ns)
-const speed = 500 // duration of a quantum (ms)
+const speed = 1000  // duration of a quantum (ms)
+
+// AddEvent interprets an incoming event into a graphic one.
+// Expected format:
+//
+// Timestamp: unix nano timestamp
+// Identifier: either "platform", "ttp" or "<email>"
+// Log: one of the following
+//			"sent promise to <email>"
+//      "sent signature to <email>"
+//
+// Other messages are currently ignored.
+func (w *Window) AddEvent(e *api.Log) {
+	event := Event{
+		Sender: w.scene.identifierToIndex(e.Identifier),
+		Date:   time.Unix(0, e.Timestamp),
+	}
+
+	w.Log(fmt.Sprint(e.Identifier, " ", e.Log))
+
+	var receiver string
+	if n, _ := fmt.Sscanf(e.Log, "sent promise to %s", &receiver); n > 0 {
+		event.Type = PROMISE
+		event.Receiver = w.scene.identifierToIndex(receiver)
+	} else if n, _ := fmt.Sscanf(e.Log, "sent signature to %s", &receiver); n > 0 {
+		event.Type = SIGNATURE
+		event.Receiver = w.scene.identifierToIndex(receiver)
+	}
+
+	if receiver != "" {
+		w.scene.Events = append(w.scene.Events, event)
+	}
+}
 
 func (w *Window) DrawEvent(e *Event) {
 	xa, ya := w.GetClientPosition(e.Sender)
 	xb, yb := w.GetClientPosition(e.Receiver)
-	w.DrawArrow(xa, ya, xb, yb, colors["red"])
+
+	var color string
+	switch e.Type {
+	case PROMISE:
+		color = "blue"
+	case SIGNATURE:
+		color = "green"
+	default:
+		color = "black"
+	}
+
+	w.DrawArrow(xa, ya, xb, yb, colors[color])
 }
 
 func (w *Window) PrintQuantumInformation() {
@@ -25,10 +69,10 @@ func (w *Window) PrintQuantumInformation() {
 	}
 
 	beginning := w.scene.Events[0].Date.UnixNano()
-	totalDuration := w.scene.Events[len(w.scene.Events) - 1].Date.UnixNano() - beginning
-	nbQuantum := math.Ceil(float64(totalDuration) / quantum)
+	totalDuration := w.scene.Events[len(w.scene.Events)-1].Date.UnixNano() - beginning
+	nbQuantum := math.Max(1, math.Ceil(float64(totalDuration)/quantum))
 	durationFromBeginning := w.scene.currentTime.UnixNano() - beginning
-	currentQuantum := math.Ceil(float64(durationFromBeginning) / quantum)+1
+	currentQuantum := math.Ceil(float64(durationFromBeginning)/quantum) + 1
 
 	if w.scene.currentEvent == 0 {
 		currentQuantum = 0
@@ -38,6 +82,9 @@ func (w *Window) PrintQuantumInformation() {
 
 func (w *Window) initTimer() {
 	w.timer = ui.NewTimerWithParent(w)
+
+	lastNbOfClients := len(w.scene.Clients)
+
 	w.timer.OnTimeout(func() {
 		nbEvents := len(w.scene.Events)
 		if w.scene.currentEvent >= nbEvents {
@@ -51,6 +98,11 @@ func (w *Window) initTimer() {
 		// Check that we have a least one event to read
 		if nbEvents == 0 {
 			return
+		}
+
+		// Check if need to redraw everything
+		if lastNbOfClients != len(w.scene.Clients) {
+			w.initScene()
 		}
 
 		// Init first time
@@ -74,4 +126,22 @@ func (w *Window) initTimer() {
 		w.PrintQuantumInformation()
 		w.scene.currentTime = endOfQuantum
 	})
+}
+
+func (s *Scene) identifierToIndex(identifier string) int {
+	if identifier == "platform" {
+		return -1
+	}
+	if identifier == "ttp" {
+		return -2
+	}
+
+	for i, c := range s.Clients {
+		if c.Name == identifier {
+			return i
+		}
+	}
+
+	s.Clients = append(s.Clients, Client{Name: identifier})
+	return len(s.Clients) - 1
 }
