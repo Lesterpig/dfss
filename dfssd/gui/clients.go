@@ -86,5 +86,17 @@ func (w *Window) DrawArrow(xa, ya, xb, yb float64, rgb uint32) {
 	brush.SetColor(color)
 	brush.SetStyle(ui.Qt_SolidPattern)
 
-	scene.AddPathWithPathPenBrush(path, pen, brush)
+	arrow := scene.AddPathWithPathPenBrush(path, pen, brush)
+	w.currentArrows = append(w.currentArrows, arrow)
+}
+
+func (w *Window) RemoveArrows() {
+	scene := w.graphics.Scene()
+
+	for _, arrow := range w.currentArrows {
+		scene.RemoveItem(&arrow.QGraphicsItem)
+		defer arrow.Delete()
+	}
+
+	w.currentArrows = nil
 }

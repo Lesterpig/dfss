@@ -2,20 +2,11 @@ package gui
 
 import (
 	"math"
+	"time"
 
 	"dfss"
 	"github.com/visualfc/goqt/ui"
 )
-
-type Window struct {
-	*ui.QMainWindow
-
-	logField   *ui.QTextEdit
-	graphics   *ui.QGraphicsView
-	scene      *Scene
-	circleSize float64
-	pixmaps    map[string]*ui.QPixmap
-}
 
 func NewWindow() *Window {
 	file := ui.NewFileWithName(":/widget.ui")
@@ -36,6 +27,7 @@ func NewWindow() *Window {
 	// Load dynamic elements from driver
 	w.logField = ui.NewTextEditFromDriver(widget.FindChild("logField"))
 	w.graphics = ui.NewGraphicsViewFromDriver(widget.FindChild("graphicsView"))
+	w.progress = ui.NewLabelFromDriver(widget.FindChild("progressLabel"))
 
 	// Load pixmaps
 	w.pixmaps = map[string]*ui.QPixmap{
@@ -56,8 +48,15 @@ func NewWindow() *Window {
 		Client{"signer2@insa-rennes.fr"},
 		Client{"signer3@dfss.com"},
 	}
+	w.scene.Events = []Event{
+		Event{PROMISE, 0, 1, time.Unix(0, 5)},
+		Event{SIGNATURE, 1, 2, time.Unix(0, 15)},
+		Event{PROMISE, 1, 0, time.Unix(0, 134)},
+		Event{OTHER, 0, 1, time.Unix(0, 402)},
+	}
 
 	w.StatusBar().ShowMessage("Ready")
+	w.StartSimulation()
 	return w
 }
 
@@ -97,7 +96,6 @@ func (w *Window) OnResizeEvent(ev *ui.QResizeEvent) bool {
 }
 
 func (w *Window) initScene() {
-
 	// Save old scene
 	oldScene := w.graphics.Scene()
 
@@ -113,14 +111,9 @@ func (w *Window) initScene() {
 	w.DrawClients()
 	w.DrawServers()
 
-	// TEST
-	xa, ya := w.GetClientPosition(0)
-	xb, yb := w.GetClientPosition(1)
-	w.DrawArrow(xa, ya, xb, yb, colors["red"])
-	w.DrawArrow(xb, yb, xa, ya, colors["red"])
-
 	// Purge
 	if oldScene != nil {
-		oldScene.Delete()
+		w.RemoveArrows()
+		defer oldScene.Delete()
 	}
 }

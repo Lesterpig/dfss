@@ -2,7 +2,26 @@ package gui
 
 import (
 	"time"
+
+	"github.com/visualfc/goqt/ui"
 )
+
+// Window contains all information used to make the demonstrator works.
+// It extends QMainWindow and cache several graphic informations.
+// Do not attempt to instantiante it directly, use `NewWindow` function instead.
+type Window struct {
+	*ui.QMainWindow
+
+	logField   *ui.QTextEdit
+	graphics   *ui.QGraphicsView
+	progress   *ui.QLabel
+	scene      *Scene
+	circleSize float64
+	pixmaps    map[string]*ui.QPixmap
+
+	currentArrows []*ui.QGraphicsPathItem
+	ticker        *time.Ticker
+}
 
 // Client represents a DFSSC instance
 type Client struct {
@@ -23,8 +42,7 @@ type Event struct {
 	Type     EventType
 	Sender   int
 	Receiver int
-	Date     *time.Time
-	Duration *time.Duration
+	Date     time.Time
 }
 
 // Scene holds the global scene for registered clients and signature events
@@ -32,5 +50,6 @@ type Scene struct {
 	Clients []Client
 	Events  []Event
 
-	currentEvent int
+	currentTime   time.Time
+	currentEvent  int
 }
