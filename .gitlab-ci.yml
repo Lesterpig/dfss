@@ -47,12 +47,23 @@ Integration tests:
   tags:
     - golang
     - mongo
+    - goqt
   services:
     - "lesterpig/mongo:latest"
   script:
     - "ln -s -f $(pwd) $GOPATH/src/dfss"
     - "./build/deps.sh"
     - "cd $GOPATH/src/dfss && make install"
+    # Copy required files
+    - "cp $GOPATH/src/github.com/visualfc/goqt/bin/* $GOPATH/src/dfss/dfssd/"
+    # Build ressources
+    - "cd $GOPATH/src/dfss/dfssd/gui && ../goqt_rcc -go gui -o application.qrc.go application.qrc"
+    # Build binary
+    - "cd $GOPATH/src/dfss/dfssd && go build -ldflags \"-r .\" -o dfssd"
+    # Install binary
+    - "mv $GOPATH/src/dfss/dfssd/dfssd /bin/"
+    - "mv $GOPATH/src/dfss/dfssd/libqtdrv.ui.so.1 /lib/"
+    # Start integration tests
     - "go test -v dfss/tests"
 
 Code lint:
@@ -74,11 +85,12 @@ Code lint:
 Deploy:
   stage: deploy
   only:
-    - /^v[0-9]/
-    - master
+   - /^v[0-9]/
+   - master
   tags:
     - golang
     - strong
+    - goqt
   script:
     - "ln -s -f $(pwd) $GOPATH/src/dfss"
     - "./build/deps.sh"
