@@ -20,7 +20,6 @@ install_all: install
 	go install ./...
 	git reset --hard
 
-release: clean build_all package
 
 # prepare_gui builds a new container from the goqt image, adding DFSS dependencies for faster builds.
 # call it once or after dependency addition.
@@ -52,9 +51,21 @@ protobuf:
 	protoc --go_out=plugins=grpc:. dfss/dfsst/api/resolution.proto
 
 # Release internals
-build_all:
+# Do not run these commands on your personal computer
+release: clean build_x build_g package
+
+build_x:
 	go get github.com/mitchellh/gox
-	gox -os "linux darwin windows" -parallel 1 -output "release/dfss_${VERSION}_{{.OS}}_{{.Arch}}/{{.Dir}}" dfss/dfssc dfss/dfssp dfss/dfsst
+	gox -osarch "linux/amd64 linux/386 linux/arm windows/386 darwin/amd64" -parallel 1 -output "release/dfss_${VERSION}_{{.OS}}_{{.Arch}}/{{.Dir}}" dfss/dfssc dfss/dfssp dfss/dfsst
+
+build_g:
+	cp $(GOPATH)/src/github.com/visualfc/goqt/bin/goqt_rcc /bin/
+	cp $(GOPATH)/src/github.com/visualfc/goqt/bin/lib* /lib/
+	cd gui && goqt_rcc -go main -o a.qrc.go application.qrc
+	cd dfssd/gui && goqt_rcc -go gui -o a.qrc.go application.qrc
+	cd gui && go build -ldflags "-r ." -o ../release/dfss_${VERSION}_linux_amd64/dfssc_gui
+	cd dfssd/gui && go build -ldflags "-r ." -o ../../release/dfss_${VERSION}_linux_amd64/dfssd
+	cp /lib/libqtdrv.ui.so.1.0.0 release/dfss_${VERSION}_linux_amd64/libqtdrv.ui.so.1
 
 package:
 	echo "$(VERSION) $(REVISION)" > build/embed/VERSION
