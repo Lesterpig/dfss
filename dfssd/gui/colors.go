@@ -1,5 +1,7 @@
 package gui
 
+// This file stores useful colors
+
 import "github.com/visualfc/goqt/ui"
 
 var colors = map[string]uint32{

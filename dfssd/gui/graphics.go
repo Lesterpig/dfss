@@ -1,14 +1,18 @@
 package gui
 
+// This file handles complex graphic primitives for the demonstrator.
+
 import (
 	"math"
 
 	"github.com/visualfc/goqt/ui"
 )
 
-const ARROW_T = math.Pi / 6
-const ARROW_L = 15
+// These two constants are used to configure arrows
+const ARROW_T = math.Pi / 6 // angle
+const ARROW_L = 15          // side length
 
+// DrawClients draws the different clients in a circle.
 func (w *Window) DrawClients() {
 	scene := w.graphics.Scene()
 	for i, c := range w.scene.Clients {
@@ -25,6 +29,7 @@ func (w *Window) DrawClients() {
 	}
 }
 
+// GetClientPosition translates a client index into its cartesian coordinates.
 func (w *Window) GetClientPosition(i int) (x, y float64) {
 	if i < 0 {
 		return w.GetServerPosition(i == -1)
@@ -35,6 +40,7 @@ func (w *Window) GetClientPosition(i int) (x, y float64) {
 	return math.Cos(angle) * (w.circleSize / 2), math.Sin(angle) * (w.circleSize / 2)
 }
 
+// GetServerPosition translates a server into its cartesian coordinates.
 func (w *Window) GetServerPosition(platform bool) (x, y float64) {
 	x = w.circleSize/2 + 150
 	y = 0
@@ -44,12 +50,13 @@ func (w *Window) GetServerPosition(platform bool) (x, y float64) {
 	return
 }
 
+// DrawServers draws the DFSS main servers (ttp and platform)
 func (w *Window) DrawServers() {
 	scene := w.graphics.Scene()
 
 	ttp := scene.AddPixmap(w.pixmaps["ttp"])
 	x, y := w.GetServerPosition(false)
-	ttp.SetPosFWithXY(x-32, y-16)
+	ttp.SetPosFWithXY(x-32, y-16) // we are shifting here a bit for better arrow display
 	ttp.SetToolTip("TTP")
 
 	platform := scene.AddPixmap(w.pixmaps["platform"])
@@ -58,6 +65,7 @@ func (w *Window) DrawServers() {
 	platform.SetToolTip("Platform")
 }
 
+// DrawArrow is the graphic primitive for drawing an arrow between A and B points
 func (w *Window) DrawArrow(xa, ya, xb, yb float64, rgb uint32) {
 	scene := w.graphics.Scene()
 
@@ -94,6 +102,7 @@ func (w *Window) DrawArrow(xa, ya, xb, yb float64, rgb uint32) {
 	w.currentArrows = append(w.currentArrows, arrow)
 }
 
+// RemoveArrows remove every arrow present in the graphic area, and delete them for better memory management.
 func (w *Window) RemoveArrows() {
 	scene := w.graphics.Scene()
 

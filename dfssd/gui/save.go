@@ -1,5 +1,7 @@
 package gui
 
+// This file handles open/save feature.
+
 import (
 	"encoding/json"
 	"io/ioutil"

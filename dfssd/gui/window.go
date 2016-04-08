@@ -1,4 +1,8 @@
+// Package gui is the graphic part of the dfssd program.
 package gui
+
+// This file is the entry point of the gui package.
+// It handles window instantiation and basic operations on it.
 
 import (
 	"math"
@@ -8,6 +12,7 @@ import (
 	"github.com/visualfc/goqt/ui"
 )
 
+// NewWindow creates and initialiaze a new dfssd main window.
 func NewWindow() *Window {
 	file := ui.NewFileWithName(":/widget.ui")
 	loader := ui.NewUiLoader()
@@ -52,17 +57,22 @@ func NewWindow() *Window {
 	return w
 }
 
+// OnResizeEvent is called by Qt each time an user tries to resize the window.
+// We have to redraw the whole scene to adapt.
 func (w *Window) OnResizeEvent(ev *ui.QResizeEvent) bool {
 	w.initScene()
 	return true
 }
 
+// Log is used to print a new line in the log area of the window.
+// It should be thread-safe.
 func (w *Window) Log(str string) {
 	str = time.Now().Format("[15:04:05.000] ") + str
 	w.logField.Append(str)
 	w.logField.EnsureCursorVisible()
 }
 
+// addIcons adds icons to control buttons, since we cannot add them directly in QtCreator.
 func (w *Window) addIcons() {
 	w.SetWindowIcon(ui.NewIconWithFilename(":/images/node_magnifier.png"))
 
@@ -79,6 +89,7 @@ func (w *Window) addIcons() {
 	w.replayButton.SetIcon(i)
 }
 
+// addActions adds action listenners to interactive parts of the window.
 func (w *Window) addActions() {
 	// MENU BAR
 	openAct := ui.NewActionWithTextParent("&Open", w)
@@ -125,6 +136,8 @@ func (w *Window) addActions() {
 	})
 }
 
+// initScene creates the Qt graphic scene associated to our custom scene.
+// It draws the base circle, clients and servers, and do some memory management for us.
 func (w *Window) initScene() {
 	// Save old scene
 	oldScene := w.graphics.Scene()

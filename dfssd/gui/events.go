@@ -1,5 +1,7 @@
 package gui
 
+// This file handles event timers and imports.
+
 import (
 	"fmt"
 	"math"
@@ -45,6 +47,7 @@ func (w *Window) AddEvent(e *api.Log) {
 	}
 }
 
+// DrawEvent triggers the appropriate draw action for a spectific event.
 func (w *Window) DrawEvent(e *Event) {
 	xa, ya := w.GetClientPosition(e.Sender)
 	xb, yb := w.GetClientPosition(e.Receiver)
@@ -62,6 +65,7 @@ func (w *Window) DrawEvent(e *Event) {
 	w.DrawArrow(xa, ya, xb, yb, colors[color])
 }
 
+// PrintQuantumInformation triggers the update of the "x / y" quantum information.
 func (w *Window) PrintQuantumInformation() {
 	if len(w.scene.Events) == 0 {
 		w.progress.SetText("No event")
@@ -80,6 +84,7 @@ func (w *Window) PrintQuantumInformation() {
 	w.progress.SetText(fmt.Sprint(currentQuantum, " / ", nbQuantum))
 }
 
+// initTimer is called during window initialization. It initializes the timeout signal called for each refresh.
 func (w *Window) initTimer() {
 	w.timer = ui.NewTimerWithParent(w)
 
@@ -128,6 +133,7 @@ func (w *Window) initTimer() {
 	})
 }
 
+// identifierToIndex is used to retrieve a client index from its name, inserting a new client if needed.
 func (s *Scene) identifierToIndex(identifier string) int {
 	if identifier == "platform" {
 		return -1

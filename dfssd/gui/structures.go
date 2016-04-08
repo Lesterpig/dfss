@@ -1,5 +1,7 @@
 package gui
 
+// This file stores strucutures used in GUI for fast documentation.
+
 import (
 	"time"
 
