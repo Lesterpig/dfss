@@ -29,18 +29,23 @@ func NewWindow() *Window {
 	w.graphics = ui.NewGraphicsViewFromDriver(widget.FindChild("graphicsView"))
 	w.progress = ui.NewLabelFromDriver(widget.FindChild("progressLabel"))
 
+	w.playButton = ui.NewPushButtonFromDriver(widget.FindChild("playButton"))
+	w.stopButton = ui.NewPushButtonFromDriver(widget.FindChild("stopButton"))
+	w.replayButton = ui.NewPushButtonFromDriver(widget.FindChild("replayButton"))
+
 	// Load pixmaps
 	w.pixmaps = map[string]*ui.QPixmap{
 		"ttp":      ui.NewPixmapWithFilenameFormatFlags(":/images/server_key.png", "", ui.Qt_AutoColor),
 		"platform": ui.NewPixmapWithFilenameFormatFlags(":/images/server_connect.png", "", ui.Qt_AutoColor),
 	}
 
-	// Load icon
-	w.SetWindowIcon(ui.NewIconWithFilename(":/images/node_magnifier.png"))
+	// Load icons
+	w.addIcons()
 
 	// Add actions
 	w.addActions()
 	w.initScene()
+	w.initTimer()
 
 	// TEST ONLY
 	w.scene.Clients = []Client{
@@ -56,8 +61,13 @@ func NewWindow() *Window {
 	}
 
 	w.StatusBar().ShowMessage("Ready")
-	w.StartSimulation()
+	w.PrintQuantumInformation()
 	return w
+}
+
+func (w *Window) OnResizeEvent(ev *ui.QResizeEvent) bool {
+	w.initScene()
+	return true
 }
 
 func (w *Window) Log(str string) {
@@ -65,7 +75,24 @@ func (w *Window) Log(str string) {
 	w.logField.EnsureCursorVisible()
 }
 
+func (w *Window) addIcons() {
+	w.SetWindowIcon(ui.NewIconWithFilename(":/images/node_magnifier.png"))
+
+	var i *ui.QIcon
+	i = ui.NewIconWithFilename(":/images/control_play_blue.png")
+	i.AddFileWithFilenameSizeModeState(":/images/control_play.png", ui.NewSizeWithWidthHeight(32, 32), ui.QIcon_Disabled, ui.QIcon_Off)
+	w.playButton.SetIcon(i)
+
+	i = ui.NewIconWithFilename(":/images/control_pause_blue.png")
+	i.AddFileWithFilenameSizeModeState(":/images/control_pause.png", ui.NewSizeWithWidthHeight(32, 32), ui.QIcon_Disabled, ui.QIcon_Off)
+	w.stopButton.SetIcon(i)
+
+	i = ui.NewIconWithFilename(":/images/control_rewind_blue.png")
+	w.replayButton.SetIcon(i)
+}
+
 func (w *Window) addActions() {
+	// MENU BAR
 	openAct := ui.NewActionWithTextParent("&Open", w)
 	openAct.SetShortcuts(ui.QKeySequence_Open)
 	openAct.SetStatusTip("Open a demonstration file")
@@ -88,11 +115,29 @@ func (w *Window) addActions() {
 
 	w.MenuBar().AddAction(openAct)
 	w.MenuBar().AddAction(saveAct)
-}
 
-func (w *Window) OnResizeEvent(ev *ui.QResizeEvent) bool {
-	w.initScene()
-	return true
+	// SIMULATION CONTROL
+	w.playButton.OnClicked(func() {
+		w.playButton.SetDisabled(true)
+		w.stopButton.SetDisabled(false)
+		w.timer.StartWithMsec(500)
+		w.Log("Started simulation")
+	})
+
+	w.stopButton.OnClicked(func() {
+		w.playButton.SetDisabled(false)
+		w.stopButton.SetDisabled(true)
+		w.timer.Stop()
+		w.Log("Paused simulation")
+	})
+	w.stopButton.SetDisabled(true)
+
+	w.replayButton.OnClicked(func() {
+		w.RemoveArrows()
+		w.scene.currentEvent = 0
+		w.PrintQuantumInformation()
+		w.Log("Restarting simulation")
+	})
 }
 
 func (w *Window) initScene() {

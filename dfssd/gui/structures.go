@@ -15,12 +15,15 @@ type Window struct {
 	logField   *ui.QTextEdit
 	graphics   *ui.QGraphicsView
 	progress   *ui.QLabel
+	playButton *ui.QPushButton
+	stopButton *ui.QPushButton
+	replayButton *ui.QPushButton
 	scene      *Scene
 	circleSize float64
 	pixmaps    map[string]*ui.QPixmap
 
 	currentArrows []*ui.QGraphicsPathItem
-	ticker        *time.Ticker
+	timer         *ui.QTimer
 }
 
 // Client represents a DFSSC instance
