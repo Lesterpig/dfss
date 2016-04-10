@@ -54,5 +54,13 @@ func signContract(args []string) {
 		fmt.Fprintln(os.Stderr, err)
 		os.Exit(5)
 	}
+
 	// Persist evidencies, if any
+	err = manager.PersistSignaturesToFile()
+	if err != nil {
+		fmt.Fprintln(os.Stderr, err)
+		os.Exit(5)
+	}
+
+	fmt.Println("Signature complete ! See .proof file for evidences.")
 }

@@ -24,6 +24,8 @@ type SignatureManager struct {
 	localPort    int
 	contract     *contract.JSON // contains the contractUUID, the list of the signers' hashes, the hash of the contract
 	platform     pAPI.PlatformClient
+	platformConn *grpc.ClientConn
+	peersConn    map[string]*grpc.ClientConn
 	peers        map[string]*cAPI.ClientClient
 	hashToID     map[string]uint32
 	nbReady      int
@@ -75,7 +77,9 @@ func NewSignatureManager(fileCA, fileCert, fileKey, addrPort, passphrase string,
 	}
 
 	m.platform = pAPI.NewPlatformClient(conn)
+	m.platformConn = conn
 
+	m.peersConn = make(map[string]*grpc.ClientConn)
 	m.peers = make(map[string]*cAPI.ClientClient)
 	for _, u := range c.Signers {
 		if u.Email != m.auth.Cert.Subject.CommonName {
@@ -139,6 +143,9 @@ func (m *SignatureManager) addPeer(user *pAPI.User) (ready bool, err error) {
 	client := cAPI.NewClientClient(conn)
 	lastConnection := m.peers[user.Email]
 	m.peers[user.Email] = &client
+	// The connection is encapsulated into the interface, so we
+	// need to create another way to access it
+	m.peersConn[user.Email] = conn
 
 	ctx, cancel := context.WithTimeout(context.Background(), time.Minute)
 	defer cancel()

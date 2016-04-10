@@ -14,6 +14,17 @@ import (
 	"github.com/bmizerany/assert"
 )
 
+// TestSignContract unroll the whole signature process.
+//
+// GOOD CASE
+// - Start platform
+// - Register client1, client2 and client3
+// - Create contract `contract.txt`
+// - Sign it
+// - Check if all proof files are present
+//
+// TODO BAD CASES
+
 func TestSignContract(t *testing.T) {
 	// Cleanup
 	eraseDatabase()
@@ -101,4 +112,20 @@ func TestSignContract(t *testing.T) {
 			assert.T(t, r.Match(output), "Regex is not satisfied: ", r.String())
 		}
 	}
+
+	// Ensure that all the files are present
+	proofFile := regexp.MustCompile(`client[0-9]+@example.com.*\.proof`)
+	files, _ := ioutil.ReadDir("./")
+
+	matches := 0
+	for _, file := range files {
+		if proofFile.Match([]byte(file.Name())) {
+			matches++
+			err = os.Remove("./" + file.Name())
+			assert.T(t, err == nil, "Cannot remove .proof matching file")
+		}
+	}
+	assert.T(t, matches == 3, "Missing proof file ?")
+
+	time.Sleep(time.Second)
 }

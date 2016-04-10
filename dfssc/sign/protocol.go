@@ -66,6 +66,13 @@ func (m *SignatureManager) Sign() error {
 
 	dAPI.DLog("{" + fmt.Sprintf("%d", myID) + "} Exit signature round")
 
+	// Network's job is done, cleaning time
+	// Shutdown and platform client and TODO peer server & connections
+	err = m.platformConn.Close()
+	if err != nil {
+		return err
+	}
+
 	return nil
 }
 
@@ -142,5 +149,18 @@ func (m *SignatureManager) promiseRound(pendingSet, sendSet []uint32, myID uint3
 		} else {
 			// something appened during the goroutine
 		}
+	}
+}
+
+// closeAllPeerClient tries to close all established connection with other peers
+func (m *SignatureManager) closeAllPeerClient() {
+	for k, client := range m.peersConn {
+		err := client.Close()
+		if err != nil {
+			// We don't care
+		}
+		// Remove associated grpc client
+		delete(m.peers, k)
+		fmt.Println("- Close connection to " + k)
 	}
 }
