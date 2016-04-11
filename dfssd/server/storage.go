@@ -1,7 +1,6 @@
 package server
 
 import (
-	"fmt"
 	"sort"
 	"sync"
 	"time"
@@ -23,7 +22,7 @@ func addMessage(msg *api.Log) {
 }
 
 // display logs that are more than since (ms) old
-func display(since int64, lfn func(string)) {
+func display(since int64, fn func(*api.Log)) {
 	var out []*api.Log      // sorted messages to display
 	var recycled []*api.Log // messages too recent to be displayed
 
@@ -45,15 +44,16 @@ func display(since int64, lfn func(string)) {
 	sort.Sort(ByTimestamp(out))
 
 	for _, v := range out {
-		lfn(fmt.Sprintf("[%d] %s:: %s", v.Timestamp, v.Identifier, v.Log))
+		//lfn()
+		fn(v)
 	}
 }
 
 // refresh every second
-func displayHandler(lfn func(string)) {
+func displayHandler(fn func(*api.Log)) {
 	ticker := time.NewTicker(time.Second)
 	for range ticker.C {
-		display(1000, lfn)
+		display(1000, fn)
 	}
 }
 

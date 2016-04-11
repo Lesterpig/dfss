@@ -1,5 +1,13 @@
 <RCC>
     <qresource prefix="/">
         <file>widget.ui</file>
+        <file>images/server_key.png</file>
+        <file>images/server_connect.png</file>
+        <file>images/node_magnifier.png</file>
+        <file>images/control_play.png</file>
+        <file>images/control_play_blue.png</file>
+        <file>images/control_pause.png</file>
+        <file>images/control_pause_blue.png</file>
+        <file>images/control_rewind_blue.png</file>
     </qresource>
 </RCC>
