@@ -20,6 +20,8 @@ type Window struct {
 	playButton   *ui.QPushButton
 	stopButton   *ui.QPushButton
 	replayButton *ui.QPushButton
+	quantumField *ui.QSpinBox
+	speedSlider  *ui.QSlider
 	scene        *Scene
 	circleSize   float64
 	pixmaps      map[string]*ui.QPixmap
