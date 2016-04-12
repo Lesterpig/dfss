@@ -26,20 +26,16 @@ func NewWidget(conf *config.Config, onRegistered func(pw string)) *Widget {
 	registerButton := ui.NewPushButtonFromDriver(form.FindChild("registerButton"))
 
 	home := config.GetHomeDir()
-	fileDialog := ui.NewFileDialogWithParentCaptionDirectoryFilter(nil, "Select the CA file for the platform", home, "Root Certificates (*.pem);;Any (*.*)")
 
 	// Events
 
 	registerButton.OnClicked(func() {
 		form.SetDisabled(true)
 		feedbackLabel.SetText("Registration in progress...")
-		fileDialog.Open()
-	})
-
-	fileDialog.OnFileSelected(func(ca string) {
-		fileDialog.Hide()
+		filter := "Root Certificates (*.pem);;Any (*.*)"
+		caFilename := ui.QFileDialogGetOpenFileNameWithParentCaptionDirFilterSelectedfilterOptions(form, "Select the CA file for the platform", home, filter, &filter, 0)
 		caDest := home + config.CAFile
-		_ = copyCA(ca, caDest)
+		_ = copyCA(caFilename, caDest)
 
 		err := user.Register(
 			caDest,
@@ -58,11 +54,6 @@ func NewWidget(conf *config.Config, onRegistered func(pw string)) *Widget {
 			config.Save(*conf)
 		}
 		form.SetDisabled(false)
-	})
-
-	fileDialog.OnRejected(func() {
-		form.SetDisabled(false)
-		feedbackLabel.SetText("Registration aborted.")
 	})
 
 	return &Widget{QWidget: form}
