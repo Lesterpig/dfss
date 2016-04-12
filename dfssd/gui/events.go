@@ -11,10 +11,6 @@ import (
 	"github.com/visualfc/goqt/ui"
 )
 
-// TEMPORARY
-const quantum = 100 // discretization argument for events (ns)
-const speed = 1000  // duration of a quantum (ms)
-
 // AddEvent interprets an incoming event into a graphic one.
 // Expected format:
 //
@@ -72,9 +68,11 @@ func (w *Window) PrintQuantumInformation() {
 		return
 	}
 
+	quantum := float64(w.quantumField.Value())
+
 	beginning := w.scene.Events[0].Date.UnixNano()
 	totalDuration := w.scene.Events[len(w.scene.Events)-1].Date.UnixNano() - beginning
-	nbQuantum := math.Max(1, math.Ceil(float64(totalDuration)/quantum))
+	nbQuantum := math.Floor(float64(totalDuration)/quantum) + 1
 	durationFromBeginning := w.scene.currentTime.UnixNano() - beginning
 	currentQuantum := math.Ceil(float64(durationFromBeginning)/quantum) + 1
 
@@ -115,6 +113,7 @@ func (w *Window) initTimer() {
 			w.scene.currentTime = w.scene.Events[0].Date
 		}
 
+		quantum := time.Duration(w.quantumField.Value())
 		endOfQuantum := w.scene.currentTime.Add(quantum * time.Nanosecond)
 
 		for i := w.scene.currentEvent; i < nbEvents; i++ {

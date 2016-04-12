@@ -140,10 +140,13 @@
           </sizepolicy>
          </property>
          <property name="focusPolicy">
-          <enum>Qt::TabFocus</enum>
+          <enum>Qt::ClickFocus</enum>
+         </property>
+         <property name="correctionMode">
+          <enum>QAbstractSpinBox::CorrectToNearestValue</enum>
          </property>
          <property name="suffix">
-          <string> us</string>
+          <string> ns</string>
          </property>
          <property name="minimum">
           <number>1</number>
@@ -183,6 +186,18 @@
          <property name="focusPolicy">
           <enum>Qt::TabFocus</enum>
          </property>
+         <property name="minimum">
+          <number>1</number>
+         </property>
+         <property name="maximum">
+          <number>20</number>
+         </property>
+         <property name="pageStep">
+          <number>2</number>
+         </property>
+         <property name="value">
+          <number>4</number>
+         </property>
          <property name="orientation">
           <enum>Qt::Horizontal</enum>
          </property>
@@ -190,7 +205,7 @@
           <enum>QSlider::TicksBothSides</enum>
          </property>
          <property name="tickInterval">
-          <number>5</number>
+          <number>1</number>
          </property>
         </widget>
        </item>

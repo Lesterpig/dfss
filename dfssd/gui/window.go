@@ -38,6 +38,9 @@ func NewWindow() *Window {
 	w.stopButton = ui.NewPushButtonFromDriver(widget.FindChild("stopButton"))
 	w.replayButton = ui.NewPushButtonFromDriver(widget.FindChild("replayButton"))
 
+	w.quantumField = ui.NewSpinBoxFromDriver(widget.FindChild("quantumField"))
+	w.speedSlider = ui.NewSliderFromDriver(widget.FindChild("speedSlider"))
+
 	// Load pixmaps
 	w.pixmaps = map[string]*ui.QPixmap{
 		"ttp":      ui.NewPixmapWithFilenameFormatFlags(":/images/server_key.png", "", ui.Qt_AutoColor),
@@ -119,6 +122,7 @@ func (w *Window) addActions() {
 	w.playButton.OnClicked(func() {
 		w.playButton.SetDisabled(true)
 		w.stopButton.SetDisabled(false)
+		speed := 2000 / w.speedSlider.Value()
 		w.timer.StartWithMsec(speed)
 	})
 
@@ -133,6 +137,17 @@ func (w *Window) addActions() {
 		w.RemoveArrows()
 		w.scene.currentEvent = 0
 		w.PrintQuantumInformation()
+	})
+
+	w.quantumField.OnValueChanged(func(_ string) {
+		w.replayButton.Click()
+	})
+
+	w.speedSlider.OnValueChanged(func(_ int32) {
+		if !w.playButton.IsEnabled() { // playing right now
+			w.stopButton.Click()
+			w.playButton.Click()
+		}
 	})
 }
 
