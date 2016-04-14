@@ -84,7 +84,8 @@ func checkJoinSignatureRequest(db *mgdb.MongoManager, stream *api.Platform_JoinS
 	}
 
 	repository := entities.NewContractRepository(db.Get("contracts"))
-	if !repository.CheckAuthorization(clientHash, bson.ObjectIdHex(contractUUID)) {
+	contract, _ := repository.GetWithSigner(clientHash, bson.ObjectIdHex(contractUUID))
+	if contract == nil || !contract.Ready {
 		_ = (*stream).Send(&api.UserConnected{
 			ErrorCode: &api.ErrorCode{
 				Code:    api.ErrorCode_INVARG,

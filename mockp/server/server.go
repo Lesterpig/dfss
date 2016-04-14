@@ -49,6 +49,14 @@ func (s *mockServer) PostContract(ctx context.Context, in *api.PostContractReque
 	return fixtures.CreateFixture[in.Comment], nil
 }
 
+// GetContract handler
+//
+// Handle incoming GetContractRequest messages
+func (s *mockServer) GetContract(ctx context.Context, in *api.GetContractRequest) (*api.Contract, error) {
+	// TODO
+	return nil, nil
+}
+
 // JoinSignature handler
 //
 // Handle incoming JoinSignatureRequest messages

@@ -20,7 +20,6 @@ var user1, user2, user3 *entities.User
 var defaultHash = sha512.Sum512([]byte{0})
 
 func createDataset() {
-
 	user1 = entities.NewUser() // Regular user
 	user2 = entities.NewUser() // Regular user
 	user3 = entities.NewUser() // Non-auth user
@@ -43,14 +42,11 @@ func createDataset() {
 	_, _ = manager.Get("users").Insert(user1)
 	_, _ = manager.Get("users").Insert(user2)
 	_, _ = manager.Get("users").Insert(user3)
-
 }
 
 func dropDataset() {
-
 	_ = manager.Get("users").Drop()
 	_ = manager.Get("contracts").Drop()
-
 }
 
 func clientTest(t *testing.T) api.PlatformClient {

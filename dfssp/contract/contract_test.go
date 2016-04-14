@@ -14,7 +14,6 @@ import (
 	"gopkg.in/mgo.v2/bson"
 )
 
-var err error
 var collection *mgdb.MongoCollection
 var manager *mgdb.MongoManager
 var dbURI string
@@ -28,6 +27,7 @@ func TestMain(m *testing.M) {
 		dbURI = "mongodb://localhost/dfss-test"
 	}
 
+	var err error
 	manager, err = mgdb.NewManager(dbURI)
 	if err != nil {
 		fmt.Println(err)
@@ -157,16 +157,26 @@ func TestCheckAuthorization(t *testing.T) {
 	createDataset()
 	id := addTestContract()
 
-	assert.T(t, repository.CheckAuthorization(user1.CertHash, id))
-	assert.T(t, !repository.CheckAuthorization(user1.CertHash, bson.NewObjectId()))
-	assert.T(t, !repository.CheckAuthorization(user2.CertHash, id))
-	assert.T(t, !repository.CheckAuthorization(user2.CertHash, bson.NewObjectId()))
+	res, err := repository.GetWithSigner(user1.CertHash, id)
+	assert.Equal(t, nil, err)
+	assert.T(t, res != nil)
+	res, err = repository.GetWithSigner(user1.CertHash, bson.NewObjectId())
+	assert.Equal(t, nil, err)
+	assert.T(t, res == nil)
+	res, err = repository.GetWithSigner(user2.CertHash, id)
+	assert.Equal(t, nil, err)
+	assert.T(t, res == nil)
+	res, err = repository.GetWithSigner(user2.CertHash, bson.NewObjectId())
+	assert.Equal(t, nil, err)
+	assert.T(t, res == nil)
 
 	contract := entities.Contract{}
 	_ = repository.Collection.FindByID(entities.Contract{ID: id}, &contract)
 	contract.Ready = false
 	_, _ = repository.Collection.UpdateByID(contract)
 
-	// Not valid if contract is not ready
-	assert.T(t, !repository.CheckAuthorization(user1.CertHash, id))
+	// Still valid if contract is not ready
+	res, _ = repository.GetWithSigner(user1.CertHash, id)
+	assert.T(t, res != nil)
+	assert.T(t, !res.Ready)
 }

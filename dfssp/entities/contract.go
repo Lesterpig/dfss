@@ -4,6 +4,7 @@ import (
 	"dfss/mgdb"
 	"time"
 
+	"gopkg.in/mgo.v2"
 	"gopkg.in/mgo.v2/bson"
 )
 
@@ -94,16 +95,20 @@ func (r *ContractRepository) GetWaitingForUser(email string) ([]Contract, error)
 	return res, err
 }
 
-// CheckAuthorization checks that a client is allowed to sign a specific contract
-func (r *ContractRepository) CheckAuthorization(signerHash []byte, contractID bson.ObjectId) bool {
-
-	count, _ := r.Collection.Collection.Find(bson.M{
-		"_id":   contractID,
-		"ready": true,
+// GetWithSigner returns the contract corresponding to an UUID and containing a specific signer, or nil if no contract matches.
+func (r *ContractRepository) GetWithSigner(signerHash []byte, contractUUID bson.ObjectId) (contract *Contract, err error) {
+	contract = new(Contract)
+	err = r.Collection.Collection.Find(bson.M{
+		"_id": contractUUID,
 		"signers": bson.M{
 			"$elemMatch": bson.M{"hash": signerHash},
 		},
-	}).Count()
+	}).One(contract)
 
-	return count == 1
+	if err == mgo.ErrNotFound {
+		contract = nil
+		err = nil
+		return
+	}
+	return
 }
