@@ -68,12 +68,7 @@ func Initialize(bits, days int, country, organization, unit, cn, path string, ca
 	}
 
 	// Save the root certificate.
-	err = ioutil.WriteFile(certPath, cert, 0600)
-	if err != nil {
-		return err
-	}
-
-	return nil
+	return ioutil.WriteFile(certPath, cert, 0600)
 }
 
 // Start fetches the platform's private rsa key and root certificate, and create a PlatformID accordingly.

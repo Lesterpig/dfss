@@ -143,11 +143,7 @@ func createFullMessage(b io.Writer, receiver, sender, globalHeader, base64Messag
 			return err
 		}
 	}
-	if err := writer.Close(); err != nil {
-		return err
-	}
-
-	return nil
+	return writer.Close()
 }
 
 // Create an attachment with a certain extension

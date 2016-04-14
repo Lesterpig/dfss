@@ -123,11 +123,7 @@ func (c *Config) checkData(keyPassphrase string) error {
 	}
 
 	_, err = auth.EncryptedPEMToPrivateKey(c.KeyData, keyPassphrase)
-	if err != nil {
-		return err
-	}
-
-	return nil
+	return err
 }
 
 // SaveUserInformations save the certificate and private key to the files specified in the Config struct
