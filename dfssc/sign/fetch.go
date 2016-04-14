@@ -2,7 +2,6 @@ package sign
 
 import (
 	"io/ioutil"
-	"time"
 
 	"dfss/dfssc/common"
 	"dfss/dfssc/security"
@@ -28,7 +27,7 @@ func FetchContract(fileCA, fileCert, fileKey, addrPort, passphrase, uuid, path s
 		Uuid: uuid,
 	}
 	client := api.NewPlatformClient(conn)
-	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	ctx, cancel := context.WithTimeout(context.Background(), net.DefaultTimeout)
 	defer cancel()
 	response, err := client.GetContract(ctx, request)
 	if err != nil {

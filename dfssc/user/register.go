@@ -8,6 +8,7 @@ import (
 	"dfss/dfssc/common"
 	"dfss/dfssc/security"
 	pb "dfss/dfssp/api"
+	"dfss/net"
 	"golang.org/x/net/context"
 	"google.golang.org/grpc"
 )
@@ -150,7 +151,7 @@ func (m *RegisterManager) sendRequest(certRequest string) (*pb.ErrorCode, error)
 	}
 
 	// Stop the context if it takes too long for the platform to answer
-	ctx, cancel := context.WithTimeout(context.TODO(), 10*time.Second)
+	ctx, cancel := context.WithTimeout(context.Background(), net.DefaultTimeout)
 	defer cancel()
 	response, err := client.Register(ctx, request)
 	if err != nil {
