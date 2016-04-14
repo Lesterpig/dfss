@@ -64,7 +64,7 @@ build_g:
 	cd gui && goqt_rcc -go main -o a.qrc.go application.qrc
 	cd dfssd/gui && goqt_rcc -go gui -o a.qrc.go application.qrc
 	cd gui && go build -ldflags "-r ." -o ../release/dfss_${VERSION}_linux_amd64/dfssc_gui
-	cd dfssd && go build -ldflags "-r ." -o ../../release/dfss_${VERSION}_linux_amd64/dfssd
+	cd dfssd && go build -ldflags "-r ." -o ../release/dfss_${VERSION}_linux_amd64/dfssd
 	cp /lib/libqtdrv.ui.so.1.0.0 release/dfss_${VERSION}_linux_amd64/libqtdrv.ui.so.1
 
 package:
