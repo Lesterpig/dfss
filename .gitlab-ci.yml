@@ -91,6 +91,7 @@ Deploy:
     - golang
     - strong
     - goqt
+    - deploy
   script:
     - "ln -s -f $(pwd) $GOPATH/src/dfss"
     - "./build/deps.sh"
