@@ -7,7 +7,7 @@ import (
 	"dfss/dfssc/user"
 )
 
-func authUser() {
+func authUser(_ []string) {
 	fmt.Println("Authenticating user")
 	var mail, token string
 

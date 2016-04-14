@@ -7,9 +7,10 @@ import (
 	"dfss/dfssc/sign"
 )
 
-func signContract(filename string) {
+func signContract(args []string) {
+	filename := args[0]
 	fmt.Println("You are going to sign the following contract:")
-	contract := showContract(filename)
+	contract := getContract(filename)
 	if contract == nil {
 		os.Exit(1)
 	}

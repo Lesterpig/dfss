@@ -13,7 +13,7 @@ import (
 	"golang.org/x/crypto/ssh/terminal"
 )
 
-func registerUser() {
+func registerUser(_ []string) {
 	fmt.Println("Registering a new user")
 	// Initialize variables
 	var country, mail, organization, unit, passphrase string

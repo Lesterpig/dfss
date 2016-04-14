@@ -7,7 +7,7 @@ import (
 	"dfss/dfssc/sign"
 )
 
-func newContract() {
+func newContract(_ []string) {
 	fmt.Println("Creating a new contract")
 
 	passphrase, filepath, comment, signers := getContractInfo()

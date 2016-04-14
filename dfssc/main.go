@@ -38,6 +38,7 @@ func init() {
 		fmt.Println("  register   register a new client")
 		fmt.Println("  auth       authenticate a new client")
 		fmt.Println("  new        create a new contract")
+		fmt.Println("  fetch      get a contract hosted on the platform")
 		fmt.Println("  show <c>   print contract information from file c")
 		fmt.Println("  export <c> export certificate and private key of the user to file c")
 		fmt.Println("  import <c> import private key and certificate from file c")
@@ -50,29 +51,36 @@ func init() {
 	}
 }
 
+type command struct {
+	nbArgs int
+	fn     func([]string)
+}
+
+var commands = map[string]command{
+	"version": command{0, func([]string) {
+		fmt.Println("v"+dfss.Version, runtime.GOOS, runtime.GOARCH)
+	}},
+	"register": command{0, registerUser},
+	"auth":     command{0, authUser},
+	"new":      command{0, newContract},
+	"fetch":    command{0, fetchContract},
+	"show":     command{1, showContract},
+	"export":   command{1, exportConf},
+	"import":   command{1, importConf},
+	"sign":     command{1, signContract},
+}
+
 func main() {
 	flag.Parse()
+	arg := flag.Arg(0)
+	c, ok := commands[arg]
 
-	command := flag.Arg(0)
-
-	switch command {
-	case "version":
-		fmt.Println("v"+dfss.Version, runtime.GOOS, runtime.GOARCH)
-	case "register":
-		registerUser()
-	case "auth":
-		authUser()
-	case "new":
-		newContract()
-	case "show":
-		showContract(flag.Arg(1))
-	case "export":
-		exportConf(flag.Arg(1))
-	case "import":
-		importConf(flag.Arg(1))
-	case "sign":
-		signContract(flag.Arg(1))
-	default:
+	if !ok || flag.NArg()-1 < c.nbArgs {
 		flag.Usage()
+		return
 	}
+
+	args := flag.Args()
+	args = append(args, "")
+	c.fn(args[1:])
 }

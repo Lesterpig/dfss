@@ -52,11 +52,9 @@ func TestNewCreateManager(t *testing.T) {
 }
 
 func TestComputeFile(t *testing.T) {
-
 	m := &CreateManager{filepath: fcontract}
 	err := m.computeFile()
 	assert.Equal(t, nil, err)
 	assert.Equal(t, "37fd29decfb2d689439478b1f64b60441534c1e373a7023676c94ac6772639edab46f80139d167a2741f159e62b3064eca58bb331d32cd10770f29064af2a9de", fmt.Sprintf("%x", m.hash))
 	assert.Equal(t, "contract.txt", m.filename)
-
 }
