@@ -1,11 +1,12 @@
 package sign
 
 import (
+	"fmt"
+
 	"dfss"
 	cAPI "dfss/dfssc/api"
 	pAPI "dfss/dfssp/api"
 	"dfss/net"
-	"fmt"
 	"golang.org/x/net/context"
 	"google.golang.org/grpc"
 )

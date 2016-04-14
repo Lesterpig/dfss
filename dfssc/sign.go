@@ -62,5 +62,5 @@ func signContract(args []string) {
 		os.Exit(5)
 	}
 
-	fmt.Println("Signature complete ! See .proof file for evidences.")
+	fmt.Println("Signature complete! See .proof file for evidences.")
 }

@@ -39,12 +39,12 @@ type SignatureManager struct {
 	archives     *Archives
 }
 
-// Archives stores the recieved and sent messages, as evidence if needed
+// Archives stores the received and sent messages, as evidence if needed
 type Archives struct {
 	sentPromises       []*cAPI.Promise
-	recievedPromises   []*cAPI.Promise
+	receivedPromises   []*cAPI.Promise
 	sentSignatures     []*cAPI.Signature
-	recievedSignatures []*cAPI.Signature
+	receivedSignatures []*cAPI.Signature
 }
 
 // NewSignatureManager populates a SignatureManager and connects to the platform.
@@ -55,9 +55,9 @@ func NewSignatureManager(fileCA, fileCert, fileKey, addrPort, passphrase string,
 		contract:  c,
 		archives: &Archives{
 			sentPromises:       make([]*cAPI.Promise, 0),
-			recievedPromises:   make([]*cAPI.Promise, 0),
+			receivedPromises:   make([]*cAPI.Promise, 0),
 			sentSignatures:     make([]*cAPI.Signature, 0),
-			recievedSignatures: make([]*cAPI.Signature, 0),
+			receivedSignatures: make([]*cAPI.Signature, 0),
 		},
 	}
 	var err error

@@ -9,7 +9,7 @@ import (
 	dAPI "dfss/dfssd/api"
 )
 
-// Sign performe all the message exchange for the contract to be signed
+// Sign perform all the message exchanges for the contract to be signed
 //
 // * Initialize the SignatureManager from starter.go
 // * Compute the reversed map [mail -> ID] of signers
@@ -35,31 +35,33 @@ func (m *SignatureManager) Sign() error {
 		dAPI.DLog(fmt.Sprintf("{%d} ", myID) + "Starting round at index [" + fmt.Sprintf("%d", m.currentIndex) + "] with nextIndex=" + fmt.Sprintf("%d", nextIndex))
 
 		// Set of the promise we are waiting for
-		pendingSet, err1 := common.GetPendingSet(m.sequence, myID, m.currentIndex)
-		if err1 != nil {
-			return err1 // err is renamed to avoid shadowing err on linter check
+		var pendingSet []uint32
+		pendingSet, err = common.GetPendingSet(m.sequence, myID, m.currentIndex)
+		if err != nil {
+			return err
 		}
 
 		// Set of the promises we must send
-		sendSet, err1 := common.GetSendSet(m.sequence, myID, m.currentIndex)
-		if err1 != nil {
-			return err1
+		var sendSet []uint32
+		sendSet, err = common.GetSendSet(m.sequence, myID, m.currentIndex)
+		if err != nil {
+			return err
 		}
 
 		// Exchange messages
 		m.promiseRound(pendingSet, sendSet, myID)
 
 		m.currentIndex = nextIndex
-		nextIndex, err1 = common.FindNextIndex(m.sequence, myID, m.currentIndex)
-		if err1 != nil {
-			return err1
+		nextIndex, err = common.FindNextIndex(m.sequence, myID, m.currentIndex)
+		if err != nil {
+			return err
 		}
 	}
 
 	dAPI.DLog("{" + fmt.Sprintf("%d", myID) + "} Enter signature round")
 
 	// Signature round
-	err = m.SendAllSigns()
+	err = m.ExchangeAllSignatures()
 	if err != nil {
 		return err
 	}
@@ -87,7 +89,7 @@ func (m *SignatureManager) GetClient(to uint32) (*cAPI.ClientClient, error) {
 	return m.peers[mailto], nil
 }
 
-// makeEMailMap build an association to reverse a hash to the sequence ID
+// makeSignersHashToIDMap build an association to reverse a hash to the sequence ID
 func (m *SignatureManager) makeSignersHashToIDMap() {
 
 	m.hashToID = make(map[string]uint32)
@@ -112,10 +114,10 @@ func (m *SignatureManager) promiseRound(pendingSet, sendSet []uint32, myID uint3
 			var err error
 			pendingSet, err = common.Remove(pendingSet, senderID)
 			if err != nil {
-				_ = fmt.Errorf("Recieve unexpected promise")
+				_ = fmt.Errorf("Receive unexpected promise")
 			}
-			m.archives.recievedPromises = append(m.archives.recievedPromises, promise)
-			dAPI.DLog("{" + fmt.Sprintf("%d", myID) + "} Recieved promise from [" + fmt.Sprintf("%d", senderID) + "] for index " + fmt.Sprintf("%d", promise.Index))
+			m.archives.receivedPromises = append(m.archives.receivedPromises, promise)
+			dAPI.DLog("{" + fmt.Sprintf("%d", myID) + "} Received promise from [" + fmt.Sprintf("%d", senderID) + "] for index " + fmt.Sprintf("%d", promise.Index))
 		} else {
 			// Wrong sender keyHash
 			log.Println("{" + fmt.Sprintf("%d", myID) + "} Wrong sender keyhash !")
@@ -134,14 +136,14 @@ func (m *SignatureManager) promiseRound(pendingSet, sendSet []uint32, myID uint3
 			dAPI.DLog("{" + fmt.Sprintf("%d", myID) + "} Send promise to " + fmt.Sprintf("%d", id))
 			_, err = m.SendPromise(promise, id)
 			if err != nil {
-				dAPI.DLog("{" + fmt.Sprintf("%d", myID) + "} Promise have not been recieved !")
+				dAPI.DLog("{" + fmt.Sprintf("%d", myID) + "} Promise have not been received !")
 				_ = fmt.Errorf("Failed to deliver promise from %d to %d", myID, id)
 			}
 			c <- promise
 		}(id, m)
 	}
 
-	// Verifying we sent all the due promesses
+	// Verifying we sent all the due promises
 	for _ = range sendSet {
 		promise := <-c
 		if promise != nil {
@@ -155,10 +157,7 @@ func (m *SignatureManager) promiseRound(pendingSet, sendSet []uint32, myID uint3
 // closeAllPeerClient tries to close all established connection with other peers
 func (m *SignatureManager) closeAllPeerClient() {
 	for k, client := range m.peersConn {
-		err := client.Close()
-		if err != nil {
-			// We don't care
-		}
+		_ = client.Close()
 		// Remove associated grpc client
 		delete(m.peers, k)
 		fmt.Println("- Close connection to " + k)

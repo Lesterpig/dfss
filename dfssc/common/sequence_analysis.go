@@ -93,6 +93,8 @@ func contains(s []uint32, e uint32) bool {
 }
 
 // GetAllButOne creates the slice of all sequence ids, except the one specified
+//
+// TODO This is O(n^2) and need a rework with a map
 func GetAllButOne(s []uint32, e uint32) []uint32 {
 	var res = make([]uint32, 0)
 

@@ -14,11 +14,11 @@ import (
 	"google.golang.org/grpc"
 )
 
-// SendAllSigns creates and sends signatures to all the signers of the contract
-func (m *SignatureManager) SendAllSigns() error {
+// ExchangeAllSignatures creates and sends signatures to all the signers of the contract
+func (m *SignatureManager) ExchangeAllSignatures() error {
 
-	allRecieved := make(chan error)
-	go m.RecieveAllSigns(allRecieved)
+	allReceived := make(chan error)
+	go m.ReceiveAllSigns(allReceived)
 
 	myID, err := m.FindID()
 	if err != nil {
@@ -57,7 +57,7 @@ func (m *SignatureManager) SendAllSigns() error {
 		}
 	}
 
-	err = <-allRecieved
+	err = <-allReceived
 	if err != nil {
 		return err
 	}
@@ -90,7 +90,7 @@ func (m *SignatureManager) SendSignature(signature *cAPI.Signature, to uint32) (
 	}
 
 	// Handle the timeout
-	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Minute)
+	ctx, cancel := context.WithTimeout(context.Background(), time.Minute)
 	defer cancel()
 
 	errCode, err := (*connection).TreatSignature(ctx, signature)
@@ -106,15 +106,15 @@ func (m *SignatureManager) SendSignature(signature *cAPI.Signature, to uint32) (
 	return errCode, nil
 }
 
-// RecieveAllSigns recieve all the signatures
-func (m *SignatureManager) RecieveAllSigns(out chan error) {
+// ReceiveAllSigns receive all the signatures
+func (m *SignatureManager) ReceiveAllSigns(out chan error) {
 	myID, err := m.FindID()
 	if err != nil {
 		out <- err
 		return
 	}
 
-	// compute a set of all signers exept me
+	// compute a set of all signers except me
 	pendingSet := common.GetAllButOne(m.sequence, myID)
 
 	// TODO this ctx needs a timeout !
@@ -126,9 +126,9 @@ func (m *SignatureManager) RecieveAllSigns(out chan error) {
 			var err error
 			pendingSet, err = common.Remove(pendingSet, senderID)
 			if err != nil {
-				// Recieve unexpected signature, ignore ?
+				// Receive unexpected signature, ignore ?
 			}
-			m.archives.recievedSignatures = append(m.archives.recievedSignatures, signature)
+			m.archives.receivedSignatures = append(m.archives.receivedSignatures, signature)
 		} else {
 			// Wrong sender keyHash
 		}

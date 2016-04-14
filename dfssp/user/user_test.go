@@ -294,7 +294,7 @@ func ExampleAuth() {
 		fmt.Println("The certificate should have been given as an answer")
 	}
 
-	fmt.Println("Certificate successfully recieved")
+	fmt.Println("Certificate successfully received")
 
 	res := entities.User{}
 	err = repository.Collection.FindByID(*user, &res)
@@ -312,7 +312,7 @@ func ExampleAuth() {
 	// User successfully inserted
 	// Client successfully connected
 	// AuthRequest successfully sent
-	// Certificate successfully recieved
+	// Certificate successfully received
 	// Database successfully updated with cert and certHash
 }
 

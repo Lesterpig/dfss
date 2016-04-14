@@ -2,8 +2,9 @@ package common
 
 import (
 	"fmt"
-	"github.com/bmizerany/assert"
 	"testing"
+
+	"github.com/bmizerany/assert"
 )
 
 func TestFindNextIndex(t *testing.T) {

@@ -35,7 +35,7 @@ var _ = math.Inf
 const _ = proto.ProtoPackageIsVersion1
 
 // Promise message contains all the required information to verify
-// the identity of the sender and reciever, and the actual promise
+// the identity of the sender and receiver, and the actual promise
 //
 // * sequence is transmitted by platform and identical across clients
 // * TODO implement an global signature for content
@@ -54,7 +54,7 @@ func (*Promise) ProtoMessage()               {}
 func (*Promise) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{0} }
 
 // Signature message contains all the required information to verify
-// the identity of the sender and reciever, and the actual signature
+// the identity of the sender and receiver, and the actual signature
 type Signature struct {
 	RecipientKeyHash []byte `protobuf:"bytes,1,opt,name=recipientKeyHash,proto3" json:"recipientKeyHash,omitempty"`
 	SenderKeyHash    []byte `protobuf:"bytes,2,opt,name=senderKeyHash,proto3" json:"senderKeyHash,omitempty"`
