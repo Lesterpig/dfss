@@ -44,7 +44,7 @@ func TestCloseWaitingGroup(t *testing.T) {
 
 	go func() {
 		myChan, _, _ := w.Join("A")
-		for _ = range myChan {
+		for range myChan {
 			t.Fatal("Should not be here")
 		}
 		// No need to call Unjoin here: if we do, we will try to unjoin a unknown room

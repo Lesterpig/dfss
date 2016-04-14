@@ -13,13 +13,7 @@ func Register(fileCA, fileCert, fileKey, addrPort, passphrase, country, organiza
 	if err != nil {
 		return err
 	}
-
-	err = manager.GetCertificate()
-	if err != nil {
-		return err
-	}
-
-	return nil
+	return manager.GetCertificate()
 }
 
 // Authenticate a user using the provided parameters
@@ -28,13 +22,7 @@ func Authenticate(fileCA, fileCert, addrPort, mail, token string) error {
 	if err != nil {
 		return err
 	}
-
-	err = manager.Authenticate()
-	if err != nil {
-		return err
-	}
-
-	return nil
+	return manager.Authenticate()
 }
 
 func connect(fileCA, addrPort string) (pb.PlatformClient, error) {

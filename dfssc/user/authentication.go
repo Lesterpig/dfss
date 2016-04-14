@@ -81,12 +81,7 @@ func (m *AuthManager) Authenticate() error {
 		return err
 	}
 
-	err = m.evaluateResponse(response)
-	if err != nil {
-		return err
-	}
-
-	return nil
+	return m.evaluateResponse(response)
 }
 
 // Creates the associated authentication request and sends it to the platform grpc server
@@ -117,10 +112,5 @@ func (m *AuthManager) sendRequest() (*pb.RegisteredUser, error) {
 func (m *AuthManager) evaluateResponse(response *pb.RegisteredUser) error {
 	cert := []byte(response.ClientCert)
 
-	err := ioutil.WriteFile(m.fileCert, cert, 0600)
-	if err != nil {
-		return err
-	}
-
-	return nil
+	return ioutil.WriteFile(m.fileCert, cert, 0600)
 }

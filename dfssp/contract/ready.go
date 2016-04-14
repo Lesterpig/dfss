@@ -137,7 +137,7 @@ func FindAndUpdatePendingSigner(mail string, signersReady *[]bool, signers *[]en
 
 	// Check if everyone is ready
 	for _, s := range *signersReady {
-		if s == false {
+		if !s {
 			return
 		}
 	}

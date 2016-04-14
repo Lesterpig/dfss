@@ -44,12 +44,7 @@ func readPassphrases(keyPassphrase, confPassphrase *string, second bool) error {
 	}
 
 	fmt.Println("Enter the passphrase of your current key (if any)")
-	err = readPassword(keyPassphrase, false)
-	if err != nil {
-		return err
-	}
-
-	return nil
+	return readPassword(keyPassphrase, false)
 }
 
 // import the configuration
