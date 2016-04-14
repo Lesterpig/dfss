@@ -4,12 +4,10 @@ import (
 	"dfss"
 	"dfss/gui/authform"
 	"dfss/gui/config"
+	"dfss/gui/contractform"
 	"dfss/gui/userform"
 	"github.com/visualfc/goqt/ui"
 )
-
-const WIDTH = 650
-const HEIGHT = 350
 
 func main() {
 	// Load configuration
@@ -17,34 +15,31 @@ func main() {
 
 	// Start first window
 	ui.Run(func() {
-		layout := ui.NewVBoxLayout()
+		window := ui.NewMainWindow()
 
 		var newuser *userform.Widget
 		var newauth *authform.Widget
+		var newcontract *contractform.Widget
 
 		newauth = authform.NewWidget(&conf, func() {
-			layout.RemoveWidget(newauth)
-			newauth.Hide()
+			window.SetCentralWidget(newcontract)
 		})
 
 		newuser = userform.NewWidget(&conf, func(pwd string) {
-			layout.RemoveWidget(newuser)
-			newuser.Hide()
-			layout.AddWidget(newauth)
+			window.SetCentralWidget(newauth)
 		})
 
+		newcontract = contractform.NewWidget(&conf)
+
 		if conf.Authenticated {
-			// TODO
+			window.SetCentralWidget(newcontract)
 		} else if conf.Registered {
-			layout.AddWidget(newauth)
+			window.SetCentralWidget(newauth)
 		} else {
-			layout.AddWidget(newuser)
+			window.SetCentralWidget(newuser)
 		}
 
-		w := ui.NewWidget()
-		w.SetLayout(layout)
-		w.SetWindowTitle("DFSS Client v" + dfss.Version)
-		w.SetFixedSizeWithWidthHeight(WIDTH, HEIGHT)
-		w.Show()
+		window.SetWindowTitle("DFSS Client v" + dfss.Version)
+		window.Show()
 	})
 }

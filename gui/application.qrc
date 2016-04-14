@@ -2,5 +2,6 @@
     <qresource prefix="/">
         <file>userform/userform.ui</file>
         <file>authform/authform.ui</file>
+        <file>contractform/contractform.ui</file>
     </qresource>
 </RCC>
