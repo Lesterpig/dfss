@@ -7,6 +7,7 @@ service Platform {
 	rpc Auth(AuthRequest) returns (RegisteredUser) {}
 	rpc Unregister(Empty) returns (ErrorCode) {}
 	rpc PostContract(PostContractRequest) returns (ErrorCode) {}
+	rpc GetContract(GetContractRequest) returns (Contract) {}
 	rpc JoinSignature(JoinSignatureRequest) returns (stream UserConnected) {}
 	rpc ReadySign(ReadySignRequest) returns (LaunchSignature) {} // Warning, LaunchSignature can be emitted with a very high delay
 }
@@ -61,6 +62,18 @@ message PostContractRequest {
 	string filename = 2;
 	repeated string signer = 3;
 	string comment = 4;
+}
+
+// GetContractRequest message contains the uuid of the asked contract
+message GetContractRequest {
+	string uuid = 1;
+}
+
+// Contract is the return value when a contract is fetched from the platform.
+// The contract is in json format to avoid duplicating structures.
+message Contract {
+	ErrorCode errorCode = 1;
+	bytes json = 2;
 }
 
 // JoinSignatureRequest message contains the contract to join unique identifier

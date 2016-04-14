@@ -6,6 +6,7 @@ import (
 	"crypto/x509"
 	"net"
 
+	"dfss/auth"
 	"golang.org/x/net/context"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials"
@@ -72,4 +73,14 @@ func GetCN(ctx *context.Context) string {
 		return ""
 	}
 	return state.VerifiedChains[0][0].Subject.CommonName
+}
+
+// GetClientHash returns the current certificate hash of connected peer from grpc context.
+// The returned slice is nil if encoutering a non-auth peer.
+func GetClientHash(ctx *context.Context) []byte {
+	state, _, ok := GetTLSState(ctx)
+	if !ok || len(state.VerifiedChains) == 0 {
+		return nil
+	}
+	return auth.GetCertificateHash(state.VerifiedChains[0][0])
 }

@@ -49,7 +49,6 @@ func (s *platformServer) Unregister(ctx context.Context, in *api.Empty) (*api.Er
 //
 // Handle incoming PostContractRequest messages
 func (s *platformServer) PostContract(ctx context.Context, in *api.PostContractRequest) (*api.ErrorCode, error) {
-
 	cn := net.GetCN(&ctx)
 	if len(cn) == 0 {
 		return &api.ErrorCode{Code: api.ErrorCode_BADAUTH}, nil
@@ -59,11 +58,21 @@ func (s *platformServer) PostContract(ctx context.Context, in *api.PostContractR
 	return builder.Execute(), nil
 }
 
+// GetContract handler
+//
+// Handle incoming GetContractRequest messages
+func (s *platformServer) GetContract(ctx context.Context, in *api.GetContractRequest) (*api.Contract, error) {
+	hash := net.GetClientHash(&ctx)
+	if hash == nil {
+		return &api.Contract{ErrorCode: &api.ErrorCode{Code: api.ErrorCode_BADAUTH}}, nil
+	}
+	return contract.Fetch(s.DB, in.Uuid, hash), nil
+}
+
 // JoinSignature handler
 //
 // Handle incoming JoinSignatureRequest messages
 func (s *platformServer) JoinSignature(in *api.JoinSignatureRequest, stream api.Platform_JoinSignatureServer) error {
-
 	ctx := stream.Context()
 	cn := net.GetCN(&ctx)
 	if len(cn) == 0 {

@@ -39,7 +39,6 @@ type JSON struct {
 
 // GetJSON returns indented json from a contract and some ttp information (nil allowed)
 func GetJSON(c *entities.Contract, ttp *TTPJSON) ([]byte, error) {
-
 	data := JSON{
 		UUID:    c.ID.Hex(),
 		Date:    &c.Date,
