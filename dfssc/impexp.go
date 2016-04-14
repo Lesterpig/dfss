@@ -7,7 +7,8 @@ import (
 )
 
 // export the certificate and private key of the user
-func exportConf(confFile string) {
+func exportConf(args []string) {
+	confFile := args[0]
 	fmt.Println("Export user configuration")
 	var keyPassphrase, confPassphrase string
 
@@ -52,7 +53,8 @@ func readPassphrases(keyPassphrase, confPassphrase *string, second bool) error {
 }
 
 // import the configuration
-func importConf(confFile string) {
+func importConf(args []string) {
+	confFile := args[0]
 	var keyPassphrase, confPassphrase string
 	err := readPassphrases(&keyPassphrase, &confPassphrase, false)
 	if err != nil {
