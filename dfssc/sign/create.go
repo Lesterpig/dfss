@@ -4,7 +4,6 @@ import (
 	"crypto/sha512"
 	"io/ioutil"
 	"path/filepath"
-	"time"
 
 	"dfss/dfssc/common"
 	"dfss/dfssc/security"
@@ -80,7 +79,7 @@ func (m *CreateManager) sendRequest() (*api.ErrorCode, error) {
 	}
 
 	client := api.NewPlatformClient(conn)
-	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	ctx, cancel := context.WithTimeout(context.Background(), net.DefaultTimeout)
 	defer cancel()
 	response, err := client.PostContract(ctx, request)
 	if err != nil {

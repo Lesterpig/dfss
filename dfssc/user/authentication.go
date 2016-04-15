@@ -8,6 +8,7 @@ import (
 	"dfss/dfssc/common"
 	"dfss/dfssc/security"
 	pb "dfss/dfssp/api"
+	"dfss/net"
 	"errors"
 	"golang.org/x/net/context"
 	"google.golang.org/grpc"
@@ -98,7 +99,7 @@ func (m *AuthManager) sendRequest() (*pb.RegisteredUser, error) {
 	}
 
 	// Stop the context if it takes too long for the platform to answer
-	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	ctx, cancel := context.WithTimeout(context.Background(), net.DefaultTimeout)
 	defer cancel()
 	response, err := client.Auth(ctx, request)
 	if err != nil {

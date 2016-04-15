@@ -13,6 +13,9 @@ import (
 	"google.golang.org/grpc/credentials"
 )
 
+// DefaultTimeout should be used when a non-critical timeout is used in the application.
+const DefaultTimeout = 30 * time.Second
+
 // Connect to a peer.
 //
 // Given parameters cert/key/ca are PEM-encoded array of bytes.
@@ -43,6 +46,7 @@ func Connect(addrPort string, cert *x509.Certificate, key *rsa.PrivateKey, ca *x
 	return grpc.Dial(
 		addrPort,
 		grpc.WithTransportCredentials(&tlsCreds{config: conf}),
+		grpc.WithTimeout(DefaultTimeout),
 	)
 }
 
