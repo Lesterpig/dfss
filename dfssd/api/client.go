@@ -1,41 +1,40 @@
 package api
 
 import (
+	"time"
+
 	"golang.org/x/net/context"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/grpclog"
-	"time"
 )
 
 var (
-	// theses are the default parameters
-	address    = "localhost:3000"
-	identifier = "platform"
-	demo       = false
+	address, identifier string
+	demo                bool
 	// lazy initializer
 	dial       *grpc.ClientConn
 	demoClient DemonstratorClient
 )
 
-// Switch for demo mode
-//
-// Should be used to pass the value of `-d` switch
-func Switch(activationSwitch bool) {
-	demo = activationSwitch
-	return
+// Configure is used to update current parameters.
+// Call it at least one time before the first DLog call.
+func Configure(activated bool, addrport, id string) {
+	address = addrport
+	identifier = id
+	demo = activated
 }
 
 // Lazy initialisation for demonstrator's connection to server
 func dInit() error {
 	var err error
-	dial, err = grpc.Dial(address, grpc.WithInsecure())
+	dial, err = grpc.Dial(address, grpc.WithInsecure(), grpc.WithTimeout(10*time.Second))
 	if err != nil {
 		grpclog.Printf("Fail to dial: %v", err)
+		return err
 	}
 
 	demoClient = NewDemonstratorClient(dial)
-
-	return err
+	return nil
 }
 
 // DClose close the connection with demonstrator server (if any)
@@ -45,7 +44,7 @@ func DClose() {
 	if dial != nil {
 		err := dial.Close()
 		if err != nil {
-			grpclog.Printf("Fail to close dialing: %v", err)
+			grpclog.Printf("Failed to close dialing with demonstrator: %v", err)
 		}
 	}
 }
@@ -53,9 +52,7 @@ func DClose() {
 // DLog send a message to the demonstrator
 //
 // The client is dialed in a lazy way
-// The default demonstrator server address is localhost:3000
 func DLog(log string) {
-
 	// check demo switch
 	if !demo {
 		return

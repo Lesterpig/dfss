@@ -5,10 +5,13 @@ import (
 	"flag"
 	"fmt"
 	"runtime"
+
+	dapi "dfss/dfssd/api"
 )
 
 var (
 	verbose   bool
+	demo      string
 	fca       string // Path to the CA
 	fcert     string // Path to the certificate
 	fkey      string // Path to the private key
@@ -23,6 +26,7 @@ func init() {
 	flag.StringVar(&fcert, "cert", "cert.pem", "Path to the user certificate")
 	flag.StringVar(&fkey, "key", "key.pem", "Path to the private key")
 	flag.StringVar(&addrPort, "host", "localhost:9000", "Host of the DFSS platform")
+	flag.StringVar(&demo, "d", "", "Demonstrator address and port (empty string disables debug)")
 	flag.IntVar(&localPort, "port", 9005, "Port to use for P2P communication between clients")
 
 	flag.Usage = func() {
@@ -73,6 +77,8 @@ var commands = map[string]command{
 func main() {
 	flag.Parse()
 	arg := flag.Arg(0)
+	dapi.Configure(demo != "", demo, "client")
+
 	c, ok := commands[arg]
 
 	if !ok || flag.NArg()-1 < c.nbArgs {
