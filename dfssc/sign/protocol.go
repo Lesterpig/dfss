@@ -23,8 +23,8 @@ func (m *SignatureManager) Sign() error {
 	}
 
 	m.makeSignersHashToIDMap()
-	m.cServerIface.incomingPromises = make(chan interface{})
-	m.cServerIface.incomingSignatures = make(chan interface{})
+	m.cServerIface.incomingPromises = make(chan interface{}, chanBufferSize)
+	m.cServerIface.incomingSignatures = make(chan interface{}, chanBufferSize)
 
 	// Cooldown delay, let other clients wake-up their channels
 	time.Sleep(time.Second)
@@ -88,25 +88,30 @@ func (m *SignatureManager) makeSignersHashToIDMap() {
 }
 
 // promiseRound describes a promise round: reception and sending
-// TODO better error management - this function should return `error` !
 func (m *SignatureManager) promiseRound(pendingSet, sendSet []uint32, myID uint32) {
 
 	// Reception of the due promises
-	// TODO this ctx needs a timeout !
 	for len(pendingSet) > 0 {
-		promise := (<-m.cServerIface.incomingPromises).(*cAPI.Promise)
-		senderID, exist := m.hashToID[fmt.Sprintf("%x", promise.Context.SenderKeyHash)]
-		if exist {
-			var err error
-			pendingSet, err = common.Remove(pendingSet, senderID)
-			if err != nil {
-				continue
+		select {
+		case promiseIface := <-m.cServerIface.incomingPromises:
+			promise := (promiseIface).(*cAPI.Promise)
+			senderID, exist := m.hashToID[fmt.Sprintf("%x", promise.Context.SenderKeyHash)]
+			if exist {
+				var err error
+				pendingSet, err = common.Remove(pendingSet, senderID)
+				if err != nil {
+					continue
+				}
+				m.archives.receivedPromises = append(m.archives.receivedPromises, promise)
 			}
-			m.archives.receivedPromises = append(m.archives.receivedPromises, promise)
+
+		case <-time.After(time.Minute):
+			// TODO contact TTP
+			return
 		}
 	}
 
-	c := make(chan *cAPI.Promise)
+	c := make(chan *cAPI.Promise, chanBufferSize)
 	// Sending of due promises
 	for _, id := range sendSet {
 		go func(id uint32, m *SignatureManager) {

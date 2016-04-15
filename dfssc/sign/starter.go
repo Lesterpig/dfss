@@ -19,6 +19,9 @@ import (
 	"google.golang.org/grpc"
 )
 
+// Limit the buffer size of the channels
+const chanBufferSize = 100
+
 // SignatureManager handles the signature of a contract.
 type SignatureManager struct {
 	auth         *security.AuthContainer

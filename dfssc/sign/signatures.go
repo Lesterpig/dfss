@@ -1,15 +1,16 @@
 package sign
 
 import (
-	"dfss/dfssc/common"
 	"fmt"
+	"time"
 
 	cAPI "dfss/dfssc/api"
+	"dfss/dfssc/common"
 )
 
 // ExchangeAllSignatures creates and sends signatures to all the signers of the contract
 func (m *SignatureManager) ExchangeAllSignatures() error {
-	allReceived := make(chan error)
+	allReceived := make(chan error, chanBufferSize)
 	go m.ReceiveAllSignatures(allReceived)
 
 	myID, err := m.FindID()
@@ -19,7 +20,7 @@ func (m *SignatureManager) ExchangeAllSignatures() error {
 
 	// compute a set of all signers except me
 	sendSet := common.GetAllButOne(m.sequence, myID)
-	errorChan := make(chan error)
+	errorChan := make(chan error, chanBufferSize)
 	for _, id := range sendSet {
 		go func(id uint32) {
 			signature, err2 := m.CreateSignature(myID, id)
@@ -71,13 +72,20 @@ func (m *SignatureManager) ReceiveAllSignatures(out chan error) {
 	// compute a set of all signers except me
 	pendingSet := common.GetAllButOne(m.sequence, myID)
 
-	// TODO this ctx needs a timeout !
 	for len(pendingSet) > 0 {
-		signature := (<-m.cServerIface.incomingSignatures).(*cAPI.Signature)
-		senderID, exist := m.hashToID[fmt.Sprintf("%x", signature.Context.SenderKeyHash)]
-		if exist {
-			pendingSet, _ = common.Remove(pendingSet, senderID)
-			m.archives.receivedSignatures = append(m.archives.receivedSignatures, signature)
+		select {
+		// Waiting for signatures from grpc handler
+		case signatureIface := <-m.cServerIface.incomingSignatures:
+			signature := (signatureIface).(*cAPI.Signature)
+			senderID, exist := m.hashToID[fmt.Sprintf("%x", signature.Context.SenderKeyHash)]
+			if exist {
+				pendingSet, _ = common.Remove(pendingSet, senderID)
+				m.archives.receivedSignatures = append(m.archives.receivedSignatures, signature)
+			}
+
+		case <-time.After(time.Minute):
+			out <- fmt.Errorf("Signature reception timeout!")
+			return
 		}
 	}
 

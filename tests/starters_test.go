@@ -64,7 +64,7 @@ func startPlatform(tmpDir string) (platform, ttp, demo *exec.Cmd, stop func(), c
 	err = ttp.Start()
 
 	// Start demonstrator
-	demo = exec.Command(demoPath, "-p", "3000", "nogui")
+	demo = exec.Command(demoPath, "-p", "9099", "nogui")
 	demo.Stdout = os.Stdout
 	demo.Stderr = os.Stderr
 	err = demo.Start()
@@ -105,7 +105,7 @@ func createClient(tmpDir string, ca []byte, port int) (*exec.Cmd, error) {
 
 	// Prepare the client command.
 	// The last argument is up to you!
-	cmd := exec.Command(path, "-ca", caPath, "-cert", certPath, "-host", "127.0.0.1:"+testPort, "-key", keyPath, "-port", strconv.Itoa(port), "-v", "-d")
+	cmd := exec.Command(path, "-ca", caPath, "-cert", certPath, "-host", "127.0.0.1:"+testPort, "-key", keyPath, "-port", strconv.Itoa(port), "-v", "-d", "localhost:9099")
 
 	return cmd, nil
 }
