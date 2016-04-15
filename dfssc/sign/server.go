@@ -1,8 +1,6 @@
 package sign
 
 import (
-	"fmt"
-
 	"dfss"
 	cAPI "dfss/dfssc/api"
 	pAPI "dfss/dfssp/api"
@@ -12,35 +10,30 @@ import (
 )
 
 type clientServer struct {
-	incomingPromises   chan *cAPI.Promise
-	incomingSignatures chan *cAPI.Signature
+	incomingPromises   chan interface{}
+	incomingSignatures chan interface{}
+}
+
+func getServerErrorCode(c chan interface{}, in interface{}) *pAPI.ErrorCode {
+	if c != nil {
+		c <- in
+		return &pAPI.ErrorCode{Code: pAPI.ErrorCode_SUCCESS}
+	}
+	return &pAPI.ErrorCode{Code: pAPI.ErrorCode_INTERR} // server not ready
 }
 
 // TreatPromise handler
 //
 // Handle incoming TreatPromise messages
 func (s *clientServer) TreatPromise(ctx context.Context, in *cAPI.Promise) (*pAPI.ErrorCode, error) {
-	// Pass the message to Sign()
-	if s.incomingPromises != nil {
-		s.incomingPromises <- in
-		// Maybe we can add another channel here for better error management
-		return &pAPI.ErrorCode{Code: pAPI.ErrorCode_SUCCESS}, nil
-	}
-
-	return &pAPI.ErrorCode{Code: pAPI.ErrorCode_INVARG}, fmt.Errorf("Cannot pass incoming promise")
+	return getServerErrorCode(s.incomingPromises, in), nil
 }
 
 // TreatSignature handler
 //
 // Handle incoming TreatSignature messages
 func (s *clientServer) TreatSignature(ctx context.Context, in *cAPI.Signature) (*pAPI.ErrorCode, error) {
-	if s.incomingSignatures != nil {
-		s.incomingSignatures <- in
-		// Maybe we can add another channel here for better error management
-		return &pAPI.ErrorCode{Code: pAPI.ErrorCode_SUCCESS}, nil
-	}
-
-	return &pAPI.ErrorCode{Code: pAPI.ErrorCode_INVARG}, fmt.Errorf("Cannot pass incoming signature")
+	return getServerErrorCode(s.incomingSignatures, in), nil
 }
 
 // Discover handler

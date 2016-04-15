@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log"
 	"strconv"
+	"sync"
 	"time"
 
 	"dfss"
@@ -45,6 +46,7 @@ type Archives struct {
 	receivedPromises   []*cAPI.Promise
 	sentSignatures     []*cAPI.Signature
 	receivedSignatures []*cAPI.Signature
+	mutex              sync.Mutex
 }
 
 // NewSignatureManager populates a SignatureManager and connects to the platform.

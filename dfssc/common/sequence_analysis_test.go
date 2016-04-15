@@ -139,7 +139,7 @@ func TestGetAllButOne(t *testing.T) {
 	assert.Equal(t, res[2], uint32(2))
 }
 
-func ExampleSequenceAnalysis() {
+func ExampleFindNextIndex() {
 	s := []uint32{0, 1, 2, 0, 1, 2}
 	id := uint32(2)
 

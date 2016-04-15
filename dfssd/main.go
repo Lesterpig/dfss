@@ -45,6 +45,7 @@ func init() {
 func main() {
 	flag.Parse()
 	command := flag.Arg(0)
+	addrPort := "0.0.0.0:" + strconv.Itoa(port)
 
 	switch command {
 	case "help":
@@ -52,10 +53,11 @@ func main() {
 	case "version":
 		fmt.Println("v"+dfss.Version, runtime.GOOS, runtime.GOARCH)
 	case "nogui":
+		fmt.Println("Listening on " + addrPort)
 		fn := func(v *api.Log) {
 			fmt.Printf("[%d] %s: %s\n", v.Timestamp, v.Identifier, v.Log)
 		}
-		err := server.Listen("0.0.0.0:"+strconv.Itoa(port), fn)
+		err := server.Listen(addrPort, fn)
 		if err != nil {
 			os.Exit(1)
 		}
@@ -63,7 +65,7 @@ func main() {
 		ui.Run(func() {
 			window := gui.NewWindow()
 			go func() {
-				err := server.Listen("0.0.0.0:"+strconv.Itoa(port), window.AddEvent)
+				err := server.Listen(addrPort, window.AddEvent)
 				if err != nil {
 					window.Log("!! " + err.Error())
 				}

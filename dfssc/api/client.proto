@@ -10,32 +10,30 @@ service Client {
 	rpc Discover(Hello) returns (Hello) {}
 }
 
+message Context {
+	bytes recipientKeyHash = 1;	// SHA-512
+	bytes senderKeyHash = 2;	  // SHA-512
+	string signatureUuid = 3;
+	string contractUuid = 4;
+	string contractDocumentHash = 5;
+}
+
 // Promise message contains all the required information to verify
 // the identity of the sender and receiver, and the actual promise
-//
-// * sequence is transmitted by platform and identical across clients
-// * TODO implement an global signature for content
 message Promise {
-	bytes recipientKeyHash = 1;  // SHA-512
-	bytes senderKeyHash = 2;     // SHA-512
-	uint32 index = 3;            // The index of the sequence for this message
-	string contractDocumentHash = 4;  // Hash of the contract to be signed
-	string signatureUuid = 5;    // Avoid re-use of the promise in another ctx
-	string contractUuid  = 6;
-	// TODO the crypto payload
+	Context context = 1;
+	uint32 index = 2;
+	bytes payload = 3;
 }
 
 // Signature message contains all the required information to verify
 // the identity of the sender and receiver, and the actual signature
 message Signature {
-	bytes recipientKeyHash = 1;	// SHA-512
-	bytes senderKeyHash = 2;	// SHA-512
-	string signature = 3;		// Cryptographic signature
-	string signatureUuid = 4;
-	string contractUuid = 5;
+	Context context = 1;
+	bytes payload = 2;
 }
 
-// Hello message is used when discovering peers. 
+// Hello message is used when discovering peers.
 // It contains the current version of the software.
 message Hello {
 	string version = 1;

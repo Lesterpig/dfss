@@ -2,7 +2,6 @@ package sign
 
 import (
 	"errors"
-	"fmt"
 	"time"
 
 	cAPI "dfss/dfssc/api"
@@ -10,49 +9,75 @@ import (
 	pAPI "dfss/dfssp/api"
 
 	"golang.org/x/net/context"
-	"google.golang.org/grpc"
 )
+
+func (m *SignatureManager) createContext(from, to uint32) (*cAPI.Context, error) {
+	if int(from) >= len(m.keyHash) || int(to) >= len(m.keyHash) {
+		return nil, errors.New("Invalid id for context creation")
+	}
+	return &cAPI.Context{
+		RecipientKeyHash:     m.keyHash[to],
+		SenderKeyHash:        m.keyHash[from],
+		ContractDocumentHash: m.contract.File.Hash,
+		SignatureUuid:        m.uuid,
+		ContractUuid:         m.contract.UUID,
+	}, nil
+}
 
 // CreatePromise creates a promise from 'from' to 'to', in the context of the SignatureManager
 // provided the specified sequence indexes are valid
 func (m *SignatureManager) CreatePromise(from, to uint32) (*cAPI.Promise, error) {
-	if int(from) >= len(m.keyHash) || int(to) >= len(m.keyHash) {
-		return nil, errors.New("Invalid id for promise creation")
+	context, err := m.createContext(from, to)
+	if err != nil {
+		return nil, err
 	}
+
 	if m.currentIndex < 0 {
 		return nil, errors.New("Invalid currentIndex for promise creation")
 	}
-	promise := &cAPI.Promise{
-		RecipientKeyHash:     m.keyHash[to],
-		SenderKeyHash:        m.keyHash[from],
-		Index:                uint32(m.currentIndex),
-		ContractDocumentHash: m.contract.File.Hash,
-		SignatureUuid:        m.uuid,
-		ContractUuid:         m.contract.UUID,
-	}
-	return promise, nil
+
+	return &cAPI.Promise{
+		Index:   uint32(m.currentIndex),
+		Context: context,
+		Payload: []byte{0x41},
+	}, nil
 }
 
-// SendPromise sends the specified promise to the specified peer
-func (m *SignatureManager) SendPromise(promise *cAPI.Promise, to uint32) (*pAPI.ErrorCode, error) {
-	connection, err := m.GetClient(to)
-	if err != nil {
-		return &pAPI.ErrorCode{}, err
+// SendEvidence factorizes the send code between promises and signatures.
+// You can use it by setting either promise or signature to `nil`.
+// The successfully sent evidence is then added to the archives.
+func (m *SignatureManager) SendEvidence(promise *cAPI.Promise, signature *cAPI.Signature, to uint32) (err error) {
+	connection, mail := m.GetClient(to)
+	if connection == nil {
+		return
 	}
 
-	// Handle the timeout
 	ctx, cancel := context.WithTimeout(context.Background(), time.Minute)
 	defer cancel()
 
-	errCode, err := (*connection).TreatPromise(ctx, promise)
-	if err == grpc.ErrClientConnTimeout {
-		dAPI.DLog("Promise timeout for [" + fmt.Sprintf("%d", to) + "]")
-		return &pAPI.ErrorCode{Code: pAPI.ErrorCode_TIMEOUT, Message: "promise timeout"}, err
-	} else if err != nil {
-		return &pAPI.ErrorCode{Code: pAPI.ErrorCode_INTERR, Message: "internal server error"}, err
+	var result *pAPI.ErrorCode
+	if promise != nil {
+		result, err = (*connection).TreatPromise(ctx, promise)
+	} else if signature != nil {
+		result, err = (*connection).TreatSignature(ctx, signature)
+	} else {
+		err = errors.New("both promise and signature are nil, cannot send anything")
 	}
 
-	m.archives.sentPromises = append(m.archives.sentPromises, promise)
+	if err == nil && result != nil && result.Code == pAPI.ErrorCode_SUCCESS {
+		m.archives.mutex.Lock()
+		if promise != nil {
+			dAPI.DLog("sent promise to " + mail)
+			m.archives.sentPromises = append(m.archives.sentPromises, promise)
+		} else {
+			dAPI.DLog("sent signature to " + mail)
+			m.archives.sentSignatures = append(m.archives.sentSignatures, signature)
+		}
+		m.archives.mutex.Unlock()
+	} else {
+		dAPI.DLog("unable to send evidence to " + mail)
+		err = errors.New("received wrong error code")
+	}
 
-	return errCode, nil
+	return
 }
