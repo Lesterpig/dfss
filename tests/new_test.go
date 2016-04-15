@@ -3,7 +3,6 @@ package tests
 import (
 	"fmt"
 	"io/ioutil"
-	"os"
 	"path/filepath"
 	"strings"
 	"testing"
@@ -31,13 +30,9 @@ func TestNewContract(t *testing.T) {
 	// Start the platform
 	workingDir, err := ioutil.TempDir("", "dfss_")
 	assert.Equal(t, nil, err)
-	platform, ttp, ca, err := startPlatform(workingDir)
+	_, _, _, stop, ca, err := startPlatform(workingDir)
 	assert.Equal(t, nil, err)
-	defer func() {
-		_ = platform.Process.Kill()
-		_ = ttp.Process.Kill()
-		_ = os.RemoveAll(workingDir)
-	}()
+	defer stop()
 
 	time.Sleep(2 * time.Second)
 

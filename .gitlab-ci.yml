@@ -61,8 +61,8 @@ Integration tests:
     # Build binary
     - "cd $GOPATH/src/dfss/dfssd && go build -ldflags \"-r .\" -o dfssd"
     # Install binary
-    - "mv $GOPATH/src/dfss/dfssd/dfssd /bin/"
-    - "mv $GOPATH/src/dfss/dfssd/libqtdrv.ui.so.1 /lib/"
+    - "cp $GOPATH/src/dfss/dfssd/dfssd $GOPATH/bin/"
+    - "cp $GOPATH/src/dfss/dfssd/libqtdrv.ui.so.1 /lib/"
     # Start integration tests
     - "go test -v dfss/tests"
 

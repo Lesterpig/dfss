@@ -5,10 +5,12 @@ import (
 	"fmt"
 	"log"
 	"strconv"
+	"sync"
 	"time"
 
 	"dfss"
 	cAPI "dfss/dfssc/api"
+	"dfss/dfssc/common"
 	"dfss/dfssc/security"
 	pAPI "dfss/dfssp/api"
 	"dfss/dfssp/contract"
@@ -17,17 +19,37 @@ import (
 	"google.golang.org/grpc"
 )
 
+// Limit the buffer size of the channels
+const chanBufferSize = 100
+
 // SignatureManager handles the signature of a contract.
 type SignatureManager struct {
-	auth      *security.AuthContainer
-	localPort int
-	contract  *contract.JSON
-	platform  pAPI.PlatformClient
-	peers     map[string]*cAPI.ClientClient
-	nbReady   int
-	cServer   *grpc.Server
-	sequence  []uint32
-	uuid      string
+	auth         *security.AuthContainer
+	localPort    int
+	contract     *contract.JSON // contains the contractUUID, the list of the signers' hashes, the hash of the contract
+	platform     pAPI.PlatformClient
+	platformConn *grpc.ClientConn
+	peersConn    map[string]*grpc.ClientConn
+	peers        map[string]*cAPI.ClientClient
+	hashToID     map[string]uint32
+	nbReady      int
+	cServer      *grpc.Server
+	cServerIface clientServer
+	sequence     []uint32
+	currentIndex int
+	uuid         string
+	keyHash      [][]byte
+	mail         string
+	archives     *Archives
+}
+
+// Archives stores the received and sent messages, as evidence if needed
+type Archives struct {
+	sentPromises       []*cAPI.Promise
+	receivedPromises   []*cAPI.Promise
+	sentSignatures     []*cAPI.Signature
+	receivedSignatures []*cAPI.Signature
+	mutex              sync.Mutex
 }
 
 // NewSignatureManager populates a SignatureManager and connects to the platform.
@@ -36,12 +58,20 @@ func NewSignatureManager(fileCA, fileCert, fileKey, addrPort, passphrase string,
 		auth:      security.NewAuthContainer(fileCA, fileCert, fileKey, addrPort, passphrase),
 		localPort: port,
 		contract:  c,
+		archives: &Archives{
+			sentPromises:       make([]*cAPI.Promise, 0),
+			receivedPromises:   make([]*cAPI.Promise, 0),
+			sentSignatures:     make([]*cAPI.Signature, 0),
+			receivedSignatures: make([]*cAPI.Signature, 0),
+		},
 	}
 	var err error
 	_, _, _, err = m.auth.LoadFiles()
 	if err != nil {
 		return nil, err
 	}
+
+	m.mail = m.auth.Cert.Subject.CommonName
 
 	m.cServer = m.GetServer()
 	go func() { log.Fatalln(net.Listen("0.0.0.0:"+strconv.Itoa(port), m.cServer)) }()
@@ -52,7 +82,9 @@ func NewSignatureManager(fileCA, fileCert, fileKey, addrPort, passphrase string,
 	}
 
 	m.platform = pAPI.NewPlatformClient(conn)
+	m.platformConn = conn
 
+	m.peersConn = make(map[string]*grpc.ClientConn)
 	m.peers = make(map[string]*cAPI.ClientClient)
 	for _, u := range c.Signers {
 		if u.Email != m.auth.Cert.Subject.CommonName {
@@ -116,6 +148,9 @@ func (m *SignatureManager) addPeer(user *pAPI.User) (ready bool, err error) {
 	client := cAPI.NewClientClient(conn)
 	lastConnection := m.peers[user.Email]
 	m.peers[user.Email] = &client
+	// The connection is encapsulated into the interface, so we
+	// need to create another way to access it
+	m.peersConn[user.Email] = conn
 
 	ctx, cancel := context.WithTimeout(context.Background(), time.Minute)
 	defer cancel()
@@ -171,6 +206,38 @@ func (m *SignatureManager) SendReadySign() (signatureUUID string, err error) {
 
 	m.sequence = launch.Sequence
 	m.uuid = launch.SignatureUuid
+	m.keyHash = launch.KeyHash
 	signatureUUID = m.uuid
 	return
+}
+
+// Initialize computes the values needed for the start of the signing
+func (m *SignatureManager) Initialize() (uint32, int, error) {
+	myID, err := m.FindID()
+	if err != nil {
+		return 0, 0, err
+	}
+
+	m.currentIndex, err = common.FindNextIndex(m.sequence, myID, -1)
+	if err != nil {
+		return 0, 0, err
+	}
+
+	nextIndex, err := common.FindNextIndex(m.sequence, myID, m.currentIndex)
+	if err != nil {
+		return 0, 0, err
+	}
+
+	return myID, nextIndex, nil
+}
+
+// FindID finds the sequence id for the user's email and the contract to sign
+func (m *SignatureManager) FindID() (uint32, error) {
+	signers := m.contract.Signers
+	for id, signer := range signers {
+		if signer.Email == m.mail {
+			return uint32(id), nil
+		}
+	}
+	return 0, errors.New("Mail couldn't be found amongst signers")
 }

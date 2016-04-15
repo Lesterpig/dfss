@@ -9,22 +9,31 @@ import (
 	"google.golang.org/grpc"
 )
 
-type clientServer struct{}
+type clientServer struct {
+	incomingPromises   chan interface{}
+	incomingSignatures chan interface{}
+}
+
+func getServerErrorCode(c chan interface{}, in interface{}) *pAPI.ErrorCode {
+	if c != nil {
+		c <- in
+		return &pAPI.ErrorCode{Code: pAPI.ErrorCode_SUCCESS}
+	}
+	return &pAPI.ErrorCode{Code: pAPI.ErrorCode_INTERR} // server not ready
+}
 
 // TreatPromise handler
 //
 // Handle incoming TreatPromise messages
 func (s *clientServer) TreatPromise(ctx context.Context, in *cAPI.Promise) (*pAPI.ErrorCode, error) {
-	// TODO
-	return nil, nil
+	return getServerErrorCode(s.incomingPromises, in), nil
 }
 
 // TreatSignature handler
 //
 // Handle incoming TreatSignature messages
 func (s *clientServer) TreatSignature(ctx context.Context, in *cAPI.Signature) (*pAPI.ErrorCode, error) {
-	// TODO
-	return nil, nil
+	return getServerErrorCode(s.incomingSignatures, in), nil
 }
 
 // Discover handler
@@ -37,6 +46,7 @@ func (s *clientServer) Discover(ctx context.Context, in *cAPI.Hello) (*cAPI.Hell
 // GetServer create and registers a ClientServer, returning the associated GRPC server
 func (m *SignatureManager) GetServer() *grpc.Server {
 	server := net.NewServer(m.auth.Cert, m.auth.Key, m.auth.CA)
-	cAPI.RegisterClientServer(server, &clientServer{})
+	m.cServerIface = clientServer{}
+	cAPI.RegisterClientServer(server, &m.cServerIface)
 	return server
 }

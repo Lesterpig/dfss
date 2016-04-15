@@ -8,6 +8,7 @@ import (
 	"path/filepath"
 	"strconv"
 	"testing"
+	"time"
 
 	"github.com/bmizerany/assert"
 )
@@ -17,9 +18,10 @@ const testPort = "9090"
 var currentClient = 0
 
 // startPlatform creates root certificate for the platform and the TTP, and starts both modules
-func startPlatform(tmpDir string) (platform, ttp *exec.Cmd, ca []byte, err error) {
+func startPlatform(tmpDir string) (platform, ttp, demo *exec.Cmd, stop func(), ca []byte, err error) {
 	path := filepath.Join(os.Getenv("GOPATH"), "bin", "dfssp")
 	ttpPath := filepath.Join(os.Getenv("GOPATH"), "bin", "dfsst")
+	demoPath := filepath.Join(os.Getenv("GOPATH"), "bin", "dfssd")
 
 	// Create temporary directory for platform
 	dir, err := ioutil.TempDir(tmpDir, "p_")
@@ -61,6 +63,20 @@ func startPlatform(tmpDir string) (platform, ttp *exec.Cmd, ca []byte, err error
 	_ = ioutil.WriteFile(filepath.Join(ttp.Dir, "ca.pem"), ca, 0600)
 	err = ttp.Start()
 
+	// Start demonstrator
+	demo = exec.Command(demoPath, "-p", "9099", "nogui")
+	demo.Stdout = os.Stdout
+	demo.Stderr = os.Stderr
+	err = demo.Start()
+
+	stop = func() {
+		_ = platform.Process.Kill()
+		_ = ttp.Process.Kill()
+		_ = os.RemoveAll(tmpDir)
+		time.Sleep(2 * time.Second)
+		_ = demo.Process.Kill()
+	}
+
 	return
 }
 
@@ -89,7 +105,7 @@ func createClient(tmpDir string, ca []byte, port int) (*exec.Cmd, error) {
 
 	// Prepare the client command.
 	// The last argument is up to you!
-	cmd := exec.Command(path, "-ca", caPath, "-cert", certPath, "-host", "127.0.0.1:"+testPort, "-key", keyPath, "-port", strconv.Itoa(port), "-v")
+	cmd := exec.Command(path, "-ca", caPath, "-cert", certPath, "-host", "127.0.0.1:"+testPort, "-key", keyPath, "-port", strconv.Itoa(port), "-v", "-d", "localhost:9099")
 
 	return cmd, nil
 }

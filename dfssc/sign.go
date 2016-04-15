@@ -49,4 +49,18 @@ func signContract(args []string) {
 	fmt.Println("Everybody is ready, starting the signature", signatureUUID)
 
 	// Signature
+	err = manager.Sign()
+	if err != nil {
+		fmt.Fprintln(os.Stderr, err)
+		os.Exit(5)
+	}
+
+	// Persist evidencies, if any
+	err = manager.PersistSignaturesToFile()
+	if err != nil {
+		fmt.Fprintln(os.Stderr, err)
+		os.Exit(5)
+	}
+
+	fmt.Println("Signature complete! See .proof file for evidences.")
 }

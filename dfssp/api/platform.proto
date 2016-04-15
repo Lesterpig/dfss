@@ -19,8 +19,9 @@ message RegisterRequest {
 	string request = 2;
 }
 
-// ErrorCode message contains an error code (see dffs/dfssp/api/errorCodes.go)
-// and a message
+// ErrorCode message contains an error code and a message
+// Above or zero : target-side error
+// Less than 0   : local error
 message ErrorCode {
 	enum Code {
 		// SUCCESS is the error code for a successful request
@@ -33,6 +34,8 @@ message ErrorCode {
 		WARNING = 3;
 		// INTERR is the error code for an internal server error
 		INTERR = -1;
+		// TIMEOUT is the error code for a timeout or unreacheable target
+		TIMEOUT = -2;
 	}
 	Code code = 1;
 	string message = 2;
@@ -108,4 +111,5 @@ message LaunchSignature {
 	string signatureUuid = 2;
 	repeated bytes keyHash = 3;
 	repeated uint32 sequence = 4;
+	bytes hash = 5; // (text Hash + sequence + signatureUUID + signers' hashes ) crypted by the platform
 }
