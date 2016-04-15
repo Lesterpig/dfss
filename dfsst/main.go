@@ -13,13 +13,14 @@ import (
 )
 
 var (
-	verbose, demo bool
-	fca           string // Path to the CA
-	fcert         string // Path to the certificate
-	fkey          string // Path to the private key
-	address       string
-	dbURI         string
-	port          string
+	verbose bool
+	fca     string // Path to the CA
+	fcert   string // Path to the certificate
+	fkey    string // Path to the private key
+	address string
+	dbURI   string
+	port    string
+	demo    string
 )
 
 func init() {
@@ -28,7 +29,7 @@ func init() {
 	flag.StringVar(&fca, "ca", "ca.pem", "Path to the root certificate")
 	flag.StringVar(&fcert, "cert", "cert.pem", "Path to the user certificate")
 	flag.StringVar(&fkey, "key", "key.pem", "Path to the private key")
-	flag.BoolVar(&demo, "d", false, "Enable demonstrator")
+	flag.StringVar(&demo, "d", "", "Demonstrator address and port (empty string disables debug)")
 
 	flag.StringVar(&port, "p", "9020", "Default port listening")
 	flag.StringVar(&address, "a", "0.0.0.0", "Default address to bind for listening")
@@ -58,7 +59,7 @@ func init() {
 func main() {
 	flag.Parse()
 	command := flag.Arg(0)
-	dapi.Switch(demo)
+	dapi.Configure(demo != "", demo, "ttp")
 
 	switch command {
 	case "version":

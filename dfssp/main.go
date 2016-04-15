@@ -15,16 +15,16 @@ import (
 )
 
 var (
-	verbose, demo                                      bool
-	path, country, org, unit, cn, port, address, dbURI string
-	keySize, rootValidity, certValidity                int
+	verbose                                                  bool
+	path, country, org, unit, cn, port, address, dbURI, demo string
+	keySize, rootValidity, certValidity                      int
 )
 
 func init() {
 
 	flag.BoolVar(&verbose, "v", false, "Print verbose messages")
-	flag.BoolVar(&demo, "d", false, "Enable demonstrator")
 
+	flag.StringVar(&demo, "d", "", "Demonstrator address and port (empty string disables debug)")
 	flag.StringVar(&port, "p", "9000", "Default port listening")
 	flag.StringVar(&address, "a", "0.0.0.0", "Default address to bind for listening")
 
@@ -67,7 +67,7 @@ func init() {
 func main() {
 	flag.Parse()
 	command := flag.Arg(0)
-	dapi.Switch(demo)
+	dapi.Configure(demo != "", demo, "platform")
 
 	switch command {
 	case "version":
