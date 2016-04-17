@@ -106,7 +106,7 @@ func (manager *MongoCollection) FindAll(query interface{}, result interface{}) e
 }
 
 // DeleteByID deletes the entity matching the id
-// Return true if the delection was successful
+// Return true if the deletion was successful
 func (manager *MongoCollection) DeleteByID(id interface{}) (bool, error) {
 	m := manager.factory.ToMap(id)
 	err := manager.Collection.Remove(bson.M{"_id": m["_id"]})

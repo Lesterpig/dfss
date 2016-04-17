@@ -36,6 +36,9 @@ Unit tests:
     - "go test -coverprofile dfssc_security.part -v dfss/dfssc/security"
     - "go test -coverprofile dfssc_user.part -v dfss/dfssc/user"
     - "go test -coverprofile dfssc_user.part -v dfss/dfssc/sign"
+    - "go test -coverprofile dfsst_entities.part -v dfss/dfsst/entities"
+    - "go test -coverprofile dfsst_resolve.part -v dfss/dfsst/resolve"
+    - "go test -coverprofile dfsst_server.part -v dfss/dfsst/server"
     - "echo 'mode: set' *part > c.out"
     - "grep -h -v 'mode: set' *part >> c.out"
     - "go tool cover -html=c.out -o coverage.html"
@@ -80,7 +83,7 @@ Code lint:
     - "./build/deps.sh"
     - "cd $GOPATH/src/dfss && make install_all"
     - "gometalinter --install --update"
-    - "gometalinter -t --deadline=600s -j1 --skip=api --skip=fixtures --skip=gui --skip=dfssd --disable=aligncheck ./..."
+    - "gometalinter -t --deadline=900s -j1 --skip=api --skip=fixtures --skip=gui --skip=dfssd --disable=aligncheck ./..."
 
 Deploy:
   stage: deploy

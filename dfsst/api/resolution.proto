@@ -2,16 +2,22 @@ syntax = "proto3";
 
 package api;
 
+import "dfss/dfssc/api/client.proto";
+
 service TTP {
     rpc Alert(AlertRequest) returns (TTPResponse) {}
     rpc Recover(RecoverRequest) returns (TTPResponse) {}
 }
 
 // Alert message sent by a signer
-message AlertRequest {}
+message AlertRequest {
+	repeated Promise promises = 1;
+}
 
 // RecoverRequest message to get a signed contract
-message RecoverRequest {}
+message RecoverRequest {
+	string signatureUUID = 1;
+}
 
 // TTPResponse message to answer an Alert or Recover message
 message TTPResponse {
