@@ -24,6 +24,11 @@ func Configure(activated bool, addrport, id string) {
 	demo = activated
 }
 
+// SetIdentifier updates the current client identifier.
+func SetIdentifier(id string) {
+	identifier = id
+}
+
 // Lazy initialisation for demonstrator's connection to server
 func dInit() error {
 	var err error
