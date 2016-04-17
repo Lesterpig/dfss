@@ -12,6 +12,7 @@ import (
 	cAPI "dfss/dfssc/api"
 	"dfss/dfssc/common"
 	"dfss/dfssc/security"
+	dAPI "dfss/dfssd/api"
 	pAPI "dfss/dfssp/api"
 	"dfss/dfssp/contract"
 	"dfss/net"
@@ -72,6 +73,7 @@ func NewSignatureManager(fileCA, fileCert, fileKey, addrPort, passphrase string,
 	}
 
 	m.mail = m.auth.Cert.Subject.CommonName
+	dAPI.SetIdentifier(m.mail)
 
 	m.cServer = m.GetServer()
 	go func() { log.Fatalln(net.Listen("0.0.0.0:"+strconv.Itoa(port), m.cServer)) }()
