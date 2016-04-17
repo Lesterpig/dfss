@@ -2,7 +2,6 @@ package resolve
 
 import (
 	cAPI "dfss/dfssc/api"
-	"dfss/dfsst/archivesManager"
 	"dfss/dfsst/entities"
 )
 
@@ -16,7 +15,7 @@ func ArePromisesComplete(promiseEntities []*entities.Promise, promise *cAPI.Prom
 }
 
 // Solve : tries to generate the signed contract from present evidence.
-func Solve(manager *archivesManager.ArchivesManager) (bool, []byte) {
+func Solve(manager *entities.ArchivesManager) (bool, []byte) {
 	// Test if we can generate the contract
 	for i := range manager.Archives.Signers {
 		ok := manager.HasSignerPromised(uint32(i))

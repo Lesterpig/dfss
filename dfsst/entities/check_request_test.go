@@ -1,39 +1,12 @@
-package checker
+package entities
 
 import (
 	"bytes"
-	"crypto/sha512"
+	"testing"
+
 	cAPI "dfss/dfssc/api"
 	"github.com/bmizerany/assert"
-	"gopkg.in/mgo.v2/bson"
-	"testing"
 )
-
-var (
-	sequence             []uint32
-	signers              [][]byte
-	contractDocumentHash []byte
-	signatureUUID        string
-	signatureUUIDBson    bson.ObjectId
-
-	signedHash []byte
-)
-
-func init() {
-	sequence = []uint32{0, 1, 2, 0, 1, 2, 0, 1, 2}
-
-	for i := 0; i < 3; i++ {
-		h := sha512.Sum512([]byte{byte(i)})
-		signer := h[:]
-		signers = append(signers, signer)
-	}
-
-	contractDocumentHash = []byte{1, 2, 3, 4, 5, 6, 7, 8, 9}
-	signatureUUIDBson = bson.NewObjectId()
-	signatureUUID = signatureUUIDBson.Hex()
-
-	signedHash = []byte{}
-}
 
 func TestIsRequestValid(t *testing.T) {
 	// TODO

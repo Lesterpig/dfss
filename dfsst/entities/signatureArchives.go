@@ -38,11 +38,6 @@ type SignatureArchives struct {
 
 // NewSignatureArchives : creates a new SignatureArchives with the specified parameters
 func NewSignatureArchives(signatureUUID bson.ObjectId, sequence []uint32, signers []Signer, textHash, signedHash []byte) *SignatureArchives {
-	receivedPromises := make([]Promise, 0)
-	abortedSigners := make([]AbortedSigner, 0)
-	dishonestSigners := make([]uint32, 0)
-	signedContract := make([]byte, 0)
-
 	return &SignatureArchives{
 		ID: signatureUUID,
 
@@ -51,11 +46,11 @@ func NewSignatureArchives(signatureUUID bson.ObjectId, sequence []uint32, signer
 		TextHash:   textHash,
 		SignedHash: signedHash,
 
-		ReceivedPromises: receivedPromises,
-		AbortedSigners:   abortedSigners,
-		DishonestSigners: dishonestSigners,
+		ReceivedPromises: make([]Promise, 0),
+		AbortedSigners:   make([]AbortedSigner, 0),
+		DishonestSigners: make([]uint32, 0),
 
-		SignedContract: signedContract,
+		SignedContract: make([]byte, 0),
 	}
 }
 
@@ -64,9 +59,9 @@ type Promise struct {
 	ID bson.ObjectId `key:"_id" bson:"_id"` // Internal id of a Promise
 
 	RecipientKeyIndex uint32 `key:"recipientKeyIndex" bson:"recipientKeyIndex"` // Index of the hash of the recipient's certificate in
-																				// the `Signers` field of the enclosing SignatureArchives
-	SenderKeyIndex uint32 `key:"senderKeyIndex" bson:"senderKeyIndex"`	// Index of the hash of the sender's certificate in
-																		// the `Signers` field of the enclosing SignatureArchives
+	// the `Signers` field of the enclosing SignatureArchives
+	SenderKeyIndex uint32 `key:"senderKeyIndex" bson:"senderKeyIndex"` // Index of the hash of the sender's certificate in
+	// the `Signers` field of the enclosing SignatureArchives
 	SequenceIndex uint32 `key:"sequenceIndex" bson:"sequenceIndex"` // Sequence index of the promise
 }
 

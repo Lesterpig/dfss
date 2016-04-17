@@ -8,13 +8,10 @@ import (
 	cAPI "dfss/dfssc/api"
 	"dfss/dfssc/security"
 	tAPI "dfss/dfsst/api"
-	"dfss/dfsst/archivesManager"
-	"dfss/dfsst/checker"
 	"dfss/dfsst/entities"
 	"dfss/dfsst/resolve"
 	"dfss/mgdb"
 	"dfss/net"
-
 	"golang.org/x/net/context"
 	"google.golang.org/grpc"
 )
@@ -29,7 +26,7 @@ type ttpServer struct {
 
 // Alert route for the TTP.
 func (server *ttpServer) Alert(ctx context.Context, in *tAPI.AlertRequest) (*tAPI.TTPResponse, error) {
-	valid, signatureUUID, signers, senderIndex := checker.IsRequestValid(ctx, in)
+	valid, signatureUUID, signers, senderIndex := entities.IsRequestValid(ctx, in)
 	if !valid {
 		return nil, errors.New(InternalError)
 	}
@@ -37,7 +34,7 @@ func (server *ttpServer) Alert(ctx context.Context, in *tAPI.AlertRequest) (*tAP
 	// with the same signatureUUID (thus signed information) for all promises, and sent by a valid signer
 	// wrt to the signed signers' hashes
 
-	manager := archivesManager.NewArchivesManager(server.DB)
+	manager := entities.NewArchivesManager(server.DB)
 	manager.InitializeArchives(in.Promises[0], signatureUUID, &signers)
 	// Now archives contains the new or already present SignatureArchives
 
@@ -82,7 +79,7 @@ func (server *ttpServer) Alert(ctx context.Context, in *tAPI.AlertRequest) (*tAP
 //
 // Updates the database with the new aborted signers.
 // If an error occurs during this process, it is returned.
-func (server *ttpServer) handleAbortedSender(manager *archivesManager.ArchivesManager, senderIndex uint32) (bool, *tAPI.TTPResponse, error) {
+func (server *ttpServer) handleAbortedSender(manager *entities.ArchivesManager, senderIndex uint32) (bool, *tAPI.TTPResponse, error) {
 	if manager.HasReceivedAbortToken(senderIndex) {
 		manager.AddToDishonest(senderIndex)
 
@@ -111,8 +108,8 @@ func (server *ttpServer) handleAbortedSender(manager *archivesManager.ArchivesMa
 //
 // Updates the database with the new aborted signer.
 // If an error occurs during this process, it is returned.
-func (server *ttpServer) handleInvalidPromises(manager *archivesManager.ArchivesManager, promises []*cAPI.Promise, senderIndex uint32) (bool, *tAPI.TTPResponse, []*entities.Promise, error) {
-	valid, tmpPromises := checker.ArePromisesValid(promises)
+func (server *ttpServer) handleInvalidPromises(manager *entities.ArchivesManager, promises []*cAPI.Promise, senderIndex uint32) (bool, *tAPI.TTPResponse, []*entities.Promise, error) {
+	valid, tmpPromises := entities.ArePromisesValid(promises)
 	complete := resolve.ArePromisesComplete(tmpPromises, promises[0])
 	if !valid || !complete {
 		manager.AddToAbort(senderIndex)
@@ -135,7 +132,7 @@ func (server *ttpServer) handleInvalidPromises(manager *archivesManager.Archives
 // updateArchiveWithEvidence : computes the dishonest signers from the new provided evidence, and updates the specified signatureArchives accordingly.
 //
 // DOES NOT UPDATE THE DATABASE (should be handled manually)
-func (server *ttpServer) updateArchiveWithEvidence(manager *archivesManager.ArchivesManager, tmpPromises []*entities.Promise) {
+func (server *ttpServer) updateArchiveWithEvidence(manager *entities.ArchivesManager, tmpPromises []*entities.Promise) {
 	computedDishonest := resolve.ComputeDishonestSigners(manager.Archives, tmpPromises)
 
 	for _, di := range computedDishonest {
@@ -155,7 +152,7 @@ func (server *ttpServer) updateArchiveWithEvidence(manager *archivesManager.Arch
 // If the contract has been successfully generated, returns it. Otherwise, returns an abort token.
 //
 // DOES NOT UPDATE THE DATABASE (should be handled manually)
-func (server *ttpServer) handleContractGenerationTry(manager *archivesManager.ArchivesManager) (*tAPI.TTPResponse, error) {
+func (server *ttpServer) handleContractGenerationTry(manager *entities.ArchivesManager) (*tAPI.TTPResponse, error) {
 	generated, contract := resolve.Solve(manager)
 	if !generated {
 		return &tAPI.TTPResponse{

@@ -13,7 +13,6 @@ import (
 	"dfss/auth"
 	"dfss/dfsst/entities"
 	"dfss/mgdb"
-
 	"gopkg.in/mgo.v2/bson"
 )
 

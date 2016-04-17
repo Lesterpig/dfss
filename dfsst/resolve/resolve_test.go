@@ -1,15 +1,15 @@
 package resolve
 
 import (
-	"crypto/sha512"
-	"dfss/dfsst/archivesManager"
-	"dfss/dfsst/entities"
-	"dfss/mgdb"
 	"fmt"
-	"github.com/bmizerany/assert"
-	"gopkg.in/mgo.v2/bson"
 	"os"
 	"testing"
+
+	"crypto/sha512"
+	"dfss/dfsst/entities"
+	"dfss/mgdb"
+	"github.com/bmizerany/assert"
+	"gopkg.in/mgo.v2/bson"
 )
 
 var (
@@ -79,7 +79,7 @@ func TestArePromisesComplete(t *testing.T) {
 
 func TestSolve(t *testing.T) {
 	archives := entities.NewSignatureArchives(signatureUUIDBson, sequence, signersEntities, contractDocumentHash, signedHash)
-	manager := &archivesManager.ArchivesManager{
+	manager := &entities.ArchivesManager{
 		DB:       dbManager,
 		Archives: archives,
 	}

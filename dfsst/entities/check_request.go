@@ -1,14 +1,14 @@
-package checker
+package entities
 
 import (
 	"bytes"
+	"errors"
+
 	"crypto/sha512"
 	"dfss/auth"
 	cAPI "dfss/dfssc/api"
 	tAPI "dfss/dfsst/api"
-	"dfss/dfsst/entities"
 	"dfss/net"
-	"errors"
 	"golang.org/x/net/context"
 	"gopkg.in/mgo.v2/bson"
 )
@@ -16,7 +16,7 @@ import (
 // IsRequestValid : determines if there are no errors in the received request.
 // ie: the information signed by the platform in the received promises is valid and consistent
 //     the sender of the request is present amongst the signed signers of the promises
-func IsRequestValid(ctx context.Context, request *tAPI.AlertRequest) (valid bool, signatureUUID bson.ObjectId, signers []entities.Signer, senderIndex uint32) {
+func IsRequestValid(ctx context.Context, request *tAPI.AlertRequest) (valid bool, signatureUUID bson.ObjectId, signers []Signer, senderIndex uint32) {
 	// Due to specifications, there should be at least one promise (from the sender to himself)
 	if len(request.Promises) == 0 {
 		valid = false
@@ -57,7 +57,7 @@ func IsRequestValid(ctx context.Context, request *tAPI.AlertRequest) (valid bool
 
 // IsPromiseSignedByPlatform : determines if the specified promise contains valid information,
 // correctly signed by the platform, and returns the signatureUUID if true.
-func IsPromiseSignedByPlatform(promise *cAPI.Promise) (bool, bson.ObjectId, []entities.Signer) {
+func IsPromiseSignedByPlatform(promise *cAPI.Promise) (bool, bson.ObjectId, []Signer) {
 	ok, signatureUUID := IsSignatureUUIDValid(promise)
 	if !ok {
 		return false, signatureUUID, nil
@@ -110,8 +110,8 @@ func IsSignatureUUIDValid(promise *cAPI.Promise) (bool, bson.ObjectId) {
 
 // AreSignersHashesValid : verifies that all the specified hashes are valid (see function IsSignerHashValid).
 // Returns a new array of Signers.
-func AreSignersHashesValid(promise *cAPI.Promise) (bool, []entities.Signer) {
-	var signers []entities.Signer
+func AreSignersHashesValid(promise *cAPI.Promise) (bool, []Signer) {
+	var signers []Signer
 	if len(promise.Context.Signers) == 0 {
 		return false, nil
 	}
@@ -129,12 +129,12 @@ func AreSignersHashesValid(promise *cAPI.Promise) (bool, []entities.Signer) {
 
 // IsSignerHashValid : verifies that the specified array of bytes is a correct SHA-512 hash.
 // Returns a new Signer with the specified hash.
-func IsSignerHashValid(hash []byte) (bool, *entities.Signer) {
+func IsSignerHashValid(hash []byte) (bool, *Signer) {
 	if sha512.Size != len(hash) {
 		return false, nil
 	}
 
-	return true, entities.NewSigner(hash)
+	return true, NewSigner(hash)
 }
 
 // IsPlatformSignedHashValid : verifies that the specified promise contains the expected information signed by the platform.

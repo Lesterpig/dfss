@@ -1,10 +1,10 @@
-package checker
+package entities
 
 import (
-	cAPI "dfss/dfssc/api"
-	"dfss/dfsst/entities"
-	"github.com/bmizerany/assert"
 	"testing"
+
+	cAPI "dfss/dfssc/api"
+	"github.com/bmizerany/assert"
 )
 
 func TestArePromisesValid(t *testing.T) {
@@ -31,14 +31,14 @@ func TestArePromisesValid(t *testing.T) {
 	promises := []*cAPI.Promise{promise0, promise1}
 	valid, promiseEntities := ArePromisesValid(promises)
 	assert.Equal(t, valid, false)
-	assert.Equal(t, promiseEntities, []*entities.Promise(nil))
+	assert.Equal(t, promiseEntities, []*Promise(nil))
 
 	promise0.Context.RecipientKeyHash = signers[2]
 	promise0.Context.SenderKeyHash = signers[1]
 	promise0.Index = 1
 	valid, promiseEntities = ArePromisesValid(promises)
 	assert.Equal(t, valid, false)
-	assert.Equal(t, promiseEntities, []*entities.Promise(nil))
+	assert.Equal(t, promiseEntities, []*Promise(nil))
 
 	promise1.Context.RecipientKeyHash = signers[2]
 	promise1.Context.SenderKeyHash = signers[0]
@@ -68,7 +68,7 @@ func TestIsPromiseValid(t *testing.T) {
 
 	valid, promiseEntity := IsPromiseValid(promise)
 	assert.Equal(t, valid, false)
-	assert.Equal(t, promiseEntity, &entities.Promise{})
+	assert.Equal(t, promiseEntity, &Promise{})
 
 	promise.Context.RecipientKeyHash = signers[2]
 	promise.Context.SenderKeyHash = signers[1]

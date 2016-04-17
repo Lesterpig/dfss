@@ -1,8 +1,7 @@
-package archivesManager
+package entities
 
 import (
 	cAPI "dfss/dfssc/api"
-	"dfss/dfsst/entities"
 	"dfss/mgdb"
 	"gopkg.in/mgo.v2/bson"
 )
@@ -10,7 +9,7 @@ import (
 // ArchivesManager : handles the structure of a SignatureArchives, with functions suited for the TTP resolve protocol.
 type ArchivesManager struct {
 	DB       *mgdb.MongoManager
-	Archives *entities.SignatureArchives
+	Archives *SignatureArchives
 }
 
 // NewArchivesManager : create a new archivesManager, with the specified mgdb manager, but
@@ -24,11 +23,11 @@ func NewArchivesManager(db *mgdb.MongoManager) *ArchivesManager {
 // InitializeArchives : if an entry in the database for this signature exists, retrieves it, otherwise creates it.
 //
 // This function should only be called after function IsRequestValid.
-func (manager *ArchivesManager) InitializeArchives(promise *cAPI.Promise, signatureUUID bson.ObjectId, signers *[]entities.Signer) {
+func (manager *ArchivesManager) InitializeArchives(promise *cAPI.Promise, signatureUUID bson.ObjectId, signers *[]Signer) {
 	present, archives := manager.ContainsSignature(signatureUUID)
 
 	if !present {
-		archives = entities.NewSignatureArchives(signatureUUID, promise.Context.Sequence, *signers, promise.Context.ContractDocumentHash, promise.Context.SignedHash)
+		archives = NewSignatureArchives(signatureUUID, promise.Context.Sequence, *signers, promise.Context.ContractDocumentHash, promise.Context.SignedHash)
 	}
 
 	manager.Archives = archives
@@ -36,11 +35,11 @@ func (manager *ArchivesManager) InitializeArchives(promise *cAPI.Promise, signat
 
 // ContainsSignature : checks if the specified signatureUUID matches a SignatureArchives in the database.
 // If it exists, returns it.
-func (manager *ArchivesManager) ContainsSignature(signatureUUID bson.ObjectId) (present bool, archives *entities.SignatureArchives) {
-	err := manager.DB.Get("signatures").FindByID(entities.SignatureArchives{ID: signatureUUID}, &archives)
+func (manager *ArchivesManager) ContainsSignature(signatureUUID bson.ObjectId) (present bool, archives *SignatureArchives) {
+	err := manager.DB.Get("signatures").FindByID(SignatureArchives{ID: signatureUUID}, &archives)
 	if err != nil {
 		present = false
-		archives = &entities.SignatureArchives{}
+		archives = &SignatureArchives{}
 		return
 	}
 
@@ -93,7 +92,7 @@ func (manager *ArchivesManager) AddToAbort(signerIndex uint32) {
 	// This requires the implementation of promises
 	var abortIndex uint32
 	abortIndex = 0
-	abortedSigner := entities.NewAbortedSigner(signerIndex, abortIndex)
+	abortedSigner := NewAbortedSigner(signerIndex, abortIndex)
 
 	manager.Archives.AbortedSigners = append(manager.Archives.AbortedSigners, *abortedSigner)
 }
@@ -111,9 +110,9 @@ func (manager *ArchivesManager) AddToDishonest(signerIndex uint32) {
 }
 
 // AddPromise : adds the specified promises to the list of received promises of the SignatureArchives.
-func (manager *ArchivesManager) AddPromise(promise *entities.Promise) {
+func (manager *ArchivesManager) AddPromise(promise *Promise) {
 	for _, p := range manager.Archives.ReceivedPromises {
-		if entities.ArePromisesEqual(&p, promise) {
+		if ArePromisesEqual(&p, promise) {
 			return
 		}
 	}

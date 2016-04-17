@@ -1,14 +1,14 @@
-package checker
+package entities
 
 import (
-	cAPI "dfss/dfssc/api"
-	"dfss/dfsst/entities"
 	"errors"
+
+	cAPI "dfss/dfssc/api"
 )
 
 // ArePromisesValid : determines if the specified promises contains coherent information wrt the ASSUMED TESTED platform signed information.
-func ArePromisesValid(promises []*cAPI.Promise) (bool, []*entities.Promise) {
-	var tmpPromises []*entities.Promise
+func ArePromisesValid(promises []*cAPI.Promise) (bool, []*Promise) {
+	var tmpPromises []*Promise
 
 	for _, promise := range promises {
 		valid, promiseEntity := IsPromiseValid(promise)
@@ -25,19 +25,19 @@ func ArePromisesValid(promises []*cAPI.Promise) (bool, []*entities.Promise) {
 // ie: the sender and recipient's hashes are correct
 //     the index of the promise coresponds to an expected message from the sender in the signed sequence
 // If true, returns a new promise entity
-func IsPromiseValid(promise *cAPI.Promise) (bool, *entities.Promise) {
+func IsPromiseValid(promise *cAPI.Promise) (bool, *Promise) {
 	valid := IsPromiseFromAtoB(promise)
 	if !valid {
-		return false, &entities.Promise{}
+		return false, &Promise{}
 	}
 
 	// This checks if the index of the specified promise corresponds to an expected promise from the sender hash of the promise
 	sender, recipient, index, err := GetPromiseProfile(promise)
 	if err != nil {
-		return false, &entities.Promise{}
+		return false, &Promise{}
 	}
 
-	entityPromise := entities.NewPromise(sender, recipient, index)
+	entityPromise := NewPromise(sender, recipient, index)
 
 	return true, entityPromise
 }

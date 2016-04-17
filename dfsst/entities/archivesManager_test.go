@@ -1,16 +1,15 @@
-package archivesManager
+package entities
 
 import (
-	"crypto/sha512"
-	cAPI "dfss/dfssc/api"
-	"dfss/dfsst/checker"
-	"dfss/dfsst/entities"
-	"dfss/mgdb"
 	"fmt"
-	"github.com/bmizerany/assert"
-	"gopkg.in/mgo.v2/bson"
 	"os"
 	"testing"
+
+	"crypto/sha512"
+	cAPI "dfss/dfssc/api"
+	"dfss/mgdb"
+	"github.com/bmizerany/assert"
+	"gopkg.in/mgo.v2/bson"
 )
 
 var (
@@ -26,7 +25,7 @@ var (
 
 	signedHash []byte
 
-	signersEntities []entities.Signer
+	signersEntities []Signer
 
 	err error
 )
@@ -51,9 +50,9 @@ func init() {
 
 	signedHash = []byte{}
 
-	signersEntities = make([]entities.Signer, 0)
+	signersEntities = make([]Signer, 0)
 	for _, s := range signers {
-		signerEntity := entities.NewSigner(s)
+		signerEntity := NewSigner(s)
 		signersEntities = append(signersEntities, *signerEntity)
 	}
 }
@@ -89,12 +88,12 @@ func TestInitializeArchives(t *testing.T) {
 			SignedHash:           signedHash,
 		},
 	}
-	archives := entities.NewSignatureArchives(signatureUUIDBson, sequence, signersEntities, contractDocumentHash, signedHash)
+	archives := NewSignatureArchives(signatureUUIDBson, sequence, signersEntities, contractDocumentHash, signedHash)
 	manager := &ArchivesManager{
 		DB:       dbManager,
 		Archives: archives,
 	}
-	arch := entities.NewSignatureArchives(signatureUUIDBson, sequence, signersEntities, contractDocumentHash, signedHash)
+	arch := NewSignatureArchives(signatureUUIDBson, sequence, signersEntities, contractDocumentHash, signedHash)
 
 	manager.InitializeArchives(promise, signatureUUIDBson, &signersEntities)
 	arch.Signers = manager.Archives.Signers
@@ -103,7 +102,7 @@ func TestInitializeArchives(t *testing.T) {
 	ok, err := collection.Insert(manager.Archives)
 	assert.Equal(t, ok, true)
 	assert.Equal(t, err, nil)
-	manager.Archives = &entities.SignatureArchives{}
+	manager.Archives = &SignatureArchives{}
 
 	manager.InitializeArchives(promise, signatureUUIDBson, &signersEntities)
 	assert.Equal(t, err, nil)
@@ -115,7 +114,7 @@ func TestInitializeArchives(t *testing.T) {
 }
 
 func TestContainsSignature(t *testing.T) {
-	archives := entities.NewSignatureArchives(signatureUUIDBson, sequence, signersEntities, contractDocumentHash, signedHash)
+	archives := NewSignatureArchives(signatureUUIDBson, sequence, signersEntities, contractDocumentHash, signedHash)
 	manager := &ArchivesManager{
 		DB:       dbManager,
 		Archives: archives,
@@ -123,7 +122,7 @@ func TestContainsSignature(t *testing.T) {
 
 	b, arch := manager.ContainsSignature(signatureUUIDBson)
 	assert.Equal(t, b, false)
-	assert.Equal(t, arch, &entities.SignatureArchives{})
+	assert.Equal(t, arch, &SignatureArchives{})
 
 	ok, err := collection.Insert(archives)
 	assert.Equal(t, ok, true)
@@ -139,14 +138,14 @@ func TestContainsSignature(t *testing.T) {
 }
 
 func TestHasReceivedAbortToken(t *testing.T) {
-	archives := entities.NewSignatureArchives(signatureUUIDBson, sequence, signersEntities, contractDocumentHash, signedHash)
+	archives := NewSignatureArchives(signatureUUIDBson, sequence, signersEntities, contractDocumentHash, signedHash)
 	manager := &ArchivesManager{
 		DB:       dbManager,
 		Archives: archives,
 	}
 	signerIndex := uint32(1)
-	abortedSigner0 := entities.NewAbortedSigner(uint32(0), uint32(1))
-	abortedSigner1 := entities.NewAbortedSigner(signerIndex, uint32(1))
+	abortedSigner0 := NewAbortedSigner(uint32(0), uint32(1))
+	abortedSigner1 := NewAbortedSigner(signerIndex, uint32(1))
 
 	assert.Equal(t, len(archives.AbortedSigners), 0)
 
@@ -165,7 +164,7 @@ func TestHasReceivedAbortToken(t *testing.T) {
 }
 
 func TestWasContractSigned(t *testing.T) {
-	archives := entities.NewSignatureArchives(signatureUUIDBson, sequence, signersEntities, contractDocumentHash, signedHash)
+	archives := NewSignatureArchives(signatureUUIDBson, sequence, signersEntities, contractDocumentHash, signedHash)
 	manager := &ArchivesManager{
 		DB:       dbManager,
 		Archives: archives,
@@ -183,7 +182,7 @@ func TestWasContractSigned(t *testing.T) {
 }
 
 func TestHasSignerPromised(t *testing.T) {
-	archives := entities.NewSignatureArchives(signatureUUIDBson, sequence, signersEntities, contractDocumentHash, signedHash)
+	archives := NewSignatureArchives(signatureUUIDBson, sequence, signersEntities, contractDocumentHash, signedHash)
 	manager := &ArchivesManager{
 		DB:       dbManager,
 		Archives: archives,
@@ -192,7 +191,7 @@ func TestHasSignerPromised(t *testing.T) {
 	assert.Equal(t, len(archives.ReceivedPromises), 0)
 	assert.Equal(t, ok, false)
 
-	promise0 := &entities.Promise{
+	promise0 := &Promise{
 		RecipientKeyIndex: 1,
 		SenderKeyIndex:    0,
 	}
@@ -202,7 +201,7 @@ func TestHasSignerPromised(t *testing.T) {
 	ok = manager.HasSignerPromised(1)
 	assert.Equal(t, ok, false)
 
-	promise1 := &entities.Promise{
+	promise1 := &Promise{
 		RecipientKeyIndex: 1,
 		SenderKeyIndex:    1,
 	}
@@ -212,7 +211,7 @@ func TestHasSignerPromised(t *testing.T) {
 	ok = manager.HasSignerPromised(1)
 	assert.Equal(t, ok, false)
 
-	promise2 := &entities.Promise{
+	promise2 := &Promise{
 		RecipientKeyIndex: 0,
 		SenderKeyIndex:    1,
 	}
@@ -227,7 +226,7 @@ func TestHasSignerPromised(t *testing.T) {
 func TestAddToAbort(t *testing.T) {
 	// TODO
 	// Test the abortedIndex field, when promises will be implemented
-	archives := entities.NewSignatureArchives(signatureUUIDBson, sequence, signersEntities, contractDocumentHash, signedHash)
+	archives := NewSignatureArchives(signatureUUIDBson, sequence, signersEntities, contractDocumentHash, signedHash)
 	manager := &ArchivesManager{
 		DB:       dbManager,
 		Archives: archives,
@@ -241,11 +240,11 @@ func TestAddToAbort(t *testing.T) {
 
 	assert.Equal(t, len(archives.AbortedSigners), 0)
 
-	sIndex, err := checker.GetIndexOfSigner(promise, signers[1])
+	sIndex, err := GetIndexOfSigner(promise, signers[1])
 	assert.Equal(t, err.Error(), "Signer's hash couldn't be matched")
 
 	promise.Context.Signers = signers
-	sIndex, err = checker.GetIndexOfSigner(promise, signers[1])
+	sIndex, err = GetIndexOfSigner(promise, signers[1])
 	assert.Equal(t, err, nil)
 	assert.Equal(t, sIndex, uint32(1))
 
@@ -259,7 +258,7 @@ func TestAddToAbort(t *testing.T) {
 }
 
 func TestAddToDishonest(t *testing.T) {
-	archives := entities.NewSignatureArchives(signatureUUIDBson, sequence, signersEntities, contractDocumentHash, signedHash)
+	archives := NewSignatureArchives(signatureUUIDBson, sequence, signersEntities, contractDocumentHash, signedHash)
 	manager := &ArchivesManager{
 		DB:       dbManager,
 		Archives: archives,
@@ -273,11 +272,11 @@ func TestAddToDishonest(t *testing.T) {
 
 	assert.Equal(t, len(archives.DishonestSigners), 0)
 
-	sIndex, err := checker.GetIndexOfSigner(promise, signers[1])
+	sIndex, err := GetIndexOfSigner(promise, signers[1])
 	assert.Equal(t, err.Error(), "Signer's hash couldn't be matched")
 
 	promise.Context.Signers = signers
-	sIndex, err = checker.GetIndexOfSigner(promise, signers[1])
+	sIndex, err = GetIndexOfSigner(promise, signers[1])
 	assert.Equal(t, err, nil)
 	assert.Equal(t, sIndex, uint32(1))
 
@@ -291,19 +290,19 @@ func TestAddToDishonest(t *testing.T) {
 }
 
 func TestAddPromise(t *testing.T) {
-	archives := entities.NewSignatureArchives(signatureUUIDBson, sequence, signersEntities, contractDocumentHash, signedHash)
+	archives := NewSignatureArchives(signatureUUIDBson, sequence, signersEntities, contractDocumentHash, signedHash)
 	manager := &ArchivesManager{
 		DB:       dbManager,
 		Archives: archives,
 	}
 	assert.Equal(t, len(archives.ReceivedPromises), 0)
 
-	promise0 := &entities.Promise{
+	promise0 := &Promise{
 		RecipientKeyIndex: 1,
 		SenderKeyIndex:    0,
 		SequenceIndex:     0,
 	}
-	promise1 := &entities.Promise{
+	promise1 := &Promise{
 		RecipientKeyIndex: 0,
 		SenderKeyIndex:    1,
 		SequenceIndex:     1,

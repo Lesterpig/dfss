@@ -36,8 +36,6 @@ Unit tests:
     - "go test -coverprofile dfssc_security.part -v dfss/dfssc/security"
     - "go test -coverprofile dfssc_user.part -v dfss/dfssc/user"
     - "go test -coverprofile dfssc_user.part -v dfss/dfssc/sign"
-    - "go test -coverprofile dfsst_archivesManager.part -v dfss/dfsst/archivesManager"
-    - "go test -coverprofile dfsst_checker.part -v dfss/dfsst/checker"
     - "go test -coverprofile dfsst_entities.part -v dfss/dfsst/entities"
     - "go test -coverprofile dfsst_resolve.part -v dfss/dfsst/resolve"
     - "go test -coverprofile dfsst_server.part -v dfss/dfsst/server"
