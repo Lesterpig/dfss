@@ -5,7 +5,7 @@ import (
 
 	"dfss/dfssp/contract"
 
-	"github.com/bmizerany/assert"
+	"github.com/stretchr/testify/assert"
 )
 
 func TestFindId(t *testing.T) {

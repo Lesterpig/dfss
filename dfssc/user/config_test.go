@@ -8,7 +8,7 @@ import (
 	"path/filepath"
 	"testing"
 
-	"github.com/bmizerany/assert"
+	"github.com/stretchr/testify/assert"
 )
 
 const certFixture = `-----BEGIN CERTIFICATE-----
@@ -46,15 +46,15 @@ func TestInvalidFiles(t *testing.T) {
 	defer deleteFiles(keyFile, certFile, "invalidConf.pem")
 
 	_, err := NewConfig("inexistantKey", "inexistantCert")
-	assert.Tf(t, err != nil, "No key file nor cert file, expected error")
+	assert.True(t, err != nil, "No key file nor cert file, expected error")
 
 	_ = common.SaveStringToDisk(fmt.Sprintf("%s", []byte(keyFixture)), keyFile)
 	_, err = NewConfig(keyFile, "inexistantCert")
-	assert.Tf(t, err != nil, "No cert file, expected error")
+	assert.True(t, err != nil, "No cert file, expected error")
 
 	_ = security.SaveCertificate(fmt.Sprintf("%s", []byte(certFixture)), certFile)
 	_, err = NewConfig(keyFile, certFile)
-	assert.Tf(t, err == nil, "Expected no error, files are present and valid")
+	assert.True(t, err == nil, "Expected no error, files are present and valid")
 }
 
 // TestErrorDumpingConfig checks the error that may be raised while dumping the configuration to the disk
@@ -64,25 +64,25 @@ func TestErrorDumpingConfig(t *testing.T) {
 	defer deleteFiles(keyFile, certFile, "invalidConf.pem")
 
 	err := common.SaveStringToDisk(fmt.Sprintf("%s", []byte(keyFixture)), keyFile)
-	assert.Tf(t, err == nil, "Expected no error, file is present")
+	assert.True(t, err == nil, "Expected no error, file is present")
 
 	err = security.SaveCertificate(fmt.Sprintf("%s", []byte(certFixture)), certFile)
-	assert.Tf(t, err == nil, "Expected no error, cert is valid")
+	assert.True(t, err == nil, "Expected no error, cert is valid")
 
 	config, err := NewConfig(keyFile, certFile)
-	assert.Tf(t, err == nil, "Expected no error, files are present and valid")
+	assert.True(t, err == nil, "Expected no error, files are present and valid")
 
 	err = config.SaveConfigToFile("file", "abc", "")
-	assert.Tf(t, err != nil, "Expected an error, passphrase is too short (< 4 char)")
+	assert.True(t, err != nil, "Expected an error, passphrase is too short (< 4 char)")
 
 	err = config.SaveConfigToFile(keyFile, "passphrase", "")
-	assert.Tf(t, err != nil, "Expected an error, file is already there")
+	assert.True(t, err != nil, "Expected an error, file is already there")
 
 	common.DeleteQuietly(keyFile)
 	_ = common.SaveStringToDisk("Invalid key", keyFile)
 	config, _ = NewConfig(keyFile, certFile)
 	err = config.SaveConfigToFile("file", "passphrase", "passphrase")
-	assert.Tf(t, err != nil, "Expected an error, private key is invalid")
+	assert.True(t, err != nil, "Expected an error, private key is invalid")
 
 	common.DeleteQuietly(certFile)
 	common.DeleteQuietly(keyFile)
@@ -90,7 +90,7 @@ func TestErrorDumpingConfig(t *testing.T) {
 	_ = common.SaveStringToDisk("Invalid certificate", certFile)
 	config, _ = NewConfig(keyFile, certFile)
 	err = config.SaveConfigToFile("file", "passphrase", "passphrase")
-	assert.Tf(t, err != nil, "Expected an error, certificate is invalid")
+	assert.True(t, err != nil, "Expected an error, certificate is invalid")
 
 }
 
@@ -103,21 +103,21 @@ func TestDumpingFile(t *testing.T) {
 	defer deleteFiles(keyFile, certFile, configPath)
 
 	err := common.SaveStringToDisk(fmt.Sprintf("%s", []byte(keyFixture)), keyFile)
-	assert.Tf(t, err == nil, "Expected no error, file is present")
+	assert.True(t, err == nil, "Expected no error, file is present")
 
 	err = security.SaveCertificate(fmt.Sprintf("%s", []byte(certFixture)), certFile)
-	assert.Tf(t, err == nil, "Expected no error, cert is valid")
+	assert.True(t, err == nil, "Expected no error, cert is valid")
 
 	config, err := NewConfig(keyFile, certFile)
-	assert.Tf(t, err == nil, "Expected no error, files are present and valid")
+	assert.True(t, err == nil, "Expected no error, files are present and valid")
 
 	err = config.SaveConfigToFile(configPath, "passphrase", "")
-	assert.Tf(t, err == nil, "Expected no error, config is valid")
+	assert.True(t, err == nil, "Expected no error, config is valid")
 
-	assert.Tf(t, common.FileExists(configPath), "Expected a config file present")
+	assert.True(t, common.FileExists(configPath), "Expected a config file present")
 	_, err = common.ReadFile(configPath)
 
-	assert.Tf(t, err == nil, "Expected no error, config is present")
+	assert.True(t, err == nil, "Expected no error, config is present")
 }
 
 // TestErrorDecodeFile tries to decode a configuration file and checks the errors raised
@@ -132,19 +132,19 @@ func TestErrorDecodeFile(t *testing.T) {
 	_ = security.SaveCertificate(fmt.Sprintf("%s", []byte(certFixture)), certFile)
 
 	_, err := DecodeConfiguration("inexistantFile", "passphrase", "")
-	assert.Tf(t, err != nil, "File is invalid, impossible to decode configuration")
+	assert.True(t, err != nil, "File is invalid, impossible to decode configuration")
 
 	_, err = DecodeConfiguration(keyFile, "pas", "")
-	assert.Tf(t, err != nil, "Passphrase is invalid, should be at least 4 char long")
+	assert.True(t, err != nil, "Passphrase is invalid, should be at least 4 char long")
 
 	config, err := NewConfig(keyFile, certFile)
-	assert.Tf(t, err == nil, "Expected no error, files are present and valid")
+	assert.True(t, err == nil, "Expected no error, files are present and valid")
 
 	err = config.SaveConfigToFile(configPath, "passphrase", "")
-	assert.Tf(t, err == nil, "Expected no error, config is valid")
+	assert.True(t, err == nil, "Expected no error, config is valid")
 
 	config, err = DecodeConfiguration(configPath, "pass", "")
-	assert.Tf(t, err != nil, "Expected error, wrong passphrase")
+	assert.True(t, err != nil, "Expected error, wrong passphrase")
 
 }
 
@@ -160,18 +160,18 @@ func TestDecodeConfig(t *testing.T) {
 	_ = security.SaveCertificate(fmt.Sprintf("%s", []byte(certFixture)), certFile)
 
 	config, err := NewConfig(keyFile, certFile)
-	assert.Tf(t, err == nil, "Expected no error, files are present and valid")
+	assert.True(t, err == nil, "Expected no error, files are present and valid")
 
 	err = config.SaveConfigToFile(configPath, "passphrase", "")
-	assert.Tf(t, err == nil, "Expected no error, config is valid")
+	assert.True(t, err == nil, "Expected no error, config is valid")
 
 	decoded, err := DecodeConfiguration(configPath, "", "passphrase")
-	assert.Tf(t, err == nil, "Expected no error, config should have been decodedi")
+	assert.True(t, err == nil, "Expected no error, config should have been decodedi")
 
-	assert.Equalf(t, config.KeyFile, decoded.KeyFile, "Wrong keyFile parameter")
-	assert.Equalf(t, config.KeyData, decoded.KeyData, "Wrong keyData parameter")
-	assert.Equalf(t, config.CertFile, decoded.CertFile, "Wrong certFile parameter")
-	assert.Equalf(t, config.CertData, decoded.CertData, "Wrong certData parameter")
+	assert.Equal(t, config.KeyFile, decoded.KeyFile, "Wrong keyFile parameter")
+	assert.Equal(t, config.KeyData, decoded.KeyData, "Wrong keyData parameter")
+	assert.Equal(t, config.CertFile, decoded.CertFile, "Wrong certFile parameter")
+	assert.Equal(t, config.CertData, decoded.CertData, "Wrong certData parameter")
 }
 
 // TestSaveFilesToDisk tries to create the certificate and private key on the disk from
@@ -187,22 +187,22 @@ func TestSaveFilesToDisk(t *testing.T) {
 	_ = security.SaveCertificate(fmt.Sprintf("%s", []byte(certFixture)), certFile)
 
 	config, err := NewConfig(keyFile, certFile)
-	assert.Tf(t, err == nil, "Expected no error, files are present and valid")
+	assert.True(t, err == nil, "Expected no error, files are present and valid")
 
 	err = config.SaveUserInformations()
-	assert.Tf(t, err != nil, "Expected an error, files are already present")
+	assert.True(t, err != nil, "Expected an error, files are already present")
 	common.DeleteQuietly(keyFile)
 
 	err = config.SaveUserInformations()
-	assert.Tf(t, err != nil, "Expected an error, certificate file is already present")
+	assert.True(t, err != nil, "Expected an error, certificate file is already present")
 
 	common.DeleteQuietly(certFile)
 
 	err = config.SaveUserInformations()
-	assert.Tf(t, err == nil, "No error expected, files are not here")
+	assert.True(t, err == nil, "No error expected, files are not here")
 
-	assert.Tf(t, common.FileExists(keyFile), "Expected private key file")
-	assert.Tf(t, common.FileExists(certFile), "Expected certificate file")
+	assert.True(t, common.FileExists(keyFile), "Expected private key file")
+	assert.True(t, common.FileExists(certFile), "Expected certificate file")
 }
 
 // Helper function to delete all the files

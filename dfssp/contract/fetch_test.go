@@ -7,7 +7,7 @@ import (
 	"dfss/dfssp/api"
 	"dfss/dfssp/contract"
 	"dfss/dfssp/entities"
-	"github.com/bmizerany/assert"
+	"github.com/stretchr/testify/assert"
 	"golang.org/x/net/context"
 	"gopkg.in/mgo.v2/bson"
 )
@@ -34,7 +34,7 @@ func TestGetContract(t *testing.T) {
 	})
 	assert.Equal(t, nil, err)
 	assert.Equal(t, api.ErrorCode_SUCCESS, c.ErrorCode.Code)
-	assert.T(t, len(c.Json) > 0)
+	assert.True(t, len(c.Json) > 0)
 
 	// Trying to unmarshal contract
 	var entity contract.JSON

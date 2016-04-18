@@ -8,7 +8,7 @@ import (
 	"crypto/sha512"
 	cAPI "dfss/dfssc/api"
 	"dfss/mgdb"
-	"github.com/bmizerany/assert"
+	"github.com/stretchr/testify/assert"
 	"gopkg.in/mgo.v2/bson"
 )
 

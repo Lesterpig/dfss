@@ -4,7 +4,7 @@ import (
 	"testing"
 
 	"dfss/dfssp/entities"
-	"github.com/bmizerany/assert"
+	"github.com/stretchr/testify/assert"
 )
 
 func TestInit(t *testing.T) {

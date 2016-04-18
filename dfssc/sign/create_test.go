@@ -10,7 +10,7 @@ import (
 
 	"dfss/auth"
 	"dfss/mockp/server"
-	"github.com/bmizerany/assert"
+	"github.com/stretchr/testify/assert"
 )
 
 var path = filepath.Join("..", "testdata")

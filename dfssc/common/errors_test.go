@@ -4,7 +4,7 @@ import (
 	"testing"
 
 	"dfss/dfssp/api"
-	"github.com/bmizerany/assert"
+	"github.com/stretchr/testify/assert"
 )
 
 func TestEvaluateErrorCodeResponse(t *testing.T) {

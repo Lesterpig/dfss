@@ -3,23 +3,23 @@ package user
 import (
 	"dfss/dfssc/common"
 	"fmt"
-	"github.com/bmizerany/assert"
+	"github.com/stretchr/testify/assert"
 	"os"
 	"testing"
 )
 
 func TestAuthenticationValidation(t *testing.T) {
 	_, err := NewAuthManager("fca", fcert, addrPort, "dummy", "token")
-	assert.T(t, err != nil, "Email is invalid")
+	assert.True(t, err != nil, "Email is invalid")
 
 	f, _ := os.Create(fcert)
 	_ = f.Close()
 	_, err = NewAuthManager("fca", fcert, addrPort, "mail@mail.mail", "token")
-	assert.T(t, err != nil, "Cert file already there")
+	assert.True(t, err != nil, "Cert file already there")
 
 	_ = os.Remove(fcert)
 	_, err = NewAuthManager("fca", fcert, addrPort, "mail@mail.mail", "token")
-	assert.T(t, err != nil, "CA file not there")
+	assert.True(t, err != nil, "CA file not there")
 
 	_, err = NewAuthManager(fca, fcert, addrPort, "mail@mail.mail", "token")
 	assert.Equal(t, err, nil)

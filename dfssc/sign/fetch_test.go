@@ -6,7 +6,7 @@ import (
 	"os"
 	"testing"
 
-	"github.com/bmizerany/assert"
+	"github.com/stretchr/testify/assert"
 )
 
 func TestFetchContract(t *testing.T) {

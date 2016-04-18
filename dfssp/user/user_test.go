@@ -15,7 +15,7 @@ import (
 	"dfss/dfssp/server"
 	"dfss/mgdb"
 	"dfss/net"
-	"github.com/bmizerany/assert"
+	"github.com/stretchr/testify/assert"
 	"golang.org/x/net/context"
 	"gopkg.in/mgo.v2/bson"
 	"time"

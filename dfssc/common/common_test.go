@@ -6,7 +6,7 @@ import (
 	"path/filepath"
 	"testing"
 
-	"github.com/bmizerany/assert"
+	"github.com/stretchr/testify/assert"
 )
 
 var path = os.TempDir()
@@ -38,27 +38,27 @@ func TestSaveToDisk(t *testing.T) {
 	data[1] = 'o'
 	data[2] = 'o'
 	err := SaveToDisk(data, ffoo)
-	assert.T(t, err == nil, "An error has been raised")
+	assert.True(t, err == nil, "An error has been raised")
 
-	assert.T(t, FileExists(ffoo), "foo.txt should be present")
+	assert.True(t, FileExists(ffoo), "foo.txt should be present")
 }
 
 // Save a string on the disk
 func TestSaveStringToDisk(t *testing.T) {
 	s := "bar"
 	err := SaveStringToDisk(s, fbar)
-	assert.T(t, err == nil, "An error has been raised")
+	assert.True(t, err == nil, "An error has been raised")
 
-	assert.T(t, FileExists(fbar), "bar.txt should be present")
+	assert.True(t, FileExists(fbar), "bar.txt should be present")
 }
 
 // DeleteQuietly should never raise an error, even with non-existant file
 func TestDeleteQuietly(t *testing.T) {
 	s := "baz"
 	_ = SaveStringToDisk(s, fbaz)
-	assert.T(t, FileExists(fbaz), "baz.txt should be present")
+	assert.True(t, FileExists(fbaz), "baz.txt should be present")
 	DeleteQuietly(fbaz)
-	assert.T(t, !FileExists(fbaz), "baz.txt should not be present")
+	assert.True(t, !FileExists(fbaz), "baz.txt should not be present")
 
 	// Assert it does not panic when deleting an inexistant file
 	DeleteQuietly("dummy")
@@ -68,12 +68,12 @@ func TestDeleteQuietly(t *testing.T) {
 func TestReadFile(t *testing.T) {
 	s := "qux"
 	_ = SaveStringToDisk(s, fqux)
-	assert.T(t, FileExists(fqux), "qux.txt should be present")
+	assert.True(t, FileExists(fqux), "qux.txt should be present")
 
 	data, err := ReadFile(fqux)
 	if err != nil {
 		fmt.Println(err.Error())
-		assert.T(t, err == nil, "An error has been raised while reading the file")
+		assert.True(t, err == nil, "An error has been raised while reading the file")
 	}
 	assert.Equal(t, s, fmt.Sprintf("%s", data), "Expected qux, received ", fmt.Sprintf("%s", data))
 

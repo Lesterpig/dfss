@@ -5,7 +5,7 @@ import (
 	"time"
 
 	"dfss/dfssp/entities"
-	"github.com/bmizerany/assert"
+	"github.com/stretchr/testify/assert"
 	"gopkg.in/mgo.v2/bson"
 )
 

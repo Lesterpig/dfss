@@ -9,7 +9,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/bmizerany/assert"
+	"github.com/stretchr/testify/assert"
 )
 
 // TestExport tries to export the certificate and pricate key of the client
@@ -49,7 +49,7 @@ func TestExport(t *testing.T) {
 	)
 	err = cmd.Run()
 	assert.Equal(t, nil, err)
-	assert.T(t, common.FileExists(confPath))
+	assert.True(t, common.FileExists(confPath))
 
 	// Bad case 1 : Wrong passphrase for private key
 	badCmd1 := exec.Command(path, "-cert", certPath, "-key", keyPath, "export", confPath)
@@ -59,8 +59,8 @@ func TestExport(t *testing.T) {
 			"wrong passphrase\n",
 	)
 	_ = badCmd1.Run()
-	// assert.Equalf(t, nil, err, "%x", err)
-	assert.T(t, !common.FileExists(confPath))
+	// assert.Equal(t, nil, err, "%x", err)
+	assert.True(t, !common.FileExists(confPath))
 
 	// Bad case 2 : Missing certificate
 	badCmd2 := exec.Command(path, "-cert", certPath, "-key", keyPath, "export", confPath)
@@ -71,7 +71,7 @@ func TestExport(t *testing.T) {
 	)
 	_ = badCmd2.Run()
 	// assert.Equal(t, nil, err)
-	assert.T(t, !common.FileExists(confPath))
+	assert.True(t, !common.FileExists(confPath))
 }
 
 // TestImport tries to import the certificate and private key of a user
@@ -112,7 +112,7 @@ func TestImport(t *testing.T) {
 	)
 	err = cmd.Run()
 	assert.Equal(t, nil, err)
-	assert.T(t, common.FileExists(confPath))
+	assert.True(t, common.FileExists(confPath))
 
 	// Nominal case
 	common.DeleteQuietly(certPath)
@@ -125,8 +125,8 @@ func TestImport(t *testing.T) {
 	)
 	err = cmd.Run()
 	assert.Equal(t, nil, err)
-	assert.T(t, common.FileExists(certPath))
-	assert.T(t, common.FileExists(keyPath))
+	assert.True(t, common.FileExists(certPath))
+	assert.True(t, common.FileExists(keyPath))
 
 	// Bad case 1 : There is already the key file
 	common.DeleteQuietly(certPath)
@@ -137,8 +137,8 @@ func TestImport(t *testing.T) {
 			"password\n",
 	)
 	_ = badCmd1.Run()
-	// assert.Equalf(t, nil, err, "%x", err)
-	assert.T(t, !common.FileExists(certPath))
+	// assert.Equal(t, nil, err, "%x", err)
+	assert.True(t, !common.FileExists(certPath))
 
 	// Bad case 2 : Wrong passphrase of the configuration
 	common.DeleteQuietly(keyPath)
@@ -150,8 +150,8 @@ func TestImport(t *testing.T) {
 	)
 	_ = badCmd2.Run()
 	// assert.Equal(t, nil, err)
-	assert.T(t, !common.FileExists(certPath))
-	assert.T(t, !common.FileExists(keyPath))
+	assert.True(t, !common.FileExists(certPath))
+	assert.True(t, !common.FileExists(keyPath))
 
 	// Bad case 3 : Wrong passphrase for the private key
 	badCmd3 := exec.Command(path, "import", confPath)
@@ -161,6 +161,6 @@ func TestImport(t *testing.T) {
 	)
 	_ = badCmd3.Run()
 	// assert.Equal(t, nil, err)
-	assert.T(t, !common.FileExists(certPath))
-	assert.T(t, !common.FileExists(keyPath))
+	assert.True(t, !common.FileExists(certPath))
+	assert.True(t, !common.FileExists(keyPath))
 }

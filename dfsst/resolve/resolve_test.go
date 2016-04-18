@@ -8,7 +8,7 @@ import (
 	"crypto/sha512"
 	"dfss/dfsst/entities"
 	"dfss/mgdb"
-	"github.com/bmizerany/assert"
+	"github.com/stretchr/testify/assert"
 	"gopkg.in/mgo.v2/bson"
 )
 

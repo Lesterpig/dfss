@@ -4,7 +4,7 @@ import (
 	"testing"
 
 	cAPI "dfss/dfssc/api"
-	"github.com/bmizerany/assert"
+	"github.com/stretchr/testify/assert"
 )
 
 func TestArePromisesValid(t *testing.T) {
