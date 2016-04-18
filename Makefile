@@ -56,15 +56,15 @@ release: clean build_x build_g package
 
 build_x:
 	go get github.com/mitchellh/gox
-	gox -osarch "linux/amd64 linux/386 linux/arm windows/386 darwin/amd64" -parallel 1 -output "release/dfss_${VERSION}_{{.OS}}_{{.Arch}}/{{.Dir}}" dfss/dfssc dfss/dfssp dfss/dfsst
+	gox -ldflags "-s -w" -osarch "linux/amd64 linux/386 linux/arm windows/386 darwin/amd64" -parallel 1 -output "release/dfss_${VERSION}_{{.OS}}_{{.Arch}}/{{.Dir}}" dfss/dfssc dfss/dfssp dfss/dfsst
 
 build_g:
 	cp $(GOPATH)/src/github.com/visualfc/goqt/bin/goqt_rcc /bin/
 	cp $(GOPATH)/src/github.com/visualfc/goqt/bin/lib* /lib/
 	cd gui && goqt_rcc -go main -o a.qrc.go application.qrc
 	cd dfssd/gui && goqt_rcc -go gui -o a.qrc.go application.qrc
-	cd gui && go build -ldflags "-r ." -o ../release/dfss_${VERSION}_linux_amd64/dfssc_gui
-	cd dfssd && go build -ldflags "-r ." -o ../release/dfss_${VERSION}_linux_amd64/dfssd
+	cd gui && go build -ldflags "-s -w -r ." -o ../release/dfss_${VERSION}_linux_amd64/dfssc_gui
+	cd dfssd && go build -ldflags "-s -w -r ." -o ../release/dfss_${VERSION}_linux_amd64/dfssd
 	cp /lib/libqtdrv.ui.so.1.0.0 release/dfss_${VERSION}_linux_amd64/libqtdrv.ui.so.1
 
 package:

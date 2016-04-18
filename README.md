@@ -42,7 +42,10 @@ make prepare_gui
 
 # Build
 make gui
+make dfssd
 ```
+
+Do not attempt to run `go install dfss/...` or `go install ./...`, it won't work due to graphic binaries.
 
 Run dfss modules
 ----------------
@@ -51,4 +54,12 @@ Run dfss modules
 dfssc help # Client
 dfssp help # Platform
 dfsst help # TTP
+```
+
+For graphic clients, you may need to install some Qt4 libraries on your system.
+
+```bash
+cd bin
+./gui   # Client GUI
+./dfssd # Demonstrator
 ```

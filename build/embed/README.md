@@ -5,13 +5,13 @@ DFSS
 Prerequisites
 -------------
 
-DFSS can run on the following platforms:
+DFSS is distributed on the following platforms:
 
 - Linux (amd64, i386 and arm)
-- MacOS (amd64 and i386)
-- Windows (amd64 and i386)
+- MacOS (amd64)
+- Windows (i386)
 
-A running mongoDB database is required for the Platform module.
+A running mongoDB database is required for the Platform and the TTP modules.
 
 Installation (UNIX)
 -------------------
@@ -23,10 +23,14 @@ You just have to untar the archive and run the following binaries:
 ./dfssc help # Client
 ./dfssp help # Platform
 ./dfsst help # TTP
-./dfssd help # Demonstrator
 ```
 
-Here is a basic tutorial to setup a new DFSS environment.
+On Linux-64 and Windows builds, two additional graphic binaries are included. You may need some Qt4 libraries on your system to run them.
+
+```bash
+./dfssc_gui # Graphic client
+./dfssd     # Demonstrator
+```
 
 ### Setup platform and TTP (Trusted Third Party)
 
