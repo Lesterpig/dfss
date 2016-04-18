@@ -1,5 +1,6 @@
 REVISION := $(shell git rev-parse HEAD || echo )
 VERSION := $(shell git tag --points-at HEAD | grep -m1 v[0-9] | sed -e 's/^v//g' )
+NOVENDOR := $(shell glide novendor)
 ifeq ($(VERSION),)
 	VERSION := master
 endif
@@ -17,7 +18,7 @@ install_all: install
 	rm -rf gui
 	rm -rf dfssd/gui
 	rm -f dfssd/main.go
-	go install ./...
+	go install $(NOVENDOR)
 	git reset --hard
 
 
@@ -25,7 +26,7 @@ install_all: install
 # call it once or after dependency addition.
 prepare_gui: nocache
 	docker run --name dfss-builder -v ${PWD}:/go/src/dfss -w /go/src/dfss lesterpig/goqt /bin/bash -c \
-		"cp -r ../github.com/visualfc/goqt/bin . ; ./build/deps.sh"
+		"cp -r ../github.com/visualfc/goqt/bin . ;"
 	docker commit dfss-builder dfss:builder
 	docker rm dfss-builder
 

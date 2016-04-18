@@ -1,0 +1,23 @@
+package: dfss
+import:
+- package: github.com/golang/protobuf
+  subpackages:
+  - proto
+- package: github.com/pborman/uuid
+- package: golang.org/x/crypto
+  subpackages:
+  - ssh/terminal
+- package: golang.org/x/net
+  subpackages:
+  - context
+- package: google.golang.org/grpc
+  subpackages:
+  - credentials
+  - grpclog
+  - peer
+- package: gopkg.in/mgo.v2
+  subpackages:
+  - bson
+- package: github.com/stretchr/testify
+  subpackages:
+  - assert

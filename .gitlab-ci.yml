@@ -21,7 +21,8 @@ Unit tests:
       - "coverage.html"
   script:
     - "ln -s $(pwd) $GOPATH/src/dfss"
-    - "./build/deps.sh"
+    - "go get github.com/Masterminds/glide"
+    - "glide install"
     - "cd $GOPATH/src/dfss && make install"
     - "go test -coverprofile auth.part -v dfss/auth"
     - "go test -coverprofile mgdb.part -v dfss/mgdb"
@@ -55,7 +56,8 @@ Integration tests:
     - "lesterpig/mongo:latest"
   script:
     - "ln -s -f $(pwd) $GOPATH/src/dfss"
-    - "./build/deps.sh"
+    - "go get github.com/Masterminds/glide"
+    - "glide install"
     - "cd $GOPATH/src/dfss && make install"
     # Copy required files
     - "cp $GOPATH/src/github.com/visualfc/goqt/bin/* $GOPATH/src/dfss/dfssd/"
@@ -80,10 +82,18 @@ Code lint:
   script:
     - "ln -s $(pwd) $GOPATH/src/dfss"
     - "go get -u github.com/alecthomas/gometalinter"
-    - "./build/deps.sh"
+    # Somehow, using gometalinter+glide+gitlab-ci causes big issues
+    # That's why there is here a duplicate of the dependencies
+    - "go get -u gopkg.in/mgo.v2"
+    - "go get -u github.com/golang/protobuf/proto"
+    - "go get -u github.com/golang/protobuf/protoc-gen-go"
+    - "go get -u google.golang.org/grpc"
+    - "go get -u github.com/pborman/uuid"
+    - "go get -u github.com/stretchr/testify/assert"
+    - "go get -u golang.org/x/crypto/ssh/terminal"
     - "cd $GOPATH/src/dfss && make install_all"
     - "gometalinter --install --update"
-    - "gometalinter -t --deadline=900s -j1 --skip=api --skip=fixtures --skip=gui --skip=dfssd --disable=aligncheck ./..."
+    - "gometalinter -t --deadline=900s -j1 --skip=api --skip=fixtures --skip=gui --skip=dfssd --disable=aligncheck $(glide novendor)"
 
 Deploy:
   stage: deploy
@@ -97,6 +107,7 @@ Deploy:
     - deploy
   script:
     - "ln -s -f $(pwd) $GOPATH/src/dfss"
-    - "./build/deps.sh"
+    - "go get -u github.com/Masterminds/glide"
+    - "glide install"
     - "make release"
     - "make deploy"

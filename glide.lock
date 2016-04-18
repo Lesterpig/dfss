@@ -1,0 +1,43 @@
+hash: 055e5878eee863b70845aa2c777902691a69cfb1716bbc8379ad2482923d5ac2
+updated: 2016-04-21T03:44:17.92353355+02:00
+imports:
+- name: github.com/golang/protobuf
+  version: bf531ff1a004f24ee53329dfd5ce0b41bfdc17df
+  subpackages:
+  - proto
+- name: github.com/pborman/uuid
+  version: c55201b036063326c5b1b89ccfe45a184973d073
+- name: github.com/stretchr/testify
+  version: c5d7a69bf8a2c9c374798160849c071093e41dd1
+  subpackages:
+  - assert
+- name: golang.org/x/crypto
+  version: fbbbdbdd6f61a8f86b00866626c2fe3d2a642db0
+  subpackages:
+  - ssh/terminal
+- name: golang.org/x/net
+  version: 815d315ead425c4365077d904a2331ee9e179820
+  subpackages:
+  - context
+  - http2
+  - trace
+  - http2/hpack
+  - internal/timeseries
+- name: google.golang.org/grpc
+  version: 1a5928317d2d6526b75552438d5593e005f36477
+  subpackages:
+  - credentials
+  - grpclog
+  - peer
+  - codes
+  - internal
+  - metadata
+  - naming
+  - transport
+- name: gopkg.in/mgo.v2
+  version: b6e2fa371e64216a45e61072a96d4e3859f169da
+  subpackages:
+  - bson
+  - internal/sasl
+  - internal/scram
+devImports: []
