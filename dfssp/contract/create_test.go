@@ -12,7 +12,7 @@ import (
 	"dfss/dfssp/api"
 	"dfss/dfssp/entities"
 	"dfss/net"
-	"github.com/bmizerany/assert"
+	"github.com/stretchr/testify/assert"
 	"golang.org/x/net/context"
 )
 
@@ -105,7 +105,7 @@ func TestAddContract(t *testing.T) {
 	assert.Equal(t, defaultHash[:], contracts[0].File.Hash)
 	assert.Equal(t, "ContractFilename", contracts[0].File.Name)
 	assert.Equal(t, "ContractComment", contracts[0].Comment)
-	assert.T(t, contracts[0].Ready)
+	assert.True(t, contracts[0].Ready)
 
 	assert.Equal(t, 2, len(contracts[0].Signers))
 	assert.Equal(t, user1.ID, contracts[0].Signers[0].UserID)
@@ -140,7 +140,7 @@ func TestAddContractMissingUser(t *testing.T) {
 	assert.Equal(t, defaultHash[:], contracts[0].File.Hash)
 	assert.Equal(t, "ContractFilename", contracts[0].File.Name)
 	assert.Equal(t, "", contracts[0].Comment)
-	assert.T(t, !contracts[0].Ready)
+	assert.True(t, !contracts[0].Ready)
 
 	assert.Equal(t, 2, len(contracts[0].Signers))
 	assert.Equal(t, user1.ID, contracts[0].Signers[0].UserID)

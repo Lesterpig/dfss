@@ -10,7 +10,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/bmizerany/assert"
+	"github.com/stretchr/testify/assert"
 )
 
 const caFixture = `-----BEGIN CERTIFICATE-----
@@ -67,23 +67,23 @@ func TestMain(m *testing.M) {
 // Test the validation of the fields
 func TestRegisterValidation(t *testing.T) {
 	_, err := NewRegisterManager(fca, fcert, fkey, addrPort, "password", "FR", "organization", "unit", "dummy", 2048)
-	assert.T(t, err != nil, "Email is invalid")
+	assert.True(t, err != nil, "Email is invalid")
 
 	_, err = NewRegisterManager(fca, fkey, fkey, addrPort, "password", "FR", "organization", "unit", "mpcs@dfss.io", 2048)
-	assert.T(t, err != nil, "Cert file is the same as key file")
+	assert.True(t, err != nil, "Cert file is the same as key file")
 
 	_, err = NewRegisterManager("inexistant.pem", fcert, fkey, addrPort, "password", "FR", "organization", "unit", "mpcs@dfss.io", 2048)
-	assert.T(t, err != nil, "CA file is invalid")
+	assert.True(t, err != nil, "CA file is invalid")
 
 	f, _ := os.Create(fcert)
 	_ = f.Close()
 	_, err = NewRegisterManager(fca, fcert, fkey, addrPort, "password", "FR", "organization", "unit", "mpcs@dfss.io", 2048)
-	assert.T(t, err != nil, "Cert file already exist")
+	assert.True(t, err != nil, "Cert file already exist")
 
 	k, _ := os.Create(fkey)
 	_ = k.Close()
 	_, err = NewRegisterManager(fca, fcert, fkey, addrPort, "password", "FR", "organization", "unit", "mpcs@dfss.io", 2048)
-	assert.T(t, err != nil, "Key file already exist")
+	assert.True(t, err != nil, "Key file already exist")
 
 	_ = os.Remove(fcert)
 	_ = os.Remove(fkey)
@@ -93,9 +93,9 @@ func TestRegisterValidation(t *testing.T) {
 // Only the SUCCESS code should not raise an error
 func TestGetCertificate(t *testing.T) {
 	manager, err := NewRegisterManager(fca, fcert, fkey, addrPort, "password", "FR", "organization", "unit", "dfss@success.io", 2048)
-	assert.T(t, err == nil, "An error occurred while processing")
+	assert.True(t, err == nil, "An error occurred while processing")
 	err = manager.GetCertificate()
-	assert.T(t, err == nil, "An error occurred while getting the certificate")
+	assert.True(t, err == nil, "An error occurred while getting the certificate")
 
 	go testRegisterInvalidResponse(t, "dfss@invarg.io")
 	go testRegisterInvalidResponse(t, "dfss@badauth.io")
@@ -108,9 +108,9 @@ func TestGetCertificate(t *testing.T) {
 func testRegisterInvalidResponse(t *testing.T, mail string) {
 	manager, err := NewRegisterManager(fca, fcert+mail, fkey+mail, addrPort, "password", "FR", "organization", "unit", mail, 2048)
 
-	assert.T(t, err == nil, "An error occurred while processing")
+	assert.True(t, err == nil, "An error occurred while processing")
 	err = manager.GetCertificate()
-	assert.T(t, err != nil, "An error should have occurred while getting the certificate")
+	assert.True(t, err != nil, "An error should have occurred while getting the certificate")
 
 	_ = os.Remove(fcert + mail)
 	_ = os.Remove(fkey + mail)

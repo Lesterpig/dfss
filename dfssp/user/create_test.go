@@ -3,7 +3,7 @@ package user_test
 import (
 	"dfss/dfssp/api"
 	"dfss/net"
-	"github.com/bmizerany/assert"
+	"github.com/stretchr/testify/assert"
 	"golang.org/x/net/context"
 	"testing"
 )

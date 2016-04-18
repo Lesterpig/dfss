@@ -11,7 +11,7 @@ import (
 	"time"
 
 	"dfss/dfssp/contract"
-	"github.com/bmizerany/assert"
+	"github.com/stretchr/testify/assert"
 )
 
 // TestSignContract unroll the whole signature process.
@@ -105,7 +105,7 @@ func TestSignContract(t *testing.T) {
 		output := <-closeChannel
 		assert.NotEqual(t, nil, output, "The return error should be null")
 		for _, r := range regexes {
-			assert.T(t, r.Match(output), "Regex is not satisfied: ", r.String())
+			assert.True(t, r.Match(output), "Regex is not satisfied: ", r.String())
 		}
 	}
 
@@ -118,10 +118,10 @@ func TestSignContract(t *testing.T) {
 		if proofFile.Match([]byte(file.Name())) {
 			matches++
 			err = os.Remove("./" + file.Name())
-			assert.T(t, err == nil, "Cannot remove .proof matching file")
+			assert.True(t, err == nil, "Cannot remove .proof matching file")
 		}
 	}
-	assert.T(t, matches == 3, "Missing proof file ?")
+	assert.True(t, matches == 3, "Missing proof file ?")
 
 	time.Sleep(time.Second)
 }

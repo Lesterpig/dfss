@@ -7,7 +7,7 @@ import (
 	"path/filepath"
 	"testing"
 
-	"github.com/bmizerany/assert"
+	"github.com/stretchr/testify/assert"
 )
 
 var crtFixture = `-----BEGIN CERTIFICATE-----
@@ -34,9 +34,9 @@ func TestGenerateKeys(t *testing.T) {
 	fkey := filepath.Join(path, "genKey.pem")
 
 	rsa, err := GenerateKeys(512, "pwd", fkey)
-	assert.T(t, err == nil, "An error has been raised during generation")
-	assert.T(t, rsa != nil, "RSA key should not be nil")
-	assert.T(t, common.FileExists(fkey), "File is missing")
+	assert.True(t, err == nil, "An error has been raised during generation")
+	assert.True(t, rsa != nil, "RSA key should not be nil")
+	assert.True(t, common.FileExists(fkey), "File is missing")
 	common.DeleteQuietly(fkey)
 }
 
@@ -46,13 +46,13 @@ func TestCertificateRequest(t *testing.T) {
 
 	rsa, err := GenerateKeys(512, "pwd", fkey)
 	defer common.DeleteQuietly(fkey)
-	assert.T(t, err == nil, "An error has been raised during generation")
-	assert.T(t, rsa != nil, "RSA key should not be nil")
-	assert.T(t, common.FileExists(fkey), "File is missing")
+	assert.True(t, err == nil, "An error has been raised during generation")
+	assert.True(t, rsa != nil, "RSA key should not be nil")
+	assert.True(t, common.FileExists(fkey), "File is missing")
 
 	csr, err := GenerateCertificateRequest("France", "DFSS", "DFSS_C", "dfssc@dfss.org", rsa)
-	assert.T(t, err == nil, "An error has been raised during generation of certificate request")
-	assert.T(t, csr != "", "Certificate request should not be nil")
+	assert.True(t, err == nil, "An error has been raised during generation of certificate request")
+	assert.True(t, csr != "", "Certificate request should not be nil")
 }
 
 // Test saving rsa key on the disk
@@ -62,18 +62,18 @@ func TestDumpingKey(t *testing.T) {
 	rsa, err := GenerateKeys(512, "pwd", fkey)
 	defer common.DeleteQuietly(fkey)
 
-	assert.T(t, err == nil, "An error has been raised during generation")
-	assert.T(t, rsa != nil, "RSA key should not be nil")
-	assert.T(t, common.FileExists(fkey), "File is missing")
+	assert.True(t, err == nil, "An error has been raised during generation")
+	assert.True(t, rsa != nil, "RSA key should not be nil")
+	assert.True(t, common.FileExists(fkey), "File is missing")
 
 	k, err := GetPrivateKey(fkey, "")
-	assert.T(t, err != nil, "An error should have been raised")
+	assert.True(t, err != nil, "An error should have been raised")
 
 	k, err = GetPrivateKey(fkey, "dummypwd")
-	assert.T(t, err != nil, "An error should have been raised")
+	assert.True(t, err != nil, "An error should have been raised")
 
 	k, err = GetPrivateKey(fkey, "pwd")
-	assert.T(t, err == nil, "No error should have been raised")
+	assert.True(t, err == nil, "No error should have been raised")
 	assert.Equal(t, *rsa, *k, "Keys should be equal")
 
 }
@@ -85,14 +85,14 @@ func TestDumpCrt(t *testing.T) {
 	err := SaveCertificate(crtFixture, fcert)
 	defer common.DeleteQuietly(fcert)
 
-	assert.T(t, err == nil, "An error has been raised during saving")
-	assert.T(t, common.FileExists(fcert), "File is missing")
+	assert.True(t, err == nil, "An error has been raised during saving")
+	assert.True(t, common.FileExists(fcert), "File is missing")
 
 	data, err := common.ReadFile(fcert)
-	assert.T(t, err == nil, "An error has been raised while reading file")
+	assert.True(t, err == nil, "An error has been raised while reading file")
 	assert.Equal(t, crtFixture, fmt.Sprintf("%s", data), "Certificates are not equal")
 
 	crt, err := GetCertificate(fcert)
-	assert.T(t, err == nil, "An error has been raised while parsing certificate")
-	assert.T(t, crt != nil, "Certificate is nil")
+	assert.True(t, err == nil, "An error has been raised while parsing certificate")
+	assert.True(t, crt != nil, "Certificate is nil")
 }

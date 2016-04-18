@@ -7,7 +7,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/bmizerany/assert"
+	"github.com/stretchr/testify/assert"
 )
 
 // TestRegisterAuth tries to register and auth several users.

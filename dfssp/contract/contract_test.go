@@ -10,7 +10,7 @@ import (
 	"dfss/dfssp/server"
 	"dfss/mgdb"
 	"dfss/net"
-	"github.com/bmizerany/assert"
+	"github.com/stretchr/testify/assert"
 	"gopkg.in/mgo.v2/bson"
 )
 
@@ -159,16 +159,16 @@ func TestCheckAuthorization(t *testing.T) {
 
 	res, err := repository.GetWithSigner(user1.CertHash, id)
 	assert.Equal(t, nil, err)
-	assert.T(t, res != nil)
+	assert.True(t, res != nil)
 	res, err = repository.GetWithSigner(user1.CertHash, bson.NewObjectId())
 	assert.Equal(t, nil, err)
-	assert.T(t, res == nil)
+	assert.True(t, res == nil)
 	res, err = repository.GetWithSigner(user2.CertHash, id)
 	assert.Equal(t, nil, err)
-	assert.T(t, res == nil)
+	assert.True(t, res == nil)
 	res, err = repository.GetWithSigner(user2.CertHash, bson.NewObjectId())
 	assert.Equal(t, nil, err)
-	assert.T(t, res == nil)
+	assert.True(t, res == nil)
 
 	contract := entities.Contract{}
 	_ = repository.Collection.FindByID(entities.Contract{ID: id}, &contract)
@@ -177,6 +177,6 @@ func TestCheckAuthorization(t *testing.T) {
 
 	// Still valid if contract is not ready
 	res, _ = repository.GetWithSigner(user1.CertHash, id)
-	assert.T(t, res != nil)
-	assert.T(t, !res.Ready)
+	assert.True(t, res != nil)
+	assert.True(t, !res.Ready)
 }

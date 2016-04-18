@@ -8,7 +8,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/bmizerany/assert"
+	"github.com/stretchr/testify/assert"
 )
 
 // TestNewContract tries to creates new contracts on the platform.
@@ -64,8 +64,8 @@ func TestNewContract(t *testing.T) {
 	assert.Equal(t, 2, len(contract.Signers))
 	assert.Equal(t, "client1@example.com", contract.Signers[0].Email)
 	assert.Equal(t, "client2@example.com", contract.Signers[1].Email)
-	assert.T(t, len(contract.Signers[0].Hash) > 0)
-	assert.T(t, len(contract.Signers[1].Hash) == 0)
+	assert.True(t, len(contract.Signers[0].Hash) > 0)
+	assert.True(t, len(contract.Signers[1].Hash) == 0)
 
 	// Register second signer
 	client2, err := createClient(workingDir, ca, 0)
@@ -76,8 +76,8 @@ func TestNewContract(t *testing.T) {
 	// Check database²
 	contract = getContract("contract.txt", 0)
 	assert.Equal(t, true, contract.Ready)
-	assert.T(t, len(contract.Signers[0].Hash) > 0)
-	assert.T(t, len(contract.Signers[1].Hash) > 0)
+	assert.True(t, len(contract.Signers[0].Hash) > 0)
+	assert.True(t, len(contract.Signers[1].Hash) > 0)
 
 	// Create a second contract
 	client2 = newClient(client2)
@@ -97,8 +97,8 @@ func TestNewContract(t *testing.T) {
 	contract = getContract("contract.txt", 1)
 	assert.Equal(t, true, contract.Ready)
 	assert.Equal(t, "Another comment with some accents héhé", contract.Comment)
-	assert.T(t, len(contract.Signers[0].Hash) > 0)
-	assert.T(t, len(contract.Signers[1].Hash) > 0)
+	assert.True(t, len(contract.Signers[0].Hash) > 0)
+	assert.True(t, len(contract.Signers[1].Hash) > 0)
 
 	// Bad case: wrong password
 	client2 = newClient(client2)

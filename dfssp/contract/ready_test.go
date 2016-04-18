@@ -6,7 +6,7 @@ import (
 	"dfss/dfssp/api"
 	"dfss/dfssp/contract"
 	"dfss/dfssp/entities"
-	"github.com/bmizerany/assert"
+	"github.com/stretchr/testify/assert"
 	"golang.org/x/net/context"
 	"gopkg.in/mgo.v2/bson"
 )
