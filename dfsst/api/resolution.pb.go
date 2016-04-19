@@ -84,6 +84,10 @@ func init() {
 var _ context.Context
 var _ grpc.ClientConn
 
+// This is a compile-time assertion to ensure that this generated file
+// is compatible with the grpc package it is being compiled against.
+const _ = grpc.SupportPackageIsVersion2
+
 // Client API for TTP service
 
 type TTPClient interface {
@@ -128,28 +132,40 @@ func RegisterTTPServer(s *grpc.Server, srv TTPServer) {
 	s.RegisterService(&_TTP_serviceDesc, srv)
 }
 
-func _TTP_Alert_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error) (interface{}, error) {
+func _TTP_Alert_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(AlertRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
-	out, err := srv.(TTPServer).Alert(ctx, in)
-	if err != nil {
-		return nil, err
+	if interceptor == nil {
+		return srv.(TTPServer).Alert(ctx, in)
 	}
-	return out, nil
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/api.TTP/Alert",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(TTPServer).Alert(ctx, req.(*AlertRequest))
+	}
+	return interceptor(ctx, in, info, handler)
 }
 
-func _TTP_Recover_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error) (interface{}, error) {
+func _TTP_Recover_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(RecoverRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
-	out, err := srv.(TTPServer).Recover(ctx, in)
-	if err != nil {
-		return nil, err
+	if interceptor == nil {
+		return srv.(TTPServer).Recover(ctx, in)
 	}
-	return out, nil
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/api.TTP/Recover",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(TTPServer).Recover(ctx, req.(*RecoverRequest))
+	}
+	return interceptor(ctx, in, info, handler)
 }
 
 var _TTP_serviceDesc = grpc.ServiceDesc{
