@@ -125,7 +125,7 @@ func (m *SignatureManager) promiseRound(pendingSet, sendSet []uint32, myID uint3
 
 	// Verifying we sent all the due promises
 	for range sendSet {
-		_ = <-c
+		<-c
 	}
 }
 

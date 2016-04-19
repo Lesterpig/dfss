@@ -62,10 +62,10 @@ func ReadySign(db *mgdb.MongoManager, rooms *common.WaitingGroupMap, ctx *contex
 				} // data == "" means the contractUUID is bad
 				return &api.LaunchSignature{ErrorCode: &api.ErrorCode{Code: api.ErrorCode_INVARG}}
 			}
-		case <-(*ctx).Done():
+		case <-(*ctx).Done(): // Client's disconnection
 			rooms.Unjoin(roomID, channel)
-			return nil
-		case <-time.After(10 * time.Minute):
+			return &api.LaunchSignature{ErrorCode: &api.ErrorCode{Code: api.ErrorCode_INVARG}}
+		case <-time.After(time.Minute): // Someone has not confirmed the signature within the delay
 			rooms.Unjoin(roomID, channel)
 			return &api.LaunchSignature{ErrorCode: &api.ErrorCode{Code: api.ErrorCode_TIMEOUT, Message: "timeout for ready signal"}}
 		}
