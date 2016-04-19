@@ -29,12 +29,15 @@ func (m *SignatureManager) Sign() error {
 	// Cooldown delay, let other clients wake-up their channels
 	time.Sleep(time.Second)
 
+	seqLen := len(m.sequence)
+
 	// Promess rounds
 	// Follow the sequence until there is no next occurence of me
 	for m.currentIndex >= 0 {
+		m.OnProgressUpdate(m.currentIndex, seqLen+1)
 		dAPI.DLog("starting round at index [" + fmt.Sprintf("%d", m.currentIndex) + "] with nextIndex=" + fmt.Sprintf("%d", nextIndex))
 
-		// Set of the promise we are waiting for
+		// Set of promises we are waiting for
 		var pendingSet []uint32
 		pendingSet, err = common.GetPendingSet(m.sequence, myID, m.currentIndex)
 		if err != nil {
@@ -58,6 +61,7 @@ func (m *SignatureManager) Sign() error {
 		}
 	}
 
+	m.OnProgressUpdate(seqLen, seqLen+1)
 	dAPI.DLog("entering signature round")
 	// Signature round
 	err = m.ExchangeAllSignatures()
@@ -65,6 +69,7 @@ func (m *SignatureManager) Sign() error {
 		return err
 	}
 	dAPI.DLog("exiting signature round")
+	m.OnProgressUpdate(seqLen+1, seqLen+1)
 
 	// Network's job is done, cleaning time
 	// Shutdown and platform client and TODO peer server & connections
@@ -125,7 +130,7 @@ func (m *SignatureManager) promiseRound(pendingSet, sendSet []uint32, myID uint3
 
 	// Verifying we sent all the due promises
 	for range sendSet {
-		_ = <-c
+		<-c
 	}
 }
 

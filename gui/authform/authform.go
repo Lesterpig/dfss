@@ -41,3 +41,9 @@ func NewWidget(conf *config.Config, onAuth func()) *Widget {
 
 	return &Widget{QWidget: form}
 }
+
+func (w *Widget) Q() *ui.QWidget {
+	return w.QWidget
+}
+
+func (w *Widget) Tick() {}

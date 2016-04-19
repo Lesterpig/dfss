@@ -5,9 +5,22 @@ import (
 	"dfss/gui/authform"
 	"dfss/gui/config"
 	"dfss/gui/contractform"
+	"dfss/gui/signform"
 	"dfss/gui/userform"
 	"github.com/visualfc/goqt/ui"
 )
+
+type window struct {
+	*ui.QMainWindow
+
+	current widget
+	conf    *config.Config
+}
+
+type widget interface {
+	Q() *ui.QWidget
+	Tick()
+}
 
 func main() {
 	// Load configuration
@@ -15,31 +28,77 @@ func main() {
 
 	// Start first window
 	ui.Run(func() {
-		window := ui.NewMainWindow()
-
-		var newuser *userform.Widget
-		var newauth *authform.Widget
-		var newcontract *contractform.Widget
-
-		newauth = authform.NewWidget(&conf, func() {
-			window.SetCentralWidget(newcontract)
-		})
-
-		newuser = userform.NewWidget(&conf, func(pwd string) {
-			window.SetCentralWidget(newauth)
-		})
-
-		newcontract = contractform.NewWidget(&conf)
-
-		if conf.Authenticated {
-			window.SetCentralWidget(newcontract)
-		} else if conf.Registered {
-			window.SetCentralWidget(newauth)
-		} else {
-			window.SetCentralWidget(newuser)
+		w := &window{
+			QMainWindow: ui.NewMainWindow(),
+			conf:        &conf,
 		}
 
-		window.SetWindowTitle("DFSS Client v" + dfss.Version)
-		window.Show()
+		if conf.Authenticated {
+			w.addActions()
+			w.showNewContractForm()
+		} else if conf.Registered {
+			w.showAuthForm()
+		} else {
+			w.showUserForm()
+		}
+
+		timer := ui.NewTimerWithParent(w)
+		timer.OnTimeout(func() {
+			w.current.Tick()
+		})
+		timer.StartWithMsec(1000)
+
+		w.SetWindowTitle("DFSS Client v" + dfss.Version)
+		w.SetWindowIcon(ui.NewIconWithFilename(":/images/digital_signature_pen.png"))
+		w.Show()
 	})
+}
+
+func (w *window) addActions() {
+	openAct := ui.NewActionWithTextParent("&Open", w)
+	openAct.SetShortcuts(ui.QKeySequence_Open)
+	openAct.OnTriggered(func() {
+		w.showSignForm()
+	})
+	w.MenuBar().AddAction(openAct)
+}
+
+func (w *window) setScreen(wi widget) {
+	old := w.CentralWidget()
+	w.SetCentralWidget(wi.Q())
+	w.current = wi
+	if old != nil {
+		old.DeleteLater()
+	}
+}
+
+func (w *window) showUserForm() {
+	w.setScreen(userform.NewWidget(w.conf, func(pwd string) {
+		w.showAuthForm()
+	}))
+}
+
+func (w *window) showAuthForm() {
+	w.setScreen(authform.NewWidget(w.conf, func() {
+		w.showNewContractForm()
+		w.addActions()
+	}))
+}
+
+func (w *window) showNewContractForm() {
+	w.setScreen(contractform.NewWidget(w.conf))
+}
+
+func (w *window) showSignForm() {
+	home := config.GetHomeDir()
+	filter := "Contract file (*.json);;Any (*.*)"
+	filename := ui.QFileDialogGetOpenFileNameWithParentCaptionDirFilterSelectedfilterOptions(w, "Select the contract file", home, filter, &filter, 0)
+	if filename != "" {
+		config.PasswordDialog(func(err error, pwd string) {
+			widget := signform.NewWidget(w.conf, filename, pwd)
+			if widget != nil {
+				w.setScreen(widget)
+			}
+		})
+	}
 }

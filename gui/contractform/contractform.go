@@ -86,3 +86,9 @@ func (w *Widget) SignersList() (list []string) {
 
 	return
 }
+
+func (w *Widget) Q() *ui.QWidget {
+	return w.QWidget
+}
+
+func (w *Widget) Tick() {}

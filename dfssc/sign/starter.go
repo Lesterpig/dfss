@@ -42,6 +42,10 @@ type SignatureManager struct {
 	keyHash      [][]byte
 	mail         string
 	archives     *Archives
+
+	// Callbacks
+	OnSignerStatusUpdate func(mail string, status SignerStatus, data string)
+	OnProgressUpdate     func(current int, end int)
 }
 
 // Archives stores the received and sent messages, as evidence if needed
@@ -139,10 +143,11 @@ func (m *SignatureManager) addPeer(user *pAPI.User) (ready bool, err error) {
 	}
 
 	addrPort := user.Ip + ":" + strconv.Itoa(int(user.Port))
-	fmt.Println("- Trying to connect with", user.Email, "/", addrPort)
+	m.OnSignerStatusUpdate(user.Email, StatusConnecting, addrPort)
 
 	conn, err := net.Connect(addrPort, m.auth.Cert, m.auth.Key, m.auth.CA)
 	if err != nil {
+		m.OnSignerStatusUpdate(user.Email, StatusError, err.Error())
 		return false, err
 	}
 
@@ -158,12 +163,13 @@ func (m *SignatureManager) addPeer(user *pAPI.User) (ready bool, err error) {
 	defer cancel()
 	msg, err := client.Discover(ctx, &cAPI.Hello{Version: dfss.Version})
 	if err != nil {
+		m.OnSignerStatusUpdate(user.Email, StatusError, err.Error())
 		return false, err
 	}
 
 	// Printing answer: application version
 	// TODO check certificate
-	fmt.Println("  Successfully connected!", "[", msg.Version, "]")
+	m.OnSignerStatusUpdate(user.Email, StatusConnected, msg.Version)
 
 	// Check if we have any other peer to connect to
 	if lastConnection == nil {

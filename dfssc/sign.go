@@ -10,6 +10,8 @@ import (
 func signContract(args []string) {
 	filename := args[0]
 	fmt.Println("You are going to sign the following contract:")
+	showContract(args)
+
 	contract := getContract(filename)
 	if contract == nil {
 		os.Exit(1)
@@ -24,6 +26,8 @@ func signContract(args []string) {
 		fmt.Fprintln(os.Stderr, err)
 		os.Exit(2)
 	}
+
+	manager.OnSignerStatusUpdate = signFeedbackFn
 	err = manager.ConnectToPeers()
 	if err != nil {
 		fmt.Fprintln(os.Stderr, err)
@@ -49,6 +53,7 @@ func signContract(args []string) {
 	fmt.Println("Everybody is ready, starting the signature", signatureUUID)
 
 	// Signature
+	manager.OnProgressUpdate = signProgressFn
 	err = manager.Sign()
 	if err != nil {
 		fmt.Fprintln(os.Stderr, err)
@@ -64,3 +69,13 @@ func signContract(args []string) {
 
 	fmt.Println("Signature complete! See .proof file for evidences.")
 }
+
+func signFeedbackFn(mail string, status sign.SignerStatus, data string) {
+	if status == sign.StatusConnecting {
+		fmt.Println("- Trying to connect with", mail, "/", data)
+	} else if status == sign.StatusConnected {
+		fmt.Println("  Successfully connected!", "[", data, "]")
+	}
+}
+
+func signProgressFn(current int, max int) {}

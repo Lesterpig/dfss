@@ -50,8 +50,20 @@
        </property>
        <item>
         <widget class="QLabel" name="mainLabel">
+         <property name="sizePolicy">
+          <sizepolicy hsizetype="Fixed" vsizetype="Preferred">
+           <horstretch>0</horstretch>
+           <verstretch>0</verstretch>
+          </sizepolicy>
+         </property>
+         <property name="minimumSize">
+          <size>
+           <width>400</width>
+           <height>0</height>
+          </size>
+         </property>
          <property name="text">
-          <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-size:18pt;&quot;&gt;Preparing signature...&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+          <string>Preparing signature...</string>
          </property>
         </widget>
        </item>
@@ -82,6 +94,9 @@
      </item>
      <item>
       <widget class="QTableWidget" name="signersTable">
+       <property name="editTriggers">
+        <set>QAbstractItemView::NoEditTriggers</set>
+       </property>
        <property name="alternatingRowColors">
         <bool>true</bool>
        </property>
@@ -101,7 +116,7 @@
         <number>200</number>
        </attribute>
        <attribute name="horizontalHeaderMinimumSectionSize">
-        <number>200</number>
+        <number>50</number>
        </attribute>
        <attribute name="horizontalHeaderStretchLastSection">
         <bool>true</bool>
@@ -122,7 +137,7 @@
        </column>
        <column>
         <property name="text">
-         <string>Ping</string>
+         <string>Info</string>
         </property>
        </column>
        <column>
