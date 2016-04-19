@@ -3,5 +3,11 @@
         <file>userform/userform.ui</file>
         <file>authform/authform.ui</file>
         <file>contractform/contractform.ui</file>
+        <file>images/cancel.png</file>
+        <file>images/connected.png</file>
+        <file>images/error.png</file>
+        <file>images/time.png</file>
+        <file>images/digital_signature_pen.png</file>
+        <file>signform/signform.ui</file>
     </qresource>
 </RCC>
