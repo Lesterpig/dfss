@@ -286,7 +286,7 @@ var _ grpc.ClientConn
 
 // This is a compile-time assertion to ensure that this generated file
 // is compatible with the grpc package it is being compiled against.
-const _ = grpc.SupportPackageIsVersion1
+const _ = grpc.SupportPackageIsVersion2
 
 // Client API for Platform service
 
@@ -410,64 +410,94 @@ func RegisterPlatformServer(s *grpc.Server, srv PlatformServer) {
 	s.RegisterService(&_Platform_serviceDesc, srv)
 }
 
-func _Platform_Register_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error) (interface{}, error) {
+func _Platform_Register_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(RegisterRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
-	out, err := srv.(PlatformServer).Register(ctx, in)
-	if err != nil {
-		return nil, err
+	if interceptor == nil {
+		return srv.(PlatformServer).Register(ctx, in)
 	}
-	return out, nil
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/api.Platform/Register",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(PlatformServer).Register(ctx, req.(*RegisterRequest))
+	}
+	return interceptor(ctx, in, info, handler)
 }
 
-func _Platform_Auth_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error) (interface{}, error) {
+func _Platform_Auth_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(AuthRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
-	out, err := srv.(PlatformServer).Auth(ctx, in)
-	if err != nil {
-		return nil, err
+	if interceptor == nil {
+		return srv.(PlatformServer).Auth(ctx, in)
 	}
-	return out, nil
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/api.Platform/Auth",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(PlatformServer).Auth(ctx, req.(*AuthRequest))
+	}
+	return interceptor(ctx, in, info, handler)
 }
 
-func _Platform_Unregister_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error) (interface{}, error) {
+func _Platform_Unregister_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(Empty)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
-	out, err := srv.(PlatformServer).Unregister(ctx, in)
-	if err != nil {
-		return nil, err
+	if interceptor == nil {
+		return srv.(PlatformServer).Unregister(ctx, in)
 	}
-	return out, nil
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/api.Platform/Unregister",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(PlatformServer).Unregister(ctx, req.(*Empty))
+	}
+	return interceptor(ctx, in, info, handler)
 }
 
-func _Platform_PostContract_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error) (interface{}, error) {
+func _Platform_PostContract_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(PostContractRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
-	out, err := srv.(PlatformServer).PostContract(ctx, in)
-	if err != nil {
-		return nil, err
+	if interceptor == nil {
+		return srv.(PlatformServer).PostContract(ctx, in)
 	}
-	return out, nil
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/api.Platform/PostContract",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(PlatformServer).PostContract(ctx, req.(*PostContractRequest))
+	}
+	return interceptor(ctx, in, info, handler)
 }
 
-func _Platform_GetContract_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error) (interface{}, error) {
+func _Platform_GetContract_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(GetContractRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
-	out, err := srv.(PlatformServer).GetContract(ctx, in)
-	if err != nil {
-		return nil, err
+	if interceptor == nil {
+		return srv.(PlatformServer).GetContract(ctx, in)
 	}
-	return out, nil
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/api.Platform/GetContract",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(PlatformServer).GetContract(ctx, req.(*GetContractRequest))
+	}
+	return interceptor(ctx, in, info, handler)
 }
 
 func _Platform_JoinSignature_Handler(srv interface{}, stream grpc.ServerStream) error {
@@ -491,16 +521,22 @@ func (x *platformJoinSignatureServer) Send(m *UserConnected) error {
 	return x.ServerStream.SendMsg(m)
 }
 
-func _Platform_ReadySign_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error) (interface{}, error) {
+func _Platform_ReadySign_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(ReadySignRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
-	out, err := srv.(PlatformServer).ReadySign(ctx, in)
-	if err != nil {
-		return nil, err
+	if interceptor == nil {
+		return srv.(PlatformServer).ReadySign(ctx, in)
 	}
-	return out, nil
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/api.Platform/ReadySign",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(PlatformServer).ReadySign(ctx, req.(*ReadySignRequest))
+	}
+	return interceptor(ctx, in, info, handler)
 }
 
 var _Platform_serviceDesc = grpc.ServiceDesc{
