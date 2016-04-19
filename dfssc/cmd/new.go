@@ -1,21 +1,27 @@
-package main
+package cmd
 
 import (
 	"fmt"
 	"os"
 
+	"github.com/spf13/cobra"
+
 	"dfss/dfssc/sign"
 )
 
-func newContract(_ []string) {
-	fmt.Println("Creating a new contract")
+var newCmd = &cobra.Command{
+	Use:   "new",
+	Short: "create a new contract",
+	Run: func(cmd *cobra.Command, args []string) {
+		fmt.Println("Creating a new contract")
 
-	passphrase, filepath, comment, signers := getContractInfo()
-	err := sign.SendNewContract(fca, fcert, fkey, addrPort, passphrase, filepath, comment, signers)
-	if err != nil {
-		fmt.Fprintln(os.Stderr, err)
-		os.Exit(1)
-	}
+		passphrase, filepath, comment, signers := getContractInfo()
+		err := sign.SendNewContract(passphrase, filepath, comment, signers)
+		if err != nil {
+			fmt.Fprintln(os.Stderr, err)
+			os.Exit(1)
+		}
+	},
 }
 
 // getContractInfo asks user for contract informations

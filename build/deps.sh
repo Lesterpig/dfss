@@ -7,4 +7,6 @@ go get -u google.golang.org/grpc
 go get -u github.com/pborman/uuid
 go get -u github.com/stretchr/testify/assert
 go get -u golang.org/x/crypto/ssh/terminal
+go get -u github.com/spf13/viper
+go get -u github.com/spf13/cobra
 

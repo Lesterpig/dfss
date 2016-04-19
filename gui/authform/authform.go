@@ -2,7 +2,8 @@ package authform
 
 import (
 	"dfss/dfssc/user"
-	"dfss/gui/config"
+
+	"github.com/spf13/viper"
 	"github.com/visualfc/goqt/ui"
 )
 
@@ -10,7 +11,7 @@ type Widget struct {
 	*ui.QWidget
 }
 
-func NewWidget(conf *config.Config, onAuth func()) *Widget {
+func NewWidget(onAuth func()) *Widget {
 	file := ui.NewFileWithName(":/authform/authform.ui")
 	loader := ui.NewUiLoader()
 	form := loader.Load(file)
@@ -19,14 +20,10 @@ func NewWidget(conf *config.Config, onAuth func()) *Widget {
 	feedbackLabel := ui.NewLabelFromDriver(form.FindChild("feedbackLabel"))
 	authButton := ui.NewPushButtonFromDriver(form.FindChild("authButton"))
 
-	home := config.GetHomeDir()
 	authButton.OnClicked(func() {
 		form.SetDisabled(true)
 		err := user.Authenticate(
-			home+config.CAFile,
-			home+config.CertFile,
-			conf.Platform,
-			conf.Email,
+			viper.GetString("email"),
 			tokenField.Text(),
 		)
 		form.SetDisabled(false)

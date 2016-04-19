@@ -2,6 +2,7 @@ package user
 
 import (
 	"dfss/auth"
+	"dfss/dfssc/common"
 	"dfss/dfssc/security"
 	"dfss/mockp/server"
 	"fmt"
@@ -10,6 +11,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/spf13/viper"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -46,6 +48,10 @@ var fcert = filepath.Join(path, "cert.pem")
 var fkey = filepath.Join(path, "key.pem")
 var addrPort = "localhost:9000"
 
+func mock(fca, fcert, fkey string) *viper.Viper {
+	return common.MockViper("file_key", fkey, "file_cert", fcert, "file_ca", fca)
+}
+
 // Main test function
 func TestMain(m *testing.M) {
 	// Generate a certificate and save it on the disk
@@ -53,6 +59,12 @@ func TestMain(m *testing.M) {
 
 	ca, _ := auth.PEMToCertificate([]byte(caFixture))
 	skey, _ := auth.PEMToPrivateKey([]byte(serverKeyFixture))
+
+	// Init config
+	viper.Set("file_ca", fca)
+	viper.Set("file_cert", fcert)
+	viper.Set("file_key", fkey)
+	viper.Set("platform_addrport", addrPort)
 
 	// Start the platform mock
 	go server.Run(ca, skey, addrPort)
@@ -66,23 +78,23 @@ func TestMain(m *testing.M) {
 
 // Test the validation of the fields
 func TestRegisterValidation(t *testing.T) {
-	_, err := NewRegisterManager(fca, fcert, fkey, addrPort, "password", "FR", "organization", "unit", "dummy", 2048)
+	_, err := NewRegisterManager("password", "FR", "organization", "unit", "dummy", 2048, mock(fca, fcert, fkey))
 	assert.True(t, err != nil, "Email is invalid")
 
-	_, err = NewRegisterManager(fca, fkey, fkey, addrPort, "password", "FR", "organization", "unit", "mpcs@dfss.io", 2048)
+	_, err = NewRegisterManager("password", "FR", "organization", "unit", "mpcs@dfss.io", 2048, mock(fca, fkey, fkey))
 	assert.True(t, err != nil, "Cert file is the same as key file")
 
-	_, err = NewRegisterManager("inexistant.pem", fcert, fkey, addrPort, "password", "FR", "organization", "unit", "mpcs@dfss.io", 2048)
+	_, err = NewRegisterManager("password", "FR", "organization", "unit", "mpcs@dfss.io", 2048, mock("inexistant.pem", fcert, fkey))
 	assert.True(t, err != nil, "CA file is invalid")
 
 	f, _ := os.Create(fcert)
 	_ = f.Close()
-	_, err = NewRegisterManager(fca, fcert, fkey, addrPort, "password", "FR", "organization", "unit", "mpcs@dfss.io", 2048)
+	_, err = NewRegisterManager("password", "FR", "organization", "unit", "mpcs@dfss.io", 2048, mock(fca, fcert, fkey))
 	assert.True(t, err != nil, "Cert file already exist")
 
 	k, _ := os.Create(fkey)
 	_ = k.Close()
-	_, err = NewRegisterManager(fca, fcert, fkey, addrPort, "password", "FR", "organization", "unit", "mpcs@dfss.io", 2048)
+	_, err = NewRegisterManager("password", "FR", "organization", "unit", "mpcs@dfss.io", 2048, mock(fca, fcert, fkey))
 	assert.True(t, err != nil, "Key file already exist")
 
 	_ = os.Remove(fcert)
@@ -92,7 +104,7 @@ func TestRegisterValidation(t *testing.T) {
 // Test the error codes received from the mock
 // Only the SUCCESS code should not raise an error
 func TestGetCertificate(t *testing.T) {
-	manager, err := NewRegisterManager(fca, fcert, fkey, addrPort, "password", "FR", "organization", "unit", "dfss@success.io", 2048)
+	manager, err := NewRegisterManager("password", "FR", "organization", "unit", "dfss@success.io", 2048, mock(fca, fcert, fkey))
 	assert.True(t, err == nil, "An error occurred while processing")
 	err = manager.GetCertificate()
 	assert.True(t, err == nil, "An error occurred while getting the certificate")
@@ -106,7 +118,7 @@ func TestGetCertificate(t *testing.T) {
 
 // Test an invalid error code and check we get an error
 func testRegisterInvalidResponse(t *testing.T, mail string) {
-	manager, err := NewRegisterManager(fca, fcert+mail, fkey+mail, addrPort, "password", "FR", "organization", "unit", mail, 2048)
+	manager, err := NewRegisterManager("password", "FR", "organization", "unit", mail, 2048, mock(fca, fcert+mail, fkey+mail))
 
 	assert.True(t, err == nil, "An error occurred while processing")
 	err = manager.GetCertificate()

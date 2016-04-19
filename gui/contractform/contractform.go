@@ -5,6 +5,8 @@ import (
 
 	"dfss/dfssc/sign"
 	"dfss/gui/config"
+
+	"github.com/spf13/viper"
 	"github.com/visualfc/goqt/ui"
 )
 
@@ -14,7 +16,7 @@ type Widget struct {
 	signers *ui.QPlainTextEdit
 }
 
-func NewWidget(conf *config.Config) *Widget {
+func NewWidget() *Widget {
 	file := ui.NewFileWithName(":/contractform/contractform.ui")
 	loader := ui.NewUiLoader()
 	form := loader.Load(file)
@@ -31,7 +33,7 @@ func NewWidget(conf *config.Config) *Widget {
 		signers: signersField,
 	}
 
-	signersField.SetPlainText(conf.Email + "\n")
+	signersField.SetPlainText(viper.GetString("email") + "\n")
 
 	fileButton.OnClicked(func() {
 		filter := "Any (*.*)"
@@ -49,12 +51,7 @@ func NewWidget(conf *config.Config) *Widget {
 				return // wrong key or rejection, aborting
 			}
 
-			home := config.GetHomeDir()
 			err = sign.SendNewContract(
-				home+config.CAFile,
-				home+config.CertFile,
-				home+config.KeyFile,
-				conf.Platform,
 				pwd,
 				fileField.Text(),
 				commentField.ToPlainText(),

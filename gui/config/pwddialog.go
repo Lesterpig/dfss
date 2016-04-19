@@ -5,6 +5,8 @@ import (
 	"io/ioutil"
 
 	"dfss/auth"
+
+	"github.com/spf13/viper"
 	"github.com/visualfc/goqt/ui"
 )
 
@@ -15,8 +17,7 @@ import (
 // The callback is always called, even when an error occurs.
 func PasswordDialog(callback func(err error, pwd string)) {
 	// Try to get private key
-	path := GetHomeDir() + KeyFile
-	data, err := ioutil.ReadFile(path)
+	data, err := ioutil.ReadFile(viper.GetString("file_key"))
 	if err != nil {
 		callback(err, "")
 		return

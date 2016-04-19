@@ -3,6 +3,7 @@ package entities
 import (
 	cAPI "dfss/dfssc/api"
 	"dfss/mgdb"
+
 	"gopkg.in/mgo.v2/bson"
 )
 
@@ -112,7 +113,7 @@ func (manager *ArchivesManager) AddToDishonest(signerIndex uint32) {
 // AddPromise : adds the specified promises to the list of received promises of the SignatureArchives.
 func (manager *ArchivesManager) AddPromise(promise *Promise) {
 	for _, p := range manager.Archives.ReceivedPromises {
-		if ArePromisesEqual(&p, promise) {
+		if (&p).Equal(promise) {
 			return
 		}
 	}

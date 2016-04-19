@@ -3,22 +3,25 @@ package sign
 import (
 	"io/ioutil"
 
+	"github.com/spf13/viper"
+
 	"dfss/dfssc/common"
 	"dfss/dfssc/security"
 	"dfss/dfssp/api"
 	"dfss/net"
+
 	"golang.org/x/net/context"
 )
 
 // FetchContract tries to download contract metadata from specified uuid, and stores the resulting json at path
-func FetchContract(fileCA, fileCert, fileKey, addrPort, passphrase, uuid, path string) error {
-	auth := security.NewAuthContainer(fileCA, fileCert, fileKey, addrPort, passphrase)
+func FetchContract(passphrase, uuid, path string) error {
+	auth := security.NewAuthContainer(passphrase)
 	ca, cert, key, err := auth.LoadFiles()
 	if err != nil {
 		return err
 	}
 
-	conn, err := net.Connect(auth.AddrPort, cert, key, ca)
+	conn, err := net.Connect(viper.GetString("platform_addrport"), cert, key, ca)
 	if err != nil {
 		return err
 	}

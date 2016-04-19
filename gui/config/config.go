@@ -8,55 +8,53 @@ import (
 	"os"
 	"os/user"
 	"path/filepath"
+
+	"github.com/spf13/viper"
 )
-
-// CAFile is the filename for the root certificate
-const CAFile = "ca.pem"
-
-// CertFile is the filename for the user certificate
-const CertFile = "cert.pem"
-
-// KeyFile is the filename for the private user key
-const KeyFile = "key.pem"
-
-// ConfigFile is the filename for the DFSS configuration file
-const ConfigFile = "config.json"
 
 // Config is the structure that will be persisted in the configuration file
 type Config struct {
-	Email    string
-	Platform string
-
-	// Virtual-only fields
-	Registered    bool `json:"-"`
-	Authenticated bool `json:"-"`
+	Email    string `json: email`
+	Platform string `json: platform`
 }
 
 // Load loads the configuration file into memory.
 // If the file does not exist, the configuration will holds default values.
-func Load() (conf Config) {
-	data, err := ioutil.ReadFile(getConfigFilename())
+func Load() {
+	// Load config file
+	path := GetHomeDir()
+	viper.AddConfigPath(GetHomeDir())
+	viper.SetConfigName(viper.GetString("filename_config"))
+	err := viper.ReadInConfig()
 	if err != nil {
 		return
 	}
 
-	_ = json.Unmarshal(data, &conf)
+	// Alias for platform
+	viper.RegisterAlias("platform_addrport", "platform")
+
+	// Setup file paths
+	viper.Set("home_dir", path)
+	viper.Set("file_ca", filepath.Join(path, viper.GetString("filename_ca")))
+	viper.Set("file_cert", filepath.Join(path, viper.GetString("filename_cert")))
+	viper.Set("file_key", filepath.Join(path, viper.GetString("filename_key")))
+	viper.Set("file_config", filepath.Join(path, viper.GetString("filename_config")))
 
 	// Fill virtual-only fields
-	path := GetHomeDir()
-	conf.Registered = isFileValid(filepath.Join(path, KeyFile))
-	conf.Authenticated = isFileValid(filepath.Join(path, CertFile))
+	viper.Set("registered", isFileValid(viper.GetString("file_key")))
+	viper.Set("authenticated", isFileValid(viper.GetString("file_cert")))
 	return
 }
 
 // Save stores the current configuration object from memory.
-func Save(c Config) {
+func Save() {
+	c := Config{viper.GetString("email"), viper.GetString("platform")}
 	data, err := json.MarshalIndent(c, "", "  ")
 	if err != nil {
 		return
 	}
 
-	_ = ioutil.WriteFile(getConfigFilename(), data, 0600)
+	_ = ioutil.WriteFile(viper.GetString("file_config"), data, 0600)
 }
 
 // GetHomeDir is a helper to get the .dfss store directory
@@ -72,10 +70,6 @@ func GetHomeDir() string {
 	}
 
 	return dfssPath + string(filepath.Separator)
-}
-
-func getConfigFilename() string {
-	return filepath.Join(GetHomeDir(), ConfigFile)
 }
 
 func isFileValid(file string) bool {

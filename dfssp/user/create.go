@@ -9,6 +9,8 @@ import (
 	"log"
 	"time"
 
+	"github.com/spf13/viper"
+
 	"dfss/auth"
 	"dfss/dfssp/api"
 	"dfss/dfssp/authority"
@@ -124,7 +126,7 @@ func Register(manager *mgdb.MongoManager, in *api.RegisterRequest) (*api.ErrorCo
 }
 
 // Check if the authentication request has usable fields
-func checkAuthRequest(in *api.AuthRequest, certDuration int) error {
+func checkAuthRequest(in *api.AuthRequest) error {
 	if len(in.Email) == 0 {
 		return errors.New("Invalid email length")
 	}
@@ -133,7 +135,7 @@ func checkAuthRequest(in *api.AuthRequest, certDuration int) error {
 		return errors.New("Invalid token length")
 	}
 
-	if certDuration < 1 {
+	if viper.GetInt("cert_validity") < 1 {
 		return errors.New("Invalid validity duration")
 	}
 
@@ -154,13 +156,13 @@ func checkTokenTimeout(user *entities.User) error {
 // Gerenate the user's certificate and certificate hash according to the specified parameters
 //
 // This function should only be called AFTER checking the AuthRequest for validity
-func generateUserCert(csr string, certDuration int, parent *x509.Certificate, key *rsa.PrivateKey) ([]byte, []byte, error) {
+func generateUserCert(csr string, parent *x509.Certificate, key *rsa.PrivateKey) ([]byte, []byte, error) {
 	x509csr, err := auth.PEMToCertificateRequest([]byte(csr))
 	if err != nil {
 		return nil, nil, err
 	}
 
-	cert, err := auth.GetCertificate(certDuration, auth.GenerateUID(), x509csr, parent, key)
+	cert, err := auth.GetCertificate(viper.GetInt("cert_validity"), auth.GenerateUID(), x509csr, parent, key)
 	if err != nil {
 		return nil, nil, err
 	}
@@ -181,9 +183,9 @@ func generateUserCert(csr string, certDuration int, parent *x509.Certificate, ke
 //
 // The user's ConnectionInfo field is NOT handled here
 // This data should be gathered upon beginning the signing sequence
-func Auth(pid *authority.PlatformID, manager *mgdb.MongoManager, certDuration int, in *api.AuthRequest) (*api.RegisteredUser, error) {
+func Auth(pid *authority.PlatformID, manager *mgdb.MongoManager, in *api.AuthRequest) (*api.RegisteredUser, error) {
 	// Check the request validity
-	err := checkAuthRequest(in, certDuration)
+	err := checkAuthRequest(in)
 	if err != nil {
 		return nil, err
 	}
@@ -215,14 +217,14 @@ func Auth(pid *authority.PlatformID, manager *mgdb.MongoManager, certDuration in
 	}
 
 	// Generate the certificates and hash
-	cert, certHash, err := generateUserCert(user.Csr, certDuration, pid.RootCA, pid.Pkey)
+	cert, certHash, err := generateUserCert(user.Csr, pid.RootCA, pid.Pkey)
 	if err != nil {
 		return nil, err
 	}
 
 	user.Certificate = string(cert)
 	user.CertHash = certHash
-	user.Expiration = time.Now().AddDate(0, 0, certDuration)
+	user.Expiration = time.Now().AddDate(0, 0, viper.GetInt("cert_validity"))
 
 	// Updating the database
 	ok, err := manager.Get("users").UpdateByID(user)

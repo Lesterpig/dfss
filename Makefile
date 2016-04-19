@@ -16,7 +16,7 @@ install_all: install
 	git stash
 	rm -rf gui
 	rm -rf dfssd/gui
-	rm -f dfssd/main.go
+	rm -f dfssd/cmd/gui.go
 	go install ./...
 	git reset --hard
 

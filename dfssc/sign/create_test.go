@@ -10,6 +10,8 @@ import (
 
 	"dfss/auth"
 	"dfss/mockp/server"
+
+	"github.com/spf13/viper"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -33,6 +35,12 @@ func TestMain(m *testing.M) {
 		os.Exit(1)
 	}
 
+	// Init conf
+	viper.Set("file_key", fkey)
+	viper.Set("file_cert", fcert)
+	viper.Set("file_ca", fca)
+	viper.Set("platform_addrport", addrPort)
+
 	ca, _ := auth.PEMToCertificate(caData)
 	key, _ := auth.PEMToPrivateKey(keyData)
 
@@ -44,10 +52,10 @@ func TestMain(m *testing.M) {
 }
 
 func TestNewCreateManager(t *testing.T) {
-	err := SendNewContract(fca, fcert, fkey, addrPort, "password", fcontract, "success", []string{"a@example.com", "b@example.com"})
+	err := SendNewContract("password", fcontract, "success", []string{"a@example.com", "b@example.com"})
 	assert.Equal(t, nil, err)
 
-	err = SendNewContract(fca, fcert, fkey, addrPort, "password", fcontract, "warning", []string{"a@example.com", "b@example.com"})
+	err = SendNewContract("password", fcontract, "warning", []string{"a@example.com", "b@example.com"})
 	assert.Equal(t, "Operation succeeded with a warning message: Some users are not ready yet", err.Error())
 }
 

@@ -10,9 +10,12 @@ import (
 	"path/filepath"
 	"testing"
 
+	"github.com/spf13/viper"
+
 	"dfss/auth"
 	"dfss/dfsst/entities"
 	"dfss/mgdb"
+
 	"gopkg.in/mgo.v2/bson"
 )
 
@@ -91,9 +94,9 @@ func TestMain(m *testing.M) {
 		os.Exit(2)
 	}
 
+	viper.Set("verbose", true)
 	ttp = &ttpServer{
-		Verbose: true,
-		DB:      dbManager,
+		DB: dbManager,
 	}
 	code := m.Run()
 

@@ -3,30 +3,36 @@ package user
 import (
 	"dfss/dfssc/common"
 	"fmt"
-	"github.com/stretchr/testify/assert"
 	"os"
 	"testing"
+
+	"github.com/spf13/viper"
+	"github.com/stretchr/testify/assert"
 )
 
+func mockb(fca, fcert, addrPort string) *viper.Viper {
+	return common.MockViper("file_ca", fca, "file_cert", fcert, "platform_addrport", addrPort)
+}
+
 func TestAuthenticationValidation(t *testing.T) {
-	_, err := NewAuthManager("fca", fcert, addrPort, "dummy", "token")
+	_, err := NewAuthManager("dummy", "token", mockb("fca", fcert, addrPort))
 	assert.True(t, err != nil, "Email is invalid")
 
 	f, _ := os.Create(fcert)
 	_ = f.Close()
-	_, err = NewAuthManager("fca", fcert, addrPort, "mail@mail.mail", "token")
+	_, err = NewAuthManager("mail@mail.mail", "token", mockb("fca", fcert, addrPort))
 	assert.True(t, err != nil, "Cert file already there")
 
 	_ = os.Remove(fcert)
-	_, err = NewAuthManager("fca", fcert, addrPort, "mail@mail.mail", "token")
+	_, err = NewAuthManager("mail@mail.mail", "token", mockb("fca", fcert, addrPort))
 	assert.True(t, err != nil, "CA file not there")
 
-	_, err = NewAuthManager(fca, fcert, addrPort, "mail@mail.mail", "token")
+	_, err = NewAuthManager("mail@mail.mail", "token", mockb(fca, fcert, addrPort))
 	assert.Equal(t, err, nil)
 }
 
 func ExampleAuthenticate() {
-	manager, err := NewAuthManager(fca, fcert, addrPort, "mail@mail.mail", "token")
+	manager, err := NewAuthManager("mail@mail.mail", "token", mockb(fca, fcert, addrPort))
 	if err != nil {
 		fmt.Println(err.Error())
 	}

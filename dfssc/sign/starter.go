@@ -8,6 +8,8 @@ import (
 	"sync"
 	"time"
 
+	"github.com/spf13/viper"
+
 	"dfss"
 	cAPI "dfss/dfssc/api"
 	"dfss/dfssc/common"
@@ -16,6 +18,7 @@ import (
 	pAPI "dfss/dfssp/api"
 	"dfss/dfssp/contract"
 	"dfss/net"
+
 	"golang.org/x/net/context"
 	"google.golang.org/grpc"
 )
@@ -26,7 +29,6 @@ const chanBufferSize = 100
 // SignatureManager handles the signature of a contract.
 type SignatureManager struct {
 	auth         *security.AuthContainer
-	localPort    int
 	contract     *contract.JSON // contains the contractUUID, the list of the signers' hashes, the hash of the contract
 	platform     pAPI.PlatformClient
 	platformConn *grpc.ClientConn
@@ -58,11 +60,10 @@ type Archives struct {
 }
 
 // NewSignatureManager populates a SignatureManager and connects to the platform.
-func NewSignatureManager(fileCA, fileCert, fileKey, addrPort, passphrase string, port int, c *contract.JSON) (*SignatureManager, error) {
+func NewSignatureManager(passphrase string, c *contract.JSON) (*SignatureManager, error) {
 	m := &SignatureManager{
-		auth:      security.NewAuthContainer(fileCA, fileCert, fileKey, addrPort, passphrase),
-		localPort: port,
-		contract:  c,
+		auth:     security.NewAuthContainer(passphrase),
+		contract: c,
 		archives: &Archives{
 			sentPromises:       make([]*cAPI.Promise, 0),
 			receivedPromises:   make([]*cAPI.Promise, 0),
@@ -80,9 +81,9 @@ func NewSignatureManager(fileCA, fileCert, fileKey, addrPort, passphrase string,
 	dAPI.SetIdentifier(m.mail)
 
 	m.cServer = m.GetServer()
-	go func() { log.Fatalln(net.Listen("0.0.0.0:"+strconv.Itoa(port), m.cServer)) }()
+	go func() { log.Fatalln(net.Listen("0.0.0.0:"+strconv.Itoa(viper.GetInt("local_port")), m.cServer)) }()
 
-	conn, err := net.Connect(m.auth.AddrPort, m.auth.Cert, m.auth.Key, m.auth.CA)
+	conn, err := net.Connect(viper.GetString("platform_addrport"), m.auth.Cert, m.auth.Key, m.auth.CA)
 	if err != nil {
 		return nil, err
 	}
@@ -105,7 +106,7 @@ func NewSignatureManager(fileCA, fileCert, fileKey, addrPort, passphrase string,
 func (m *SignatureManager) ConnectToPeers() error {
 	stream, err := m.platform.JoinSignature(context.Background(), &pAPI.JoinSignatureRequest{
 		ContractUuid: m.contract.UUID,
-		Port:         uint32(m.localPort),
+		Port:         uint32(viper.GetInt("local_port")),
 	})
 	if err != nil {
 		return err

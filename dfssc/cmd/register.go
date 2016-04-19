@@ -1,4 +1,4 @@
-package main
+package cmd
 
 import (
 	"bufio"
@@ -10,40 +10,46 @@ import (
 	"strings"
 
 	"dfss/dfssc/user"
+
+	"github.com/spf13/cobra"
 	"golang.org/x/crypto/ssh/terminal"
 )
 
-func registerUser(_ []string) {
-	fmt.Println("Registering a new user")
-	// Initialize variables
-	var country, mail, organization, unit, passphrase string
-	var bits int
+var registerCmd = &cobra.Command{
+	Use:   "register",
+	Short: "register a new client",
+	Run: func(cmd *cobra.Command, args []string) {
+		fmt.Println("Registering a new user")
+		// Initialize variables
+		var country, mail, organization, unit, passphrase string
+		var bits int
 
-	name := "Jon Doe"
-	u, err := osuser.Current()
-	if err == nil {
-		name = u.Name
-	}
+		name := "Jon Doe"
+		u, err := osuser.Current()
+		if err == nil {
+			name = u.Name
+		}
 
-	// Get all the necessary parameters
-	readStringParam("Mail", "", &mail)
-	readStringParam("Country", "FR", &country)
-	readStringParam("Organization", name, &organization)
-	readStringParam("Organizational unit", name, &unit)
-	readIntParam("Length of the key (2048 or 4096)", "2048", &bits)
-	err = readPassword(&passphrase, true)
-	if err != nil {
-		fmt.Println("An error occurred:", err.Error())
-		os.Exit(1)
-		return
-	}
+		// Get all the necessary parameters
+		readStringParam("Mail", "", &mail)
+		readStringParam("Country", "FR", &country)
+		readStringParam("Organization", name, &organization)
+		readStringParam("Organizational unit", name, &unit)
+		readIntParam("Length of the key (2048 or 4096)", "2048", &bits)
+		err = readPassword(&passphrase, true)
+		if err != nil {
+			fmt.Println("An error occurred:", err.Error())
+			os.Exit(1)
+			return
+		}
 
-	recapUser(mail, country, organization, unit)
-	err = user.Register(fca, fcert, fkey, addrPort, passphrase, country, organization, unit, mail, bits)
-	if err != nil {
-		fmt.Println("An error occurred:", err.Error())
-		os.Exit(2)
-	}
+		recapUser(mail, country, organization, unit)
+		err = user.Register(passphrase, country, organization, unit, mail, bits)
+		if err != nil {
+			fmt.Fprintln(os.Stderr, "An error occurred:", err.Error())
+			os.Exit(2)
+		}
+	},
 }
 
 // We need to use ONLY ONE reader: buffio buffers some data (= consumes from stdin)

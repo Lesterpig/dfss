@@ -10,6 +10,8 @@ import (
 	"dfss/dfssp/server"
 	"dfss/mgdb"
 	"dfss/net"
+
+	"github.com/spf13/viper"
 	"github.com/stretchr/testify/assert"
 	"gopkg.in/mgo.v2/bson"
 )
@@ -21,6 +23,8 @@ var dbURI string
 var repository *entities.ContractRepository
 
 func TestMain(m *testing.M) {
+	viper.Set("ca_filename", "dfssp_rootCA.pem")
+	viper.Set("pkey_filename", "dfssp_pkey.pem")
 
 	dbURI = os.Getenv("DFSS_MONGO_URI")
 	if dbURI == "" {
@@ -39,8 +43,12 @@ func TestMain(m *testing.M) {
 
 	// Start platform server
 	keyPath := filepath.Join(os.Getenv("GOPATH"), "src", "dfss", "dfssp", "testdata")
+	viper.Set("path", keyPath)
+	viper.Set("dbURI", dbURI)
+	viper.Set("root_validity", 365)
+	viper.Set("verbose", true)
 
-	srv := server.GetServer(keyPath, dbURI, 365, true)
+	srv := server.GetServer()
 	go func() { _ = net.Listen("localhost:9090", srv) }()
 
 	// Run

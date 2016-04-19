@@ -30,7 +30,7 @@ func Solve(manager *entities.ArchivesManager) (bool, []byte) {
 // GenerateSignedContract : generates the signed contract.
 // Does not take into account if we have the evidence to do it (see function 'CanGenerate').
 //
-// IMPLEMENTATION REQUIRES THE IMPLEMENTATION OF PROMISES.
+// XXX : Implementation needs cryptographic promises
 func GenerateSignedContract(archives *entities.SignatureArchives) []byte {
 	// TODO
 	return []byte{0, 0, 7}

@@ -1,4 +1,4 @@
-package main
+package cmd
 
 import (
 	"bytes"
@@ -8,6 +8,8 @@ import (
 
 	"dfss/dfssc/common"
 	"dfss/dfssp/contract"
+
+	"github.com/spf13/cobra"
 )
 
 const contractShowTemplate = `UUID       : {{.UUID}}
@@ -22,22 +24,13 @@ Signers    :
 {{range .Signers}}  - {{.Email}}
 {{end}}`
 
-func getContract(filename string) *contract.JSON {
-	data, err := ioutil.ReadFile(filename)
-	if err != nil {
-		fmt.Println("Cannot open file:", err)
-		return nil
-	}
-
-	c, err := common.UnmarshalDFSSFile(data)
-	if err != nil {
-		fmt.Println("Corrupted file:", err)
-		return nil
-	}
-	return c
+var showCmd = &cobra.Command{
+	Use:   "show <c>",
+	Short: "print contract information from file c",
+	Run:   showContract,
 }
 
-func showContract(args []string) {
+func showContract(cmd *cobra.Command, args []string) {
 	filename := args[0]
 	c := getContract(filename)
 	if c == nil {
@@ -56,4 +49,19 @@ func showContract(args []string) {
 		fmt.Println("Cannot print contract:", err)
 	}
 	fmt.Print(b.String())
+}
+
+func getContract(filename string) *contract.JSON {
+	data, err := ioutil.ReadFile(filename)
+	if err != nil {
+		fmt.Println("Cannot open file:", err)
+		return nil
+	}
+
+	c, err := common.UnmarshalDFSSFile(data)
+	if err != nil {
+		fmt.Println("Corrupted file:", err)
+		return nil
+	}
+	return c
 }
