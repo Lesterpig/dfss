@@ -71,3 +71,9 @@ func copyCA(from string, to string) error {
 
 	return ioutil.WriteFile(to, file, 0600)
 }
+
+func (w *Widget) Q() *ui.QWidget {
+	return w.QWidget
+}
+
+func (w *Widget) Tick() {}
