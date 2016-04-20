@@ -16,7 +16,7 @@ const (
 )
 
 func clientTest(t *testing.T, hostPort string) api.PlatformClient {
-	conn, err := net.Connect(hostPort, nil, nil, rootCA)
+	conn, err := net.Connect(hostPort, nil, nil, rootCA, nil)
 	if err != nil {
 		t.Fatal("Unable to connect: ", err)
 	}

@@ -34,7 +34,7 @@ func connect() (pb.PlatformClient, error) {
 		return nil, err
 	}
 
-	conn, err := net.Connect(viper.GetString("platform_addrport"), nil, nil, ca)
+	conn, err := net.Connect(viper.GetString("platform_addrport"), nil, nil, ca, nil)
 	if err != nil {
 		return nil, err
 	}

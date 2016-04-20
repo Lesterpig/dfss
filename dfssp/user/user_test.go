@@ -273,7 +273,7 @@ func ExampleAuth() {
 	}
 	fmt.Println("User successfully inserted")
 
-	conn, err := net.Connect("localhost:9090", nil, nil, rootCA)
+	conn, err := net.Connect("localhost:9090", nil, nil, rootCA, nil)
 	if err != nil {
 		fmt.Println("Unable to connect: ", err)
 	}

@@ -1,6 +1,7 @@
 package net
 
 import (
+	"bytes"
 	"crypto/rsa"
 	"crypto/tls"
 	"crypto/x509"
@@ -8,19 +9,26 @@ import (
 	"net"
 	"time"
 
+	"dfss/auth"
 	"golang.org/x/net/context"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials"
 )
 
 // DefaultTimeout should be used when a non-critical timeout is used in the application.
-const DefaultTimeout = 30 * time.Second
+var DefaultTimeout = 30 * time.Second
 
 // Connect to a peer.
 //
 // Given parameters cert/key/ca are PEM-encoded array of bytes.
 // Closing must be defered after call.
-func Connect(addrPort string, cert *x509.Certificate, key *rsa.PrivateKey, ca *x509.Certificate) (*grpc.ClientConn, error) {
+//
+// The cert and key parameters can be set as nil for an unauthentified connection.
+// If they are not, they will be provided to the remote server for authentification.
+//
+// serverCertHash will be matched against the remote server certificate.
+// If nil, Connect will consider that the remote server is the root ca.
+func Connect(addrPort string, cert *x509.Certificate, key *rsa.PrivateKey, ca *x509.Certificate, serverCertHash []byte) (*grpc.ClientConn, error) {
 
 	var certificates = make([]tls.Certificate, 1)
 
@@ -42,10 +50,14 @@ func Connect(addrPort string, cert *x509.Certificate, key *rsa.PrivateKey, ca *x
 		InsecureSkipVerify: true, // Don't panic, it's normal and safe. See tlsCreds structure.
 	}
 
+	if serverCertHash == nil {
+		serverCertHash = auth.GetCertificateHash(ca)
+	}
+
 	// let's do the dialing !
 	return grpc.Dial(
 		addrPort,
-		grpc.WithTransportCredentials(&tlsCreds{config: conf}),
+		grpc.WithTransportCredentials(&tlsCreds{config: conf, serverCertHash: serverCertHash}),
 		grpc.WithTimeout(DefaultTimeout),
 	)
 }
@@ -58,7 +70,8 @@ func Connect(addrPort string, cert *x509.Certificate, key *rsa.PrivateKey, ca *x
 //
 // See crypto/tls/handshake_client.go and google.golang.org/grpc/credentials/credentials.go
 type tlsCreds struct {
-	config tls.Config
+	config         tls.Config
+	serverCertHash []byte
 }
 
 func (c *tlsCreds) Info() credentials.ProtocolInfo {
@@ -115,6 +128,14 @@ func (c *tlsCreds) ClientHandshake(addr string, rawConn net.Conn, timeout time.D
 	if err != nil {
 		_ = rawConn.Close()
 		return nil, nil, err
+	}
+
+	if c.serverCertHash != nil {
+		// Additional check for the server cert hash
+		if !bytes.Equal(auth.GetCertificateHash(serverCert), c.serverCertHash) {
+			_ = rawConn.Close()
+			return nil, nil, errors.New("credentials: Bad remote certificate hash")
+		}
 	}
 
 	return conn, nil, nil

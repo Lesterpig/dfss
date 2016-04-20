@@ -8,7 +8,6 @@ import (
 
 	"dfss/auth"
 	pb "dfss/net/fixtures"
-
 	"golang.org/x/net/context"
 )
 
@@ -75,10 +74,10 @@ func (s *testServer) Auth(ctx context.Context, in *pb.Empty) (*pb.IsAuth, error)
 }
 
 func startTestServer(c chan bool) {
-
 	ca, _ := auth.PEMToCertificate([]byte(caFixture))
 	key, _ := auth.PEMToPrivateKey([]byte(serverKeyFixture))
 
+	DefaultTimeout = 5 * time.Second
 	server := NewServer(ca, key, ca)
 	pb.RegisterTestServer(server, &testServer{})
 	go func() {
@@ -104,8 +103,7 @@ func TestServerOnly(t *testing.T) {
 	time.Sleep(100 * time.Millisecond)
 }
 
-func TestServerClientAuth(t *testing.T) {
-
+func TestServerClientAuthNoCertificateHash(t *testing.T) {
 	// Start server
 	c := make(chan bool)
 	go startTestServer(c)
@@ -115,7 +113,7 @@ func TestServerClientAuth(t *testing.T) {
 	cert, _ := auth.PEMToCertificate([]byte(clientCertFixture))
 	key, _ := auth.PEMToPrivateKey([]byte(clientKeyFixture))
 
-	conn, err := Connect("localhost:9000", cert, key, ca)
+	conn, err := Connect("localhost:9000", cert, key, ca, nil)
 
 	if err != nil {
 		t.Fatal("Unable to connect:", err)
@@ -129,15 +127,39 @@ func TestServerClientAuth(t *testing.T) {
 	time.Sleep(100 * time.Millisecond)
 }
 
-func TestServerClientNonAuth(t *testing.T) {
-
+func TestServerClientBadAuthWrongCertificateHash(t *testing.T) {
 	// Start server
 	c := make(chan bool)
 	go startTestServer(c)
 	time.Sleep(2 * time.Second)
 
 	ca, _ := auth.PEMToCertificate([]byte(caFixture))
-	conn, err := Connect("localhost:9000", nil, nil, ca)
+	cert, _ := auth.PEMToCertificate([]byte(clientCertFixture))
+	key, _ := auth.PEMToPrivateKey([]byte(clientKeyFixture))
+
+	// The connection won't fail immediately, because grpc is connecting in the background
+	conn, _ := Connect("localhost:9000", cert, key, ca, auth.GetCertificateHash(cert))
+
+	// We have to ask for a specific query in order to test the certificate hash
+	client := pb.NewTestClient(conn)
+	_, err := client.Ping(context.Background(), &pb.Hop{Id: 1})
+
+	if err == nil {
+		t.Fatal("Successfully connected with bad hash")
+	}
+
+	c <- true
+	time.Sleep(100 * time.Millisecond)
+}
+
+func TestServerClientNonAuth(t *testing.T) {
+	// Start server
+	c := make(chan bool)
+	go startTestServer(c)
+	time.Sleep(2 * time.Second)
+
+	ca, _ := auth.PEMToCertificate([]byte(caFixture))
+	conn, err := Connect("localhost:9000", nil, nil, ca, nil)
 
 	if err != nil {
 		t.Fatal("Unable to connect:", err)
@@ -172,7 +194,6 @@ func sharedServerClientTest(t *testing.T, client pb.TestClient, expectedAuth boo
 // EXAMPLE
 
 func Example() {
-
 	// Load certs and private keys
 	ca, _ := auth.PEMToCertificate([]byte(caFixture))
 	cert, _ := auth.PEMToCertificate([]byte(clientCertFixture))
@@ -191,7 +212,7 @@ func Example() {
 
 	// Start an authentified client
 	// The second and third arguments can be empty for non-auth connection
-	conn, err := Connect("localhost:9000", cert, ckey, ca)
+	conn, err := Connect("localhost:9000", cert, ckey, ca, auth.GetCertificateHash(ca))
 	if err != nil {
 		panic("Unable to connect")
 	}
@@ -207,7 +228,7 @@ func Example() {
 	fmt.Println((*r).Id)
 
 	// Start a non-authentified client
-	conn, err = Connect("localhost:9000", nil, nil, ca)
+	conn, err = Connect("localhost:9000", nil, nil, ca, nil)
 	if err != nil {
 		panic("Unable to connect")
 	}

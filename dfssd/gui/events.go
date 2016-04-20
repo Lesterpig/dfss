@@ -68,7 +68,7 @@ func (w *Window) PrintQuantumInformation() {
 		return
 	}
 
-	quantum := float64(w.quantumField.Value()*1000)
+	quantum := float64(w.quantumField.Value() * 1000)
 
 	beginning := w.scene.Events[0].Date.UnixNano()
 	totalDuration := w.scene.Events[len(w.scene.Events)-1].Date.UnixNano() - beginning
