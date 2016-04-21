@@ -135,7 +135,7 @@ func checkAuthRequest(in *api.AuthRequest) error {
 		return errors.New("Invalid token length")
 	}
 
-	if viper.GetInt("cert_validity") < 1 {
+	if viper.GetInt("validity") < 1 {
 		return errors.New("Invalid validity duration")
 	}
 
@@ -162,7 +162,7 @@ func generateUserCert(csr string, parent *x509.Certificate, key *rsa.PrivateKey)
 		return nil, nil, err
 	}
 
-	cert, err := auth.GetCertificate(viper.GetInt("cert_validity"), auth.GenerateUID(), x509csr, parent, key)
+	cert, err := auth.GetCertificate(viper.GetInt("validity"), auth.GenerateUID(), x509csr, parent, key)
 	if err != nil {
 		return nil, nil, err
 	}
@@ -224,7 +224,7 @@ func Auth(pid *authority.PlatformID, manager *mgdb.MongoManager, in *api.AuthReq
 
 	user.Certificate = string(cert)
 	user.CertHash = certHash
-	user.Expiration = time.Now().AddDate(0, 0, viper.GetInt("cert_validity"))
+	user.Expiration = time.Now().AddDate(0, 0, viper.GetInt("validity"))
 
 	// Updating the database
 	ok, err := manager.Get("users").UpdateByID(user)

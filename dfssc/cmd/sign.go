@@ -4,15 +4,19 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/spf13/cobra"
-
 	"dfss/dfssc/sign"
+	"github.com/spf13/cobra"
 )
 
 var signCmd = &cobra.Command{
 	Use:   "sign <c>",
 	Short: "sign contract from file c",
 	Run: func(cmd *cobra.Command, args []string) {
+		if len(args) != 1 {
+			_ = cmd.Usage()
+			os.Exit(1)
+		}
+
 		filename := args[0]
 		fmt.Println("You are going to sign the following contract:")
 		showContract(cmd, args)

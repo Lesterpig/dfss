@@ -4,7 +4,6 @@ import (
 	"dfss"
 
 	dapi "dfss/dfssd/api"
-
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 )
@@ -50,6 +49,6 @@ func init() {
 	_ = viper.BindPFlag("platform_addrport", RootCmd.PersistentFlags().Lookup("host"))
 
 	// Bind subcommands to root
-	RootCmd.AddCommand(versionCmd, registerCmd, authCmd, newCmd, showCmd, fetchCmd, importCmd, exportCmd, signCmd)
+	RootCmd.AddCommand(dfss.VersionCmd, registerCmd, authCmd, newCmd, showCmd, fetchCmd, importCmd, exportCmd, signCmd)
 
 }

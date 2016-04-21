@@ -38,11 +38,11 @@ func Initialize(v *viper.Viper, ca *x509.Certificate, rKey *rsa.PrivateKey) erro
 
 	if ca == nil {
 		// Generate the root certificate, using the private key.
-		cert, err = auth.GetSelfSignedCertificate(v.GetInt("root_validity"), auth.GenerateUID(), v.GetString("country"), v.GetString("organization"), v.GetString("unit"), v.GetString("cn"), key)
+		cert, err = auth.GetSelfSignedCertificate(v.GetInt("validity"), auth.GenerateUID(), v.GetString("country"), v.GetString("organization"), v.GetString("unit"), v.GetString("cn"), key)
 	} else {
 		csr, _ := auth.GetCertificateRequest(v.GetString("country"), v.GetString("organization"), v.GetString("unit"), v.GetString("cn"), key)
 		request, _ := auth.PEMToCertificateRequest(csr)
-		cert, err = auth.GetCertificate(v.GetInt("cert_validity"), auth.GenerateUID(), request, ca, rKey)
+		cert, err = auth.GetCertificate(v.GetInt("validity"), auth.GenerateUID(), request, ca, rKey)
 		// Override default path values
 		certPath = filepath.Join(path, "cert.pem")
 		keyPath = filepath.Join(path, "key.pem")

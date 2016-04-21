@@ -5,7 +5,6 @@ import (
 
 	"dfss/dfssd/gui"
 	"dfss/dfssd/server"
-
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 	"github.com/visualfc/goqt/ui"
@@ -27,8 +26,4 @@ var guiCmd = &cobra.Command{
 			window.Show()
 		})
 	},
-}
-
-func init() {
-	RootCmd.AddCommand(guiCmd)
 }

@@ -8,7 +8,6 @@ import (
 
 	"dfss/dfssc/common"
 	"dfss/dfssp/contract"
-
 	"github.com/spf13/cobra"
 )
 
@@ -31,6 +30,11 @@ var showCmd = &cobra.Command{
 }
 
 func showContract(cmd *cobra.Command, args []string) {
+	if len(args) != 1 {
+		_ = cmd.Usage()
+		return
+	}
+
 	filename := args[0]
 	c := getContract(filename)
 	if c == nil {

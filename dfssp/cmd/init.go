@@ -7,15 +7,23 @@ import (
 	"dfss/dfssc/common"
 	dapi "dfss/dfssd/api"
 	"dfss/dfssp/authority"
-
 	"github.com/spf13/cobra"
+	"github.com/spf13/viper"
 )
 
 var initCmd = &cobra.Command{
-	Use:   "init [cn, country, key, org, path, unit, root-validity]",
+	Use:   "init",
 	Short: "create and save the platform's private key and root certificate",
 	Run: func(cmd *cobra.Command, args []string) {
-		err := authority.Initialize(common.SubViper("key_size", "root_validity", "country", "organization", "unit", "cn", "path"), nil, nil)
+
+		_ = viper.BindPFlag("cn", cmd.Flags().Lookup("cn"))
+		_ = viper.BindPFlag("validity", cmd.Flags().Lookup("validity"))
+		_ = viper.BindPFlag("country", cmd.Flags().Lookup("country"))
+		_ = viper.BindPFlag("organization", cmd.Flags().Lookup("org"))
+		_ = viper.BindPFlag("unit", cmd.Flags().Lookup("unit"))
+		_ = viper.BindPFlag("key_size", cmd.Flags().Lookup("key"))
+
+		err := authority.Initialize(common.SubViper("key_size", "validity", "country", "organization", "unit", "cn", "path"), nil, nil)
 		if err != nil {
 			fmt.Fprintln(os.Stderr, "An error occured during the initialization operation:", err)
 			os.Exit(1)

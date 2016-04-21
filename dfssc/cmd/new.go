@@ -4,9 +4,8 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/spf13/cobra"
-
 	"dfss/dfssc/sign"
+	"github.com/spf13/cobra"
 )
 
 var newCmd = &cobra.Command{

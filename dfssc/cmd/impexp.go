@@ -4,10 +4,9 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/spf13/cobra"
-
 	"dfss/dfssc/common"
 	"dfss/dfssc/user"
+	"github.com/spf13/cobra"
 )
 
 // export the certificate and private key of the user
@@ -15,6 +14,12 @@ var exportCmd = &cobra.Command{
 	Use:   "export <c>",
 	Short: "export certificate and private key of the user to file c",
 	Run: func(cmd *cobra.Command, args []string) {
+		if len(args) != 1 {
+			_ = cmd.Usage()
+			os.Exit(1)
+			return
+		}
+
 		confFile := args[0]
 		fmt.Println("Export user configuration")
 		var keyPassphrase, confPassphrase string
@@ -47,6 +52,12 @@ var importCmd = &cobra.Command{
 	Use:   "import <c>",
 	Short: "import private key and certificate of the user from file c",
 	Run: func(cmd *cobra.Command, args []string) {
+		if len(args) != 1 {
+			_ = cmd.Usage()
+			os.Exit(1)
+			return
+		}
+
 		confFile := args[0]
 		var keyPassphrase, confPassphrase string
 		err := readPassphrases(&keyPassphrase, &confPassphrase, false)

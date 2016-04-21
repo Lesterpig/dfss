@@ -1,12 +1,12 @@
 package cmd
 
 import (
-	"dfss/dfssd/api"
-	"dfss/dfssd/server"
 	"fmt"
 	"os"
 	"strconv"
 
+	"dfss/dfssd/api"
+	"dfss/dfssd/server"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 )

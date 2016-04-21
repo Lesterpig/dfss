@@ -10,7 +10,6 @@ import (
 	"strings"
 
 	"dfss/dfssc/user"
-
 	"github.com/spf13/cobra"
 	"golang.org/x/crypto/ssh/terminal"
 )

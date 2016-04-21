@@ -5,9 +5,8 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/spf13/cobra"
-
 	"dfss/dfssc/sign"
+	"github.com/spf13/cobra"
 )
 
 var fetchCmd = &cobra.Command{

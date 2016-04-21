@@ -3,7 +3,6 @@ package cmd
 import (
 	"dfss"
 	dapi "dfss/dfssd/api"
-
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 )
@@ -31,37 +30,35 @@ func init() {
 	// Add flags to dfssp
 	RootCmd.PersistentFlags().BoolP("verbose", "v", false, "print verbose messages")
 	RootCmd.PersistentFlags().StringP("demo", "d", "", "demonstrator address and port, let empty for no debug")
-	RootCmd.PersistentFlags().StringP("address", "a", "0.0.0.0", "address to bind for listening")
-	RootCmd.PersistentFlags().StringP("port", "p", "9000", "port to bind for listening")
 	RootCmd.PersistentFlags().String("path", ".", "path to get the platform's private key and root certificate")
-	RootCmd.PersistentFlags().String("country", "France", "country for the root certificate")
-	RootCmd.PersistentFlags().String("org", "DFSS", "Organization for the root certificate")
-	RootCmd.PersistentFlags().String("unit", "INSA Rennes", "Organizational unit for the rot certificate")
-	RootCmd.PersistentFlags().String("cn", "dfssp", "Common name for the root certificate")
-	RootCmd.PersistentFlags().IntP("key", "k", 512, "Encoding size for the private key")
-	RootCmd.PersistentFlags().IntP("root-validity", "r", 365, "Validity duration for the root certificate (days)")
-	RootCmd.PersistentFlags().IntP("cert-validity", "c", 365, "Validity duration for the child certificates (days)")
-	RootCmd.PersistentFlags().String("db", "mongodb://localhost/dfss", "server url in standard MongoDB format for accessing database")
+
+	initCmd.Flags().String("cn", "dfssp", "common name for the root certificate")
+	initCmd.Flags().IntP("validity", "r", 365, "validity duration for the root certificate (days)")
+	initCmd.Flags().String("country", "FR", "country for the root certificate")
+	initCmd.Flags().String("org", "DFSS", "organization for the root certificate")
+	initCmd.Flags().String("unit", "INSA Rennes", "organizational unit for the root certificate")
+	initCmd.Flags().IntP("key", "k", 2048, "encoding size for the private key of the platform")
+
+	ttpCmd.Flags().String("cn", "ttp", "common name for the ttp certificate")
+	ttpCmd.Flags().IntP("validity", "c", 365, "validity duration for the ttp certificate (days)")
+	ttpCmd.Flags().String("country", "FR", "country for the ttp certificate")
+	ttpCmd.Flags().String("org", "DFSS", "organization for the ttp certificate")
+	ttpCmd.Flags().String("unit", "INSA Rennes", "organizational unit for the ttp certificate")
+	ttpCmd.Flags().IntP("key", "k", 2048, "encoding size for the private key of the ttp")
+
+	startCmd.Flags().IntP("validity", "c", 365, "validity duration for the child certificates (days)")
+	startCmd.Flags().StringP("address", "a", "0.0.0.0", "address to bind for listening")
+	startCmd.Flags().StringP("port", "p", "9000", "port to bind for listening")
+	startCmd.Flags().String("db", "mongodb://localhost/dfss", "server url in standard MongoDB format for accessing database")
 
 	// Bind viper to flags
 	_ = viper.BindPFlag("verbose", RootCmd.PersistentFlags().Lookup("verbose"))
 	_ = viper.BindPFlag("demo", RootCmd.PersistentFlags().Lookup("demo"))
-	_ = viper.BindPFlag("address", RootCmd.PersistentFlags().Lookup("address"))
-	_ = viper.BindPFlag("port", RootCmd.PersistentFlags().Lookup("port"))
 	_ = viper.BindPFlag("path", RootCmd.PersistentFlags().Lookup("path"))
-	_ = viper.BindPFlag("country", RootCmd.PersistentFlags().Lookup("country"))
-	_ = viper.BindPFlag("organization", RootCmd.PersistentFlags().Lookup("org"))
-	_ = viper.BindPFlag("unit", RootCmd.PersistentFlags().Lookup("unit"))
-	_ = viper.BindPFlag("cn", RootCmd.PersistentFlags().Lookup("cn"))
-	_ = viper.BindPFlag("key_size", RootCmd.PersistentFlags().Lookup("key"))
-	_ = viper.BindPFlag("root_validity", RootCmd.PersistentFlags().Lookup("root-validity"))
-	_ = viper.BindPFlag("cert_validity", RootCmd.PersistentFlags().Lookup("cert-validity"))
-	_ = viper.BindPFlag("dbURI", RootCmd.PersistentFlags().Lookup("db"))
 
 	viper.SetDefault("pkey_filename", "dfssp_pkey.pem")
 	viper.SetDefault("ca_filename", "dfssp_rootCA.pem")
 
 	// Register subcommands here
-	RootCmd.AddCommand(versionCmd, ttpCmd, initCmd, startCmd)
-
+	RootCmd.AddCommand(dfss.VersionCmd, ttpCmd, initCmd, startCmd)
 }

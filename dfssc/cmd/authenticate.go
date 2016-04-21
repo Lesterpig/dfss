@@ -4,9 +4,8 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/spf13/cobra"
-
 	"dfss/dfssc/user"
+	"github.com/spf13/cobra"
 )
 
 var authCmd = &cobra.Command{
@@ -22,7 +21,7 @@ var authCmd = &cobra.Command{
 		err := user.Authenticate(mail, token)
 		if err != nil {
 			fmt.Println("An error occurred : ", err.Error())
-			os.Exit(3)
+			os.Exit(1)
 		}
 	},
 }

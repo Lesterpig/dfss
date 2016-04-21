@@ -15,18 +15,16 @@ var RootCmd = &cobra.Command{
 Distributed Fair Signing System project
 
 Debug tool to trace remote transmissions`,
-	Run: func(cmd *cobra.Command, args []string) {
-		_ = cmd.Help()
-	},
+	Run: guiCmd.Run,
 }
 
 func init() {
 	// Add flag to the command
-	RootCmd.PersistentFlags().IntP("port", "p", 3000, "port to use for listening transmissions")
+	RootCmd.PersistentFlags().IntP("port", "p", 9099, "port to use for listening transmissions")
 
 	// Bind the flag to viper
 	_ = viper.BindPFlag("port", RootCmd.PersistentFlags().Lookup("port"))
 
 	// Register subcommands
-	RootCmd.AddCommand(versionCmd, noguiCmd)
+	RootCmd.AddCommand(dfss.VersionCmd, noguiCmd, guiCmd)
 }

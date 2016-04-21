@@ -45,7 +45,7 @@ func TestMain(m *testing.M) {
 	keyPath := filepath.Join(os.Getenv("GOPATH"), "src", "dfss", "dfssp", "testdata")
 	viper.Set("path", keyPath)
 	viper.Set("dbURI", dbURI)
-	viper.Set("root_validity", 365)
+	viper.Set("validity", 365)
 	viper.Set("verbose", true)
 
 	srv := server.GetServer()

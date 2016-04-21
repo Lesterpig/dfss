@@ -8,6 +8,7 @@ import (
 	"os"
 	"path/filepath"
 	"testing"
+	"time"
 
 	"dfss/auth"
 	"dfss/dfssp/api"
@@ -15,8 +16,6 @@ import (
 	"dfss/dfssp/server"
 	"dfss/mgdb"
 	"dfss/net"
-	"time"
-
 	"github.com/spf13/viper"
 	"github.com/stretchr/testify/assert"
 	"golang.org/x/net/context"
@@ -73,15 +72,10 @@ func TestMain(m *testing.M) {
 	// Valid server
 	viper.Set("path", keyPath)
 	viper.Set("dbURI", dbURI)
-	viper.Set("root_validity", 365)
-	viper.Set("cert_validity", 365)
+	viper.Set("validity", 365)
 	viper.Set("verbose", true)
 	srv := server.GetServer()
 	go func() { _ = net.Listen(ValidServ, srv) }()
-
-	// Server using invalid certificate duration
-	// srv2 := server.GetServer(keyPath, dbURI, -1, true)
-	// go func() { _ = net.Listen(InvalidServ, srv2) }()
 
 	// Run
 	err = collection.Drop()

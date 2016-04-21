@@ -7,7 +7,6 @@ import (
 	"dfss/gui/contractform"
 	"dfss/gui/signform"
 	"dfss/gui/userform"
-
 	"github.com/spf13/viper"
 	"github.com/visualfc/goqt/ui"
 )
@@ -27,7 +26,7 @@ func init() {
 	viper.Set("filename_ca", "ca.pem")
 	viper.Set("filename_cert", "cert.pem")
 	viper.Set("filename_key", "key.pem")
-	viper.Set("filename_config", "config.json")
+	viper.Set("filename_config", "config")
 }
 
 func main() {
