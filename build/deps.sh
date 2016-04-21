@@ -10,3 +10,4 @@ go get -u golang.org/x/crypto/ssh/terminal
 go get -u github.com/spf13/viper
 go get -u github.com/spf13/cobra
 
+go get -u github.com/inconshreveable/mousetrap # required by cobra for win builds
