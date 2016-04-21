@@ -20,7 +20,7 @@ func TestFetchContractWrongUUID(t *testing.T) {
 func checkFetchResult(t *testing.T, uuid string, errExpected bool, content string) {
 	file, _ := ioutil.TempFile("", "")
 	defer func() { _ = os.Remove(file.Name()) }()
-	err := FetchContract(fca, fcert, fkey, addrPort, "password", uuid, file.Name())
+	err := FetchContract("password", uuid, file.Name())
 	if errExpected {
 		assert.NotEqual(t, nil, err)
 	} else {

@@ -8,6 +8,7 @@ import (
 	"os"
 	"path/filepath"
 	"testing"
+	"time"
 
 	"dfss/auth"
 	"dfss/dfssp/api"
@@ -15,10 +16,10 @@ import (
 	"dfss/dfssp/server"
 	"dfss/mgdb"
 	"dfss/net"
+	"github.com/spf13/viper"
 	"github.com/stretchr/testify/assert"
 	"golang.org/x/net/context"
 	"gopkg.in/mgo.v2/bson"
-	"time"
 )
 
 var (
@@ -53,6 +54,8 @@ var dbURI string
 var repository *entities.UserRepository
 
 func TestMain(m *testing.M) {
+	viper.Set("ca_filename", "dfssp_rootCA.pem")
+	viper.Set("pkey_filename", "dfssp_pkey.pem")
 
 	dbURI = os.Getenv("DFSS_MONGO_URI")
 	if dbURI == "" {
@@ -67,12 +70,12 @@ func TestMain(m *testing.M) {
 	keyPath := filepath.Join(os.Getenv("GOPATH"), "src", "dfss", "dfssp", "testdata")
 
 	// Valid server
-	srv := server.GetServer(keyPath, dbURI, 365, true)
+	viper.Set("path", keyPath)
+	viper.Set("dbURI", dbURI)
+	viper.Set("validity", 365)
+	viper.Set("verbose", true)
+	srv := server.GetServer()
 	go func() { _ = net.Listen(ValidServ, srv) }()
-
-	// Server using invalid certificate duration
-	srv2 := server.GetServer(keyPath, dbURI, -1, true)
-	go func() { _ = net.Listen(InvalidServ, srv2) }()
 
 	// Run
 	err = collection.Drop()

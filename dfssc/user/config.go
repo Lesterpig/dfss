@@ -6,6 +6,8 @@ import (
 	"dfss/dfssc/security"
 	"encoding/json"
 	"fmt"
+
+	"github.com/spf13/viper"
 )
 
 // Config represents the config file to be marshalled in json
@@ -18,11 +20,13 @@ type Config struct {
 
 // NewConfig creates a new config object from the key and certificate provided
 // The validity of those is checked later
-func NewConfig(keyFile, certFile string) (*Config, error) {
+func NewConfig(viper *viper.Viper) (*Config, error) {
+	keyFile := viper.GetString("file_key")
 	if !common.FileExists(keyFile) {
 		return nil, fmt.Errorf("No such file: %s", keyFile)
 	}
 
+	certFile := viper.GetString("file_cert")
 	if !common.FileExists(certFile) {
 		return nil, fmt.Errorf("No such file: %s", certFile)
 	}

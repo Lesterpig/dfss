@@ -40,7 +40,7 @@ func TestExport(t *testing.T) {
 	path := filepath.Join(os.Getenv("GOPATH"), "bin", "dfssc")
 
 	// Basic command
-	cmd := exec.Command(path, "-cert", certPath, "-key", keyPath, "export", confPath)
+	cmd := exec.Command(path, "--cert", certPath, "--key", keyPath, "export", confPath)
 
 	// Export the configuration
 	cmd.Stdin = strings.NewReader(
@@ -52,7 +52,7 @@ func TestExport(t *testing.T) {
 	assert.True(t, common.FileExists(confPath))
 
 	// Bad case 1 : Wrong passphrase for private key
-	badCmd1 := exec.Command(path, "-cert", certPath, "-key", keyPath, "export", confPath)
+	badCmd1 := exec.Command(path, "--cert", certPath, "--key", keyPath, "export", confPath)
 	common.DeleteQuietly(confPath)
 	badCmd1.Stdin = strings.NewReader(
 		"passphrase\n" +
@@ -63,7 +63,7 @@ func TestExport(t *testing.T) {
 	assert.True(t, !common.FileExists(confPath))
 
 	// Bad case 2 : Missing certificate
-	badCmd2 := exec.Command(path, "-cert", certPath, "-key", keyPath, "export", confPath)
+	badCmd2 := exec.Command(path, "--cert", certPath, "--key", keyPath, "export", confPath)
 	common.DeleteQuietly(certPath)
 	badCmd2.Stdin = strings.NewReader(
 		"passphrase\n" +
@@ -104,7 +104,7 @@ func TestImport(t *testing.T) {
 	path := filepath.Join(os.Getenv("GOPATH"), "bin", "dfssc")
 
 	// Create the config file
-	cmd := exec.Command(path, "-cert", certPath, "-key", keyPath, "export", confPath)
+	cmd := exec.Command(path, "--cert", certPath, "--key", keyPath, "export", confPath)
 
 	cmd.Stdin = strings.NewReader(
 		"pass\n" +

@@ -30,14 +30,14 @@ func startPlatform(tmpDir string) (platform, ttp, demo *exec.Cmd, stop func(), c
 	}
 
 	// Init
-	cmd := exec.Command(path, "-path", dir, "-v", "init")
+	cmd := exec.Command(path, "--path", dir, "-v", "init")
 	err = cmd.Run()
 	if err != nil {
 		return
 	}
 
 	// Create TTP working directory
-	cmd = exec.Command(path, "-path", dir, "-v", "-cn", "ttp", "ttp")
+	cmd = exec.Command(path, "--path", dir, "-v", "--cn", "ttp", "ttp")
 	err = cmd.Run()
 	if err != nil {
 		return
@@ -50,13 +50,13 @@ func startPlatform(tmpDir string) (platform, ttp, demo *exec.Cmd, stop func(), c
 	}
 
 	// Start platform
-	platform = exec.Command(path, "-db", dbURI, "-path", dir, "-p", testPort, "-v", "start")
+	platform = exec.Command(path, "--db", dbURI, "--path", dir, "-p", testPort, "-v", "start")
 	platform.Stdout = os.Stdout
 	platform.Stderr = os.Stderr
 	err = platform.Start()
 
 	// Start TTP
-	ttp = exec.Command(ttpPath, "-db", dbURI, "-p", "9098", "start")
+	ttp = exec.Command(ttpPath, "--db", dbURI, "--port", "9098", "start")
 	ttp.Dir = filepath.Join(dir, "ttp")
 	ttp.Stdout = os.Stdout
 	ttp.Stderr = os.Stderr
@@ -64,7 +64,7 @@ func startPlatform(tmpDir string) (platform, ttp, demo *exec.Cmd, stop func(), c
 	err = ttp.Start()
 
 	// Start demonstrator
-	demo = exec.Command(demoPath, "-p", "9099", "nogui")
+	demo = exec.Command(demoPath, "--port", "9099", "nogui")
 	demo.Stdout = os.Stdout
 	demo.Stderr = os.Stderr
 	err = demo.Start()
@@ -105,7 +105,7 @@ func createClient(tmpDir string, ca []byte, port int) (*exec.Cmd, error) {
 
 	// Prepare the client command.
 	// The last argument is up to you!
-	cmd := exec.Command(path, "-ca", caPath, "-cert", certPath, "-host", "127.0.0.1:"+testPort, "-key", keyPath, "-port", strconv.Itoa(port), "-v", "-d", "localhost:9099")
+	cmd := exec.Command(path, "--ca", caPath, "--cert", certPath, "--host", "127.0.0.1:"+testPort, "--key", keyPath, "--port", strconv.Itoa(port), "-v", "-d", "localhost:9099")
 
 	return cmd, nil
 }

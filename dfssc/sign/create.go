@@ -5,10 +5,13 @@ import (
 	"io/ioutil"
 	"path/filepath"
 
+	"github.com/spf13/viper"
+
 	"dfss/dfssc/common"
 	"dfss/dfssc/security"
 	"dfss/dfssp/api"
 	"dfss/net"
+
 	"golang.org/x/net/context"
 )
 
@@ -23,9 +26,9 @@ type CreateManager struct {
 }
 
 // SendNewContract tries to create a contract on the platform and returns an error or nil
-func SendNewContract(fileCA, fileCert, fileKey, addrPort, passphrase, filepath, comment string, signers []string) error {
+func SendNewContract(passphrase, filepath, comment string, signers []string) error {
 	m := &CreateManager{
-		auth:     security.NewAuthContainer(fileCA, fileCert, fileKey, addrPort, passphrase),
+		auth:     security.NewAuthContainer(passphrase),
 		filepath: filepath,
 		comment:  comment,
 		signers:  signers,
@@ -66,7 +69,7 @@ func (m *CreateManager) sendRequest() (*api.ErrorCode, error) {
 		return nil, err
 	}
 
-	conn, err := net.Connect(m.auth.AddrPort, cert, key, ca)
+	conn, err := net.Connect(viper.GetString("platform_addrport"), cert, key, ca)
 	if err != nil {
 		return nil, err
 	}

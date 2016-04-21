@@ -75,9 +75,9 @@ func NewPromise(recipientIndex, senderIndex, sequenceIndex uint32) *Promise {
 	}
 }
 
-// ArePromisesEqual : determines if the two specified promises share the same information, without considering the
+// Equal : determines if the two specified promises share the same information, without considering the
 // bson object id.
-func ArePromisesEqual(p1, p2 *Promise) bool {
+func (p1 *Promise) Equal(p2 *Promise) bool {
 	if p1.RecipientKeyIndex != p2.RecipientKeyIndex {
 		return false
 	}

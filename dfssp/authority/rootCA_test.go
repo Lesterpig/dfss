@@ -8,10 +8,22 @@ import (
 	"path/filepath"
 	"testing"
 
+	"github.com/spf13/viper"
+
 	"dfss/auth"
+	"dfss/dfssc/common"
 )
 
-var pkey *rsa.PrivateKey
+var (
+	pkey           *rsa.PrivateKey
+	PkeyFileName   = "dfssp_pkey.pem"
+	RootCAFileName = "dfssp_rootCA.pem"
+)
+
+func init() {
+	viper.Set("ca_filename", RootCAFileName)
+	viper.Set("pkey_filename", PkeyFileName)
+}
 
 func TestMain(m *testing.M) {
 	pkey, _ = auth.GeneratePrivateKey(512)
@@ -23,7 +35,8 @@ func TestInitialize(t *testing.T) {
 	keyPath := filepath.Join(path, PkeyFileName)
 	certPath := filepath.Join(path, RootCAFileName)
 
-	err := Initialize(1024, 365, "country", "organization", "unit", "cn", path, nil, nil)
+	v := common.MockViper("key_size", 1024, "validity", 365, "country", "country", "organization", "organization", "unit", "unit", "cn", "cn", "path", path)
+	err := Initialize(v, nil, nil)
 
 	if err != nil {
 		t.Fatal(err)
@@ -46,7 +59,8 @@ func Example() {
 	certPath := filepath.Join(path, RootCAFileName)
 
 	// Generate root certificate and key
-	err := Initialize(1024, 365, "UK", "DFSS", "unit", "ROOT", path, nil, nil)
+	v := common.MockViper("key_size", 1024, "validity", 365, "country", "UK", "organization", "DFSS", "unit", "unit", "cn", "ROOT", "path", path)
+	err := Initialize(v, nil, nil)
 	if err != nil {
 		fmt.Println(err)
 		return
@@ -64,7 +78,8 @@ func Example() {
 
 	// Generate child certificate and key
 	childPath := filepath.Join(path, "child")
-	err = Initialize(1024, 10, "FR", "DFSS", "unit", "CHILD", childPath, pid.RootCA, pid.Pkey)
+	v = common.MockViper("key_size", 1024, "validity", 10, "country", "FR", "organization", "DFSS", "unit", "unit", "cn", "CHILD", "path", childPath)
+	err = Initialize(v, pid.RootCA, pid.Pkey)
 	if err != nil {
 		fmt.Println(err)
 		return
@@ -91,7 +106,8 @@ func CheckFile(path, name string) {
 
 func TestStart(t *testing.T) {
 	path, _ := ioutil.TempDir("", "")
-	_ = Initialize(1024, 365, "country", "organization", "unit", "cn", path, nil, nil)
+	v := common.MockViper("key_size", 1024, "validity", 365, "country", "country", "organization", "organization", "unit", "unit", "cn", "cn", "path", path)
+	_ = Initialize(v, nil, nil)
 
 	pid, err := Start(path)
 	if err != nil {

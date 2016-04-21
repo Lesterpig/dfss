@@ -39,6 +39,7 @@ func TestNewContract(t *testing.T) {
 	// Register client1
 	client1, err := createClient(workingDir, ca, 0)
 	assert.Equal(t, nil, err)
+
 	err = registerAndAuth(client1, "client1@example.com", "password", "", true, true)
 	assert.Equal(t, nil, err)
 

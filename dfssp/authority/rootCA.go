@@ -7,14 +7,9 @@ import (
 	"os"
 	"path/filepath"
 
-	"dfss/auth"
-)
+	"github.com/spf13/viper"
 
-const (
-	// PkeyFileName is the private key file default name
-	PkeyFileName = "dfssp_pkey.pem"
-	// RootCAFileName is the root certificate file default name
-	RootCAFileName = "dfssp_rootCA.pem"
+	"dfss/auth"
 )
 
 // PlatformID contains platform private key and root certificate
@@ -25,26 +20,29 @@ type PlatformID struct {
 
 // Initialize creates and saves the platform's private key and root certificate to a PEM format.
 // If ca and rKey are not nil, they will be used as the root certificate and root private key instead of creating a ones.
-// The files are saved at the specified path.
-func Initialize(bits, days int, country, organization, unit, cn, path string, ca *x509.Certificate, rKey *rsa.PrivateKey) error {
+// The files are saved at the specified path by viper.
+func Initialize(v *viper.Viper, ca *x509.Certificate, rKey *rsa.PrivateKey) error {
 	// Generate the private key.
-	key, err := auth.GeneratePrivateKey(bits)
+	key, err := auth.GeneratePrivateKey(v.GetInt("key_size"))
 
 	if err != nil {
 		return err
 	}
 
 	var cert []byte
-	certPath := filepath.Join(path, RootCAFileName)
-	keyPath := filepath.Join(path, PkeyFileName)
+	path := v.GetString("path")
+	// ca_filename and pkey_filename are part of the global conf of
+	// the app, that's why we don't fetch them from the local viper
+	certPath := filepath.Join(path, viper.GetString("ca_filename"))
+	keyPath := filepath.Join(path, viper.GetString("pkey_filename"))
 
 	if ca == nil {
 		// Generate the root certificate, using the private key.
-		cert, err = auth.GetSelfSignedCertificate(days, auth.GenerateUID(), country, organization, unit, cn, key)
+		cert, err = auth.GetSelfSignedCertificate(v.GetInt("validity"), auth.GenerateUID(), v.GetString("country"), v.GetString("organization"), v.GetString("unit"), v.GetString("cn"), key)
 	} else {
-		csr, _ := auth.GetCertificateRequest(country, organization, unit, cn, key)
+		csr, _ := auth.GetCertificateRequest(v.GetString("country"), v.GetString("organization"), v.GetString("unit"), v.GetString("cn"), key)
 		request, _ := auth.PEMToCertificateRequest(csr)
-		cert, err = auth.GetCertificate(days, auth.GenerateUID(), request, ca, rKey)
+		cert, err = auth.GetCertificate(v.GetInt("validity"), auth.GenerateUID(), request, ca, rKey)
 		// Override default path values
 		certPath = filepath.Join(path, "cert.pem")
 		keyPath = filepath.Join(path, "key.pem")
@@ -77,8 +75,8 @@ func Initialize(bits, days int, country, organization, unit, cn, path string, ca
 //
 // The files are fetched using their default name.
 func Start(path string) (*PlatformID, error) {
-	keyPath := filepath.Join(path, PkeyFileName)
-	certPath := filepath.Join(path, RootCAFileName)
+	keyPath := filepath.Join(path, viper.GetString("pkey_filename"))
+	certPath := filepath.Join(path, viper.GetString("ca_filename"))
 
 	// Recover the private rsa key from file.
 	keyBytes, err := ioutil.ReadFile(keyPath)

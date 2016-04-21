@@ -6,10 +6,12 @@ import (
 	"dfss/auth"
 	"dfss/dfssc/common"
 	"fmt"
+
+	"github.com/spf13/viper"
 )
 
 // GenerateKeys generate a pair of keys and save it to the disk
-func GenerateKeys(bits int, passphrase, filename string) (*rsa.PrivateKey, error) {
+func GenerateKeys(bits int, passphrase string) (*rsa.PrivateKey, error) {
 	key, err := auth.GeneratePrivateKey(bits)
 	if err != nil {
 		return nil, err
@@ -20,7 +22,7 @@ func GenerateKeys(bits int, passphrase, filename string) (*rsa.PrivateKey, error
 		return nil, err
 	}
 
-	err = common.SaveToDisk(pem, filename)
+	err = common.SaveToDisk(pem, viper.GetString("file_key"))
 	if err != nil {
 		return nil, err
 	}

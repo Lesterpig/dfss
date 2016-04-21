@@ -15,8 +15,9 @@ install: nocache
 install_all: install
 	git stash
 	rm -rf gui
+	rm -rf dfssd/cmd
 	rm -rf dfssd/gui
-	rm -f dfssd/main.go
+	rm dfssd/main.go
 	go install ./...
 	git reset --hard
 

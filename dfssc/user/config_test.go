@@ -45,15 +45,15 @@ func TestInvalidFiles(t *testing.T) {
 	certFile := filepath.Join(cPath, "invalidCert.pem")
 	defer deleteFiles(keyFile, certFile, "invalidConf.pem")
 
-	_, err := NewConfig("inexistantKey", "inexistantCert")
+	_, err := NewConfig(common.MockViper("file_key", "inexistantKey", "file_cert", "inexistantCert"))
 	assert.True(t, err != nil, "No key file nor cert file, expected error")
 
 	_ = common.SaveStringToDisk(fmt.Sprintf("%s", []byte(keyFixture)), keyFile)
-	_, err = NewConfig(keyFile, "inexistantCert")
+	_, err = NewConfig(common.MockViper("file_key", keyFile, "file_cert", "inexistantCert"))
 	assert.True(t, err != nil, "No cert file, expected error")
 
 	_ = security.SaveCertificate(fmt.Sprintf("%s", []byte(certFixture)), certFile)
-	_, err = NewConfig(keyFile, certFile)
+	_, err = NewConfig(common.MockViper("file_key", keyFile, "file_cert", certFile))
 	assert.True(t, err == nil, "Expected no error, files are present and valid")
 }
 
@@ -61,6 +61,7 @@ func TestInvalidFiles(t *testing.T) {
 func TestErrorDumpingConfig(t *testing.T) {
 	keyFile := filepath.Join(cPath, "privKey.pem")
 	certFile := filepath.Join(cPath, "cert.pem")
+	mockViper := common.MockViper("file_key", keyFile, "file_cert", certFile)
 	defer deleteFiles(keyFile, certFile, "invalidConf.pem")
 
 	err := common.SaveStringToDisk(fmt.Sprintf("%s", []byte(keyFixture)), keyFile)
@@ -69,7 +70,7 @@ func TestErrorDumpingConfig(t *testing.T) {
 	err = security.SaveCertificate(fmt.Sprintf("%s", []byte(certFixture)), certFile)
 	assert.True(t, err == nil, "Expected no error, cert is valid")
 
-	config, err := NewConfig(keyFile, certFile)
+	config, err := NewConfig(mockViper)
 	assert.True(t, err == nil, "Expected no error, files are present and valid")
 
 	err = config.SaveConfigToFile("file", "abc", "")
@@ -80,7 +81,7 @@ func TestErrorDumpingConfig(t *testing.T) {
 
 	common.DeleteQuietly(keyFile)
 	_ = common.SaveStringToDisk("Invalid key", keyFile)
-	config, _ = NewConfig(keyFile, certFile)
+	config, _ = NewConfig(mockViper)
 	err = config.SaveConfigToFile("file", "passphrase", "passphrase")
 	assert.True(t, err != nil, "Expected an error, private key is invalid")
 
@@ -88,7 +89,7 @@ func TestErrorDumpingConfig(t *testing.T) {
 	common.DeleteQuietly(keyFile)
 	_ = common.SaveStringToDisk(fmt.Sprintf("%s", []byte(keyFixture)), keyFile)
 	_ = common.SaveStringToDisk("Invalid certificate", certFile)
-	config, _ = NewConfig(keyFile, certFile)
+	config, _ = NewConfig(mockViper)
 	err = config.SaveConfigToFile("file", "passphrase", "passphrase")
 	assert.True(t, err != nil, "Expected an error, certificate is invalid")
 
@@ -108,7 +109,7 @@ func TestDumpingFile(t *testing.T) {
 	err = security.SaveCertificate(fmt.Sprintf("%s", []byte(certFixture)), certFile)
 	assert.True(t, err == nil, "Expected no error, cert is valid")
 
-	config, err := NewConfig(keyFile, certFile)
+	config, err := NewConfig(common.MockViper("file_key", keyFile, "file_cert", certFile))
 	assert.True(t, err == nil, "Expected no error, files are present and valid")
 
 	err = config.SaveConfigToFile(configPath, "passphrase", "")
@@ -137,7 +138,7 @@ func TestErrorDecodeFile(t *testing.T) {
 	_, err = DecodeConfiguration(keyFile, "pas", "")
 	assert.True(t, err != nil, "Passphrase is invalid, should be at least 4 char long")
 
-	config, err := NewConfig(keyFile, certFile)
+	config, err := NewConfig(common.MockViper("file_key", keyFile, "file_cert", certFile))
 	assert.True(t, err == nil, "Expected no error, files are present and valid")
 
 	err = config.SaveConfigToFile(configPath, "passphrase", "")
@@ -159,7 +160,7 @@ func TestDecodeConfig(t *testing.T) {
 	_ = common.SaveStringToDisk(fmt.Sprintf("%s", []byte(keyFixture)), keyFile)
 	_ = security.SaveCertificate(fmt.Sprintf("%s", []byte(certFixture)), certFile)
 
-	config, err := NewConfig(keyFile, certFile)
+	config, err := NewConfig(common.MockViper("file_key", keyFile, "file_cert", certFile))
 	assert.True(t, err == nil, "Expected no error, files are present and valid")
 
 	err = config.SaveConfigToFile(configPath, "passphrase", "")
@@ -186,7 +187,7 @@ func TestSaveFilesToDisk(t *testing.T) {
 	_ = common.SaveStringToDisk(fmt.Sprintf("%s", []byte(keyFixture)), keyFile)
 	_ = security.SaveCertificate(fmt.Sprintf("%s", []byte(certFixture)), certFile)
 
-	config, err := NewConfig(keyFile, certFile)
+	config, err := NewConfig(common.MockViper("file_key", keyFile, "file_cert", certFile))
 	assert.True(t, err == nil, "Expected no error, files are present and valid")
 
 	err = config.SaveUserInformations()

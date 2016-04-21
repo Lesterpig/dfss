@@ -7,6 +7,7 @@ import (
 	"dfss/gui/contractform"
 	"dfss/gui/signform"
 	"dfss/gui/userform"
+	"github.com/spf13/viper"
 	"github.com/visualfc/goqt/ui"
 )
 
@@ -14,7 +15,6 @@ type window struct {
 	*ui.QMainWindow
 
 	current widget
-	conf    *config.Config
 }
 
 type widget interface {
@@ -22,21 +22,27 @@ type widget interface {
 	Tick()
 }
 
+func init() {
+	viper.Set("filename_ca", "ca.pem")
+	viper.Set("filename_cert", "cert.pem")
+	viper.Set("filename_key", "key.pem")
+	viper.Set("filename_config", "config")
+}
+
 func main() {
 	// Load configuration
-	conf := config.Load()
+	config.Load()
 
 	// Start first window
 	ui.Run(func() {
 		w := &window{
 			QMainWindow: ui.NewMainWindow(),
-			conf:        &conf,
 		}
 
-		if conf.Authenticated {
+		if viper.GetBool("authenticated") {
 			w.addActions()
 			w.showNewContractForm()
-		} else if conf.Registered {
+		} else if viper.GetBool("registered") {
 			w.showAuthForm()
 		} else {
 			w.showUserForm()
@@ -73,29 +79,29 @@ func (w *window) setScreen(wi widget) {
 }
 
 func (w *window) showUserForm() {
-	w.setScreen(userform.NewWidget(w.conf, func(pwd string) {
+	w.setScreen(userform.NewWidget(func(pwd string) {
 		w.showAuthForm()
 	}))
 }
 
 func (w *window) showAuthForm() {
-	w.setScreen(authform.NewWidget(w.conf, func() {
+	w.setScreen(authform.NewWidget(func() {
 		w.showNewContractForm()
 		w.addActions()
 	}))
 }
 
 func (w *window) showNewContractForm() {
-	w.setScreen(contractform.NewWidget(w.conf))
+	w.setScreen(contractform.NewWidget())
 }
 
 func (w *window) showSignForm() {
-	home := config.GetHomeDir()
+	home := viper.GetString("home_dir")
 	filter := "Contract file (*.json);;Any (*.*)"
 	filename := ui.QFileDialogGetOpenFileNameWithParentCaptionDirFilterSelectedfilterOptions(w, "Select the contract file", home, filter, &filter, 0)
 	if filename != "" {
 		config.PasswordDialog(func(err error, pwd string) {
-			widget := signform.NewWidget(w.conf, filename, pwd)
+			widget := signform.NewWidget(filename, pwd)
 			if widget != nil {
 				w.setScreen(widget)
 			}

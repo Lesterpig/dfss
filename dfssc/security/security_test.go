@@ -7,6 +7,7 @@ import (
 	"path/filepath"
 	"testing"
 
+	"github.com/spf13/viper"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -32,8 +33,9 @@ var path = os.TempDir()
 // Test the generation of keys
 func TestGenerateKeys(t *testing.T) {
 	fkey := filepath.Join(path, "genKey.pem")
+	viper.Set("file_key", fkey)
 
-	rsa, err := GenerateKeys(512, "pwd", fkey)
+	rsa, err := GenerateKeys(512, "pwd")
 	assert.True(t, err == nil, "An error has been raised during generation")
 	assert.True(t, rsa != nil, "RSA key should not be nil")
 	assert.True(t, common.FileExists(fkey), "File is missing")
@@ -43,8 +45,9 @@ func TestGenerateKeys(t *testing.T) {
 // Test the generation of a certificate request
 func TestCertificateRequest(t *testing.T) {
 	fkey := filepath.Join(path, "genCsr.pem")
+	viper.Set("file_key", fkey)
 
-	rsa, err := GenerateKeys(512, "pwd", fkey)
+	rsa, err := GenerateKeys(512, "pwd")
 	defer common.DeleteQuietly(fkey)
 	assert.True(t, err == nil, "An error has been raised during generation")
 	assert.True(t, rsa != nil, "RSA key should not be nil")
@@ -58,8 +61,9 @@ func TestCertificateRequest(t *testing.T) {
 // Test saving rsa key on the disk
 func TestDumpingKey(t *testing.T) {
 	fkey := filepath.Join(path, "dumpKey.pem")
+	viper.Set("file_key", fkey)
 
-	rsa, err := GenerateKeys(512, "pwd", fkey)
+	rsa, err := GenerateKeys(512, "pwd")
 	defer common.DeleteQuietly(fkey)
 
 	assert.True(t, err == nil, "An error has been raised during generation")

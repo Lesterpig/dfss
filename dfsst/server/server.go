@@ -12,6 +12,8 @@ import (
 	"dfss/dfsst/resolve"
 	"dfss/mgdb"
 	"dfss/net"
+
+	"github.com/spf13/viper"
 	"golang.org/x/net/context"
 	"google.golang.org/grpc"
 )
@@ -20,8 +22,7 @@ import (
 const InternalError string = "Internal server error"
 
 type ttpServer struct {
-	DB      *mgdb.MongoManager
-	Verbose bool
+	DB *mgdb.MongoManager
 }
 
 // Alert route for the TTP.
@@ -177,23 +178,23 @@ func (server *ttpServer) Recover(ctx context.Context, in *tAPI.RecoverRequest) (
 }
 
 // GetServer returns the gRPC server.
-func GetServer(fca, fcert, fkey, password, db string, verbose bool) *grpc.Server {
-	auth := security.NewAuthContainer(fca, fcert, fkey, "", password)
+func GetServer() *grpc.Server {
+	// We can do that because NewAuthContainer is looking for "file_ca", "file_cert", and "file_key" in viper, which are set by the TTP
+	auth := security.NewAuthContainer(viper.GetString("password"))
 	ca, cert, key, err := auth.LoadFiles()
 	if err != nil {
 		fmt.Fprintln(os.Stderr, "An error occured during the private key and certificates retrieval:", err)
 		os.Exit(1)
 	}
 
-	dbManager, err := mgdb.NewManager(db)
+	dbManager, err := mgdb.NewManager(viper.GetString("dbURI"))
 	if err != nil {
 		fmt.Fprintln(os.Stderr, "An error occured during the connection to MongoDB:", err)
 		os.Exit(2)
 	}
 
 	server := &ttpServer{
-		Verbose: verbose,
-		DB:      dbManager,
+		DB: dbManager,
 	}
 	netServer := net.NewServer(cert, key, ca)
 	tAPI.RegisterTTPServer(netServer, server)

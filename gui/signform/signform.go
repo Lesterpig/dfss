@@ -6,7 +6,7 @@ import (
 
 	"dfss/dfssc/sign"
 	"dfss/dfssp/contract"
-	"dfss/gui/config"
+	"github.com/spf13/viper"
 	"github.com/visualfc/goqt/ui"
 )
 
@@ -29,7 +29,7 @@ type Widget struct {
 	feedback                 string
 }
 
-func NewWidget(conf *config.Config, filename, pwd string) *Widget {
+func NewWidget(filename, pwd string) *Widget {
 	loadIcons()
 	file := ui.NewFileWithName(":/signform/signform.ui")
 	loader := ui.NewUiLoader()
@@ -51,14 +51,8 @@ func NewWidget(conf *config.Config, filename, pwd string) *Widget {
 		return nil
 	}
 
-	home := config.GetHomeDir()
 	m, err := sign.NewSignatureManager(
-		home+config.CAFile,
-		home+config.CertFile,
-		home+config.KeyFile,
-		conf.Platform,
 		pwd,
-		9005, // TODO change port
 		w.contract,
 	)
 	if err != nil {
@@ -73,7 +67,7 @@ func NewWidget(conf *config.Config, filename, pwd string) *Widget {
 	}
 
 	w.initLines()
-	w.signerUpdated(conf.Email, sign.StatusConnected, "It's you!")
+	w.signerUpdated(viper.GetString("email"), sign.StatusConnected, "It's you!")
 	go func() {
 		err = w.execute()
 		if err != nil {

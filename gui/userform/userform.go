@@ -5,6 +5,8 @@ import (
 
 	"dfss/dfssc/user"
 	"dfss/gui/config"
+
+	"github.com/spf13/viper"
 	"github.com/visualfc/goqt/ui"
 )
 
@@ -12,7 +14,7 @@ type Widget struct {
 	*ui.QWidget
 }
 
-func NewWidget(conf *config.Config, onRegistered func(pw string)) *Widget {
+func NewWidget(onRegistered func(pw string)) *Widget {
 	file := ui.NewFileWithName(":/userform/userform.ui")
 	loader := ui.NewUiLoader()
 	form := loader.Load(file)
@@ -25,7 +27,7 @@ func NewWidget(conf *config.Config, onRegistered func(pw string)) *Widget {
 	feedbackLabel := ui.NewLabelFromDriver(form.FindChild("feedbackLabel"))
 	registerButton := ui.NewPushButtonFromDriver(form.FindChild("registerButton"))
 
-	home := config.GetHomeDir()
+	home := viper.GetString("home_dir")
 
 	// Events
 
@@ -34,24 +36,19 @@ func NewWidget(conf *config.Config, onRegistered func(pw string)) *Widget {
 		feedbackLabel.SetText("Registration in progress...")
 		filter := "Root Certificates (*.pem);;Any (*.*)"
 		caFilename := ui.QFileDialogGetOpenFileNameWithParentCaptionDirFilterSelectedfilterOptions(form, "Select the CA file for the platform", home, filter, &filter, 0)
-		caDest := home + config.CAFile
-		_ = copyCA(caFilename, caDest)
+		_ = copyCA(caFilename)
+		viper.Set("platform_addrport", hostField.Text())
 
 		err := user.Register(
-			caDest,
-			home+config.CertFile,
-			home+config.KeyFile,
-			hostField.Text(),
 			passwordField.Text(),
 			"", "", "", emailField.Text(), 2048,
 		)
 		if err != nil {
 			feedbackLabel.SetText(err.Error())
 		} else {
-			conf.Email = emailField.Text()
-			conf.Platform = hostField.Text()
+			viper.Set("email", emailField.Text())
 			onRegistered(passwordField.Text())
-			config.Save(*conf)
+			config.Save()
 		}
 		form.SetDisabled(false)
 	})
@@ -59,8 +56,8 @@ func NewWidget(conf *config.Config, onRegistered func(pw string)) *Widget {
 	return &Widget{QWidget: form}
 }
 
-func copyCA(from string, to string) error {
-	if from == to {
+func copyCA(from string) error {
+	if from == viper.GetString("file_ca") {
 		return nil
 	}
 
@@ -69,7 +66,7 @@ func copyCA(from string, to string) error {
 		return err
 	}
 
-	return ioutil.WriteFile(to, file, 0600)
+	return ioutil.WriteFile(viper.GetString("file_ca"), file, 0600)
 }
 
 func (w *Widget) Q() *ui.QWidget {

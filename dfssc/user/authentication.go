@@ -5,32 +5,31 @@ import (
 	"regexp"
 	"time"
 
+	"github.com/spf13/viper"
+
 	"dfss/dfssc/common"
 	"dfss/dfssc/security"
 	pb "dfss/dfssp/api"
 	"dfss/net"
 	"errors"
+
 	"golang.org/x/net/context"
 	"google.golang.org/grpc"
 )
 
 // AuthManager handles the authentication of a user
 type AuthManager struct {
-	fileCA   string
-	fileCert string
-	addrPort string
-	mail     string
-	token    string
+	viper *viper.Viper
+	mail  string
+	token string
 }
 
 // NewAuthManager creates a new authentication manager with the given parameters
-func NewAuthManager(fileCA, fileCert, addrPort, mail, token string) (*AuthManager, error) {
+func NewAuthManager(mail, token string, viper *viper.Viper) (*AuthManager, error) {
 	m := &AuthManager{
-		fileCA:   fileCA,
-		fileCert: fileCert,
-		addrPort: addrPort,
-		mail:     mail,
-		token:    token,
+		viper: viper,
+		mail:  mail,
+		token: token,
 	}
 
 	if err := m.checkValidParams(); err != nil {
@@ -54,15 +53,17 @@ func (m *AuthManager) checkValidParams() error {
 }
 
 func (m *AuthManager) checkFilePresence() error {
-	if b := common.FileExists(m.fileCert); b {
-		return errors.New("A certificate is already present at path " + m.fileCert)
+	fileCert := m.viper.GetString("file_cert")
+	if b := common.FileExists(fileCert); b {
+		return errors.New("A certificate is already present at path " + fileCert)
 	}
 
-	if b := common.FileExists(m.fileCA); !b {
-		return errors.New("You need the certificate of the platform at path " + m.fileCA)
+	fileCA := m.viper.GetString("file_ca")
+	if b := common.FileExists(fileCA); !b {
+		return errors.New("You need the certificate of the platform at path " + fileCA)
 	}
 
-	data, err := security.GetCertificate(m.fileCA)
+	data, err := security.GetCertificate(fileCA)
 	if err != nil {
 		return err
 	}
@@ -87,7 +88,7 @@ func (m *AuthManager) Authenticate() error {
 
 // Creates the associated authentication request and sends it to the platform grpc server
 func (m *AuthManager) sendRequest() (*pb.RegisteredUser, error) {
-	client, err := connect(m.fileCA, m.addrPort)
+	client, err := connect()
 	if err != nil {
 		return nil, err
 	}
@@ -113,5 +114,5 @@ func (m *AuthManager) sendRequest() (*pb.RegisteredUser, error) {
 func (m *AuthManager) evaluateResponse(response *pb.RegisteredUser) error {
 	cert := []byte(response.ClientCert)
 
-	return ioutil.WriteFile(m.fileCert, cert, 0600)
+	return ioutil.WriteFile(m.viper.GetString("file_cert"), cert, 0600)
 }

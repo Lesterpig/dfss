@@ -5,20 +5,20 @@ import (
 	"regexp"
 	"time"
 
+	"github.com/spf13/viper"
+
 	"dfss/dfssc/common"
 	"dfss/dfssc/security"
 	pb "dfss/dfssp/api"
 	"dfss/net"
+
 	"golang.org/x/net/context"
 	"google.golang.org/grpc"
 )
 
 // RegisterManager handles the registration of a user
 type RegisterManager struct {
-	fileCA       string
-	fileCert     string
-	fileKey      string
-	addrPort     string
+	*viper.Viper
 	passphrase   string
 	country      string
 	organization string
@@ -28,19 +28,8 @@ type RegisterManager struct {
 }
 
 // NewRegisterManager return a new Register Manager to register a user
-func NewRegisterManager(fileCA, fileCert, fileKey, addrPort, passphrase, country, organization, unit, mail string, bits int) (*RegisterManager, error) {
-	m := &RegisterManager{
-		fileCA:       fileCA,
-		fileCert:     fileCert,
-		fileKey:      fileKey,
-		addrPort:     addrPort,
-		passphrase:   passphrase,
-		country:      country,
-		organization: organization,
-		unit:         unit,
-		mail:         mail,
-		bits:         bits,
-	}
+func NewRegisterManager(passphrase, country, organization, unit, mail string, bits int, v *viper.Viper) (*RegisterManager, error) {
+	m := &RegisterManager{v, passphrase, country, organization, unit, mail, bits}
 
 	if err := m.checkValidParams(); err != nil {
 		return nil, err
@@ -71,23 +60,26 @@ func (m *RegisterManager) checkValidParams() error {
 // Check the CA is present and valid
 // Check there is not a duplicate file
 func (m *RegisterManager) checkFilePresence() error {
-	if b := common.FileExists(m.fileKey); b {
-		return errors.New("A private key is already present at path " + m.fileKey)
+	fileKey := m.GetString("file_key")
+	if b := common.FileExists(fileKey); b {
+		return errors.New("A private key is already present at path " + fileKey)
 	}
 
-	if b := common.FileExists(m.fileCert); b {
-		return errors.New("A certificate is already present at path " + m.fileCert)
+	fileCert := m.GetString("file_cert")
+	if b := common.FileExists(fileCert); b {
+		return errors.New("A certificate is already present at path " + fileCert)
 	}
 
-	if m.fileKey == m.fileCert {
+	if fileKey == fileCert {
 		return errors.New("Cannot store certificate and key in the same file")
 	}
 
-	if b := common.FileExists(m.fileCA); !b {
-		return errors.New("You need the certificate of the platform at path " + m.fileCA)
+	fileCA := m.GetString("file_ca")
+	if b := common.FileExists(fileCA); !b {
+		return errors.New("You need the certificate of the platform at path " + fileCA)
 	}
 
-	data, err := security.GetCertificate(m.fileCA)
+	data, err := security.GetCertificate(fileCA)
 	if err != nil {
 		return err
 	}
@@ -101,21 +93,22 @@ func (m *RegisterManager) checkFilePresence() error {
 
 // GetCertificate handles the creation of a certificate, delete private key upon failure
 func (m *RegisterManager) GetCertificate() error {
+	fileKey := m.GetString("file_key")
 	request, err := m.buildCertificateRequest()
 	if err != nil {
-		common.DeleteQuietly(m.fileKey)
+		common.DeleteQuietly(fileKey)
 		return err
 	}
 
 	code, err := m.sendRequest(request)
 	if err != nil {
-		common.DeleteQuietly(m.fileKey)
+		common.DeleteQuietly(fileKey)
 		return err
 	}
 
 	err = common.EvaluateErrorCodeResponse(code)
 	if err != nil {
-		common.DeleteQuietly(m.fileKey)
+		common.DeleteQuietly(fileKey)
 		return err
 	}
 
@@ -124,7 +117,7 @@ func (m *RegisterManager) GetCertificate() error {
 
 // Builds a certificate request
 func (m *RegisterManager) buildCertificateRequest() (string, error) {
-	key, err := security.GenerateKeys(m.bits, m.passphrase, m.fileKey)
+	key, err := security.GenerateKeys(m.bits, m.passphrase)
 	if err != nil {
 		return "", err
 	}
@@ -139,7 +132,7 @@ func (m *RegisterManager) buildCertificateRequest() (string, error) {
 
 // Send the request and returns the response
 func (m *RegisterManager) sendRequest(certRequest string) (*pb.ErrorCode, error) {
-	client, err := connect(m.fileCA, m.addrPort)
+	client, err := connect()
 	if err != nil {
 		return nil, err
 	}
