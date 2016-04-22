@@ -35,7 +35,7 @@ func Load() {
 	viper.Set("file_ca", filepath.Join(path, viper.GetString("filename_ca")))
 	viper.Set("file_cert", filepath.Join(path, viper.GetString("filename_cert")))
 	viper.Set("file_key", filepath.Join(path, viper.GetString("filename_key")))
-	viper.Set("file_config", filepath.Join(path, viper.GetString("filename_config")) + ".json")
+	viper.Set("file_config", filepath.Join(path, viper.GetString("filename_config"))+".json")
 
 	// Fill virtual-only fields
 	viper.Set("registered", isFileValid(viper.GetString("file_key")))
