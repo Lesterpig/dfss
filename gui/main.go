@@ -33,8 +33,9 @@ func main() {
 
 	// Start first window
 	ui.Run(func() {
+		qw := ui.NewMainWindow()
 		w := &window{
-			QMainWindow: ui.NewMainWindow(),
+			QMainWindow: qw,
 		}
 
 		if viper.GetBool("authenticated") {
@@ -82,6 +83,9 @@ func (w *window) addActions() {
 		ui.QApplicationAboutQt()
 	})
 
+	userAct := ui.NewActionWithTextParent("Authenticated as "+viper.GetString("email")+" ("+viper.GetString("platform")+")", w)
+	userAct.SetDisabled(true)
+
 	fileMenu := w.MenuBar().AddMenuWithTitle("&File")
 	fileMenu.AddAction(newAct)
 	fileMenu.AddAction(openAct)
@@ -92,6 +96,8 @@ func (w *window) addActions() {
 	helpMenu.AddAction(aboutAct)
 	helpMenu.AddSeparator()
 	helpMenu.AddAction(aboutQtAct)
+
+	w.MenuBar().AddAction(userAct)
 }
 
 func (w *window) setScreen(wi widget) {

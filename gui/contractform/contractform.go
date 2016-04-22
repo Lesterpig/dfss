@@ -26,7 +26,6 @@ func NewWidget() *Widget {
 	signersField := ui.NewPlainTextEditFromDriver(form.FindChild("signersField"))
 	fileButton := ui.NewPushButtonFromDriver(form.FindChild("fileButton"))
 	createButton := ui.NewPushButtonFromDriver(form.FindChild("createButton"))
-	feedbackLabel := ui.NewLabelFromDriver(form.FindChild("feedbackLabel"))
 
 	w := &Widget{
 		QWidget: form,
@@ -43,11 +42,9 @@ func NewWidget() *Widget {
 
 	createButton.OnClicked(func() {
 		form.SetDisabled(true)
-		feedbackLabel.SetText("Please wait...")
 		config.PasswordDialog(func(err error, pwd string) {
 			if err != nil {
 				form.SetDisabled(false)
-				feedbackLabel.SetText("Aborted.")
 				return // wrong key or rejection, aborting
 			}
 
@@ -59,9 +56,9 @@ func NewWidget() *Widget {
 			)
 
 			if err != nil {
-				feedbackLabel.SetText(err.Error())
+				config.ShowMsgBox(err.Error(), true)
 			} else {
-				feedbackLabel.SetText("Contract successfully sent to signers!")
+				config.ShowMsgBox("Contract successfully sent to signers!", false)
 				fileField.SetText("")
 			}
 			form.SetDisabled(false)

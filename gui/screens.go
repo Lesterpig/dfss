@@ -41,7 +41,7 @@ func (w *window) showShowContract(filename string) {
 
 	w.contract = showcontract.Load(filename)
 	if w.contract == nil {
-		w.showMsgBox("Unable to load file", true)
+		config.ShowMsgBox("Unable to load file", true)
 		return
 	}
 	w.setScreen(showcontract.NewWidget(w.contract, w.showSignForm))
@@ -51,7 +51,7 @@ func (w *window) showSignForm() {
 	config.PasswordDialog(func(err error, pwd string) {
 		widget := signform.NewWidget(w.contract, pwd)
 		if widget == nil {
-			w.showMsgBox("Unable to start the signing procedure", true)
+			config.ShowMsgBox("Unable to start the signing procedure", true)
 			return
 		}
 		w.setScreen(widget)
@@ -78,28 +78,15 @@ func (w *window) showFetchForm() {
 			err := sign.FetchContract(pwd, uuid, path)
 
 			if err != nil {
-				w.showMsgBox(err.Error(), true)
+				config.ShowMsgBox(err.Error(), true)
 				return
 			}
-			w.showMsgBox("Contract stored as "+path, false)
 			w.showShowContract(path)
+			config.ShowMsgBox("Contract stored as "+path, false)
 		})
 
 		dialog.OnFinished(func(_ int32) {
 			w.current.Q().SetDisabled(false)
 		})
 	})
-}
-
-func (w *window) showMsgBox(content string, critical bool) {
-	m := ui.NewMessageBoxWithParent(w)
-	m.SetText(content)
-	if critical {
-		m.SetWindowTitle("Error")
-		m.SetIcon(ui.QMessageBox_Critical)
-	} else {
-		m.SetWindowTitle("Information")
-		m.SetIcon(ui.QMessageBox_Information)
-	}
-	m.Exec()
 }

@@ -1,5 +1,7 @@
 package config
 
+// This file handles basic feedback messages.
+
 import (
 	"errors"
 	"io/ioutil"
@@ -9,6 +11,20 @@ import (
 	"github.com/spf13/viper"
 	"github.com/visualfc/goqt/ui"
 )
+
+// ShowMsgBox pops a new Qt Msg Box containing the appropriate message regarding the critical flag.
+func ShowMsgBox(content string, critical bool) {
+	m := ui.NewMessageBox()
+	m.SetText(content)
+	if critical {
+		m.SetWindowTitle("Error")
+		m.SetIcon(ui.QMessageBox_Critical)
+	} else {
+		m.SetWindowTitle("Information")
+		m.SetIcon(ui.QMessageBox_Information)
+	}
+	m.Exec()
+}
 
 // PasswordDialog checks the current private key for any passphrase.
 // If the key is protected, it spawns an inputDialog window to ask the user's passphrase,
