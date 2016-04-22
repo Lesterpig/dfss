@@ -40,7 +40,7 @@ func main() {
 
 		if viper.GetBool("authenticated") {
 			w.addActions()
-			w.showNewContractForm()
+			w.showWelcome()
 		} else if viper.GetBool("registered") {
 			w.showAuthForm()
 		} else {

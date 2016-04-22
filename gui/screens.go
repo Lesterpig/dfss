@@ -8,9 +8,18 @@ import (
 	"dfss/gui/showcontract"
 	"dfss/gui/signform"
 	"dfss/gui/userform"
+	"dfss/gui/welcome"
 	"github.com/spf13/viper"
 	"github.com/visualfc/goqt/ui"
 )
+
+func (w *window) showWelcome() {
+	w.setScreen(welcome.NewWidget(
+		w.showNewContractForm,
+		func() { w.showShowContract("") },
+		w.showFetchForm,
+	))
+}
 
 func (w *window) showUserForm() {
 	w.setScreen(userform.NewWidget(func(pwd string) {
