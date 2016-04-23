@@ -9,5 +9,6 @@
         <file>images/time.png</file>
         <file>images/digital_signature_pen.png</file>
         <file>signform/signform.ui</file>
+        <file>showcontract/showcontract.ui</file>
     </qresource>
 </RCC>

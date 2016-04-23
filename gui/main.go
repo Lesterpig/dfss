@@ -2,11 +2,8 @@ package main
 
 import (
 	"dfss"
-	"dfss/gui/authform"
+	"dfss/dfssp/contract"
 	"dfss/gui/config"
-	"dfss/gui/contractform"
-	"dfss/gui/signform"
-	"dfss/gui/userform"
 	"github.com/spf13/viper"
 	"github.com/visualfc/goqt/ui"
 )
@@ -14,7 +11,8 @@ import (
 type window struct {
 	*ui.QMainWindow
 
-	current widget
+	current  widget
+	contract *contract.JSON
 }
 
 type widget interface {
@@ -61,12 +59,39 @@ func main() {
 }
 
 func (w *window) addActions() {
+	newAct := ui.NewActionWithTextParent("&New", w)
+	newAct.SetShortcuts(ui.QKeySequence_New)
+	newAct.OnTriggered(w.showNewContractForm)
+
 	openAct := ui.NewActionWithTextParent("&Open", w)
 	openAct.SetShortcuts(ui.QKeySequence_Open)
 	openAct.OnTriggered(func() {
-		w.showSignForm()
+		w.showShowContract("")
 	})
-	w.MenuBar().AddAction(openAct)
+
+	fetchAct := ui.NewActionWithTextParent("&Fetch", w)
+	fetchAct.OnTriggered(w.showFetchForm)
+
+	aboutAct := ui.NewActionWithTextParent("&About", w)
+	aboutAct.OnTriggered(func() {
+		ui.QMessageBoxAbout(w, "About DFSS Client", about)
+	})
+
+	aboutQtAct := ui.NewActionWithTextParent("About &Qt", w)
+	aboutQtAct.OnTriggered(func() {
+		ui.QApplicationAboutQt()
+	})
+
+	fileMenu := w.MenuBar().AddMenuWithTitle("&File")
+	fileMenu.AddAction(newAct)
+	fileMenu.AddAction(openAct)
+	fileMenu.AddSeparator()
+	fileMenu.AddAction(fetchAct)
+
+	helpMenu := w.MenuBar().AddMenuWithTitle("&Help")
+	helpMenu.AddAction(aboutAct)
+	helpMenu.AddSeparator()
+	helpMenu.AddAction(aboutQtAct)
 }
 
 func (w *window) setScreen(wi widget) {
@@ -75,36 +100,5 @@ func (w *window) setScreen(wi widget) {
 	w.current = wi
 	if old != nil {
 		old.DeleteLater()
-	}
-}
-
-func (w *window) showUserForm() {
-	w.setScreen(userform.NewWidget(func(pwd string) {
-		w.showAuthForm()
-	}))
-}
-
-func (w *window) showAuthForm() {
-	w.setScreen(authform.NewWidget(func() {
-		w.showNewContractForm()
-		w.addActions()
-	}))
-}
-
-func (w *window) showNewContractForm() {
-	w.setScreen(contractform.NewWidget())
-}
-
-func (w *window) showSignForm() {
-	home := viper.GetString("home_dir")
-	filter := "Contract file (*.json);;Any (*.*)"
-	filename := ui.QFileDialogGetOpenFileNameWithParentCaptionDirFilterSelectedfilterOptions(w, "Select the contract file", home, filter, &filter, 0)
-	if filename != "" {
-		config.PasswordDialog(func(err error, pwd string) {
-			widget := signform.NewWidget(filename, pwd)
-			if widget != nil {
-				w.setScreen(widget)
-			}
-		})
 	}
 }

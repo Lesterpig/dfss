@@ -1,9 +1,6 @@
 package signform
 
 import (
-	"encoding/json"
-	"io/ioutil"
-
 	"dfss/dfssc/sign"
 	"dfss/dfssp/contract"
 	"github.com/spf13/viper"
@@ -29,34 +26,26 @@ type Widget struct {
 	feedback                 string
 }
 
-func NewWidget(filename, pwd string) *Widget {
+func NewWidget(contract *contract.JSON, pwd string) *Widget {
 	loadIcons()
 	file := ui.NewFileWithName(":/signform/signform.ui")
 	loader := ui.NewUiLoader()
 	form := loader.Load(file)
-	w := &Widget{QWidget: form}
+	w := &Widget{
+		QWidget:  form,
+		contract: contract,
+	}
 
 	w.feedbackLabel = ui.NewLabelFromDriver(w.FindChild("mainLabel"))
 	w.table = ui.NewTableWidgetFromDriver(w.FindChild("signersTable"))
 	w.progressBar = ui.NewProgressBarFromDriver(w.FindChild("progressBar"))
-
-	data, err := ioutil.ReadFile(filename)
-	if err != nil {
-		return nil
-	}
-
-	w.contract = new(contract.JSON)
-	err = json.Unmarshal(data, w.contract)
-	if err != nil {
-		return nil
-	}
 
 	m, err := sign.NewSignatureManager(
 		pwd,
 		w.contract,
 	)
 	if err != nil {
-		// TODO
+		return nil
 	}
 
 	w.manager = m
