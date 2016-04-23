@@ -4,8 +4,8 @@ import (
 	"strings"
 
 	"dfss/dfssc/sign"
+	"dfss/gui/common"
 	"dfss/gui/config"
-
 	"github.com/spf13/viper"
 	"github.com/visualfc/goqt/ui"
 )
@@ -42,7 +42,7 @@ func NewWidget() *Widget {
 
 	createButton.OnClicked(func() {
 		form.SetDisabled(true)
-		config.PasswordDialog(func(err error, pwd string) {
+		common.PasswordDialog(func(err error, pwd string) {
 			if err != nil {
 				form.SetDisabled(false)
 				return // wrong key or rejection, aborting
@@ -56,9 +56,9 @@ func NewWidget() *Widget {
 			)
 
 			if err != nil {
-				config.ShowMsgBox(err.Error(), true)
+				common.ShowMsgBox(err.Error(), true)
 			} else {
-				config.ShowMsgBox("Contract successfully sent to signers!", false)
+				common.ShowMsgBox("Contract successfully sent to signers!", false)
 				fileField.SetText("")
 			}
 			form.SetDisabled(false)

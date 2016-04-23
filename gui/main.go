@@ -3,6 +3,7 @@ package main
 import (
 	"dfss"
 	"dfss/dfssp/contract"
+	"dfss/gui/common"
 	"dfss/gui/config"
 	"github.com/spf13/viper"
 	"github.com/visualfc/goqt/ui"
@@ -73,6 +74,11 @@ func (w *window) addActions() {
 	fetchAct := ui.NewActionWithTextParent("&Fetch", w)
 	fetchAct.OnTriggered(w.showFetchForm)
 
+	helpAct := ui.NewActionWithTextParent("&Help", w)
+	helpAct.OnTriggered(func() {
+		common.ShowMsgBox(help, false)
+	})
+
 	aboutAct := ui.NewActionWithTextParent("&About", w)
 	aboutAct.OnTriggered(func() {
 		ui.QMessageBoxAbout(w, "About DFSS Client", about)
@@ -93,6 +99,7 @@ func (w *window) addActions() {
 	fileMenu.AddAction(fetchAct)
 
 	helpMenu := w.MenuBar().AddMenuWithTitle("&Help")
+	helpMenu.AddAction(helpAct)
 	helpMenu.AddAction(aboutAct)
 	helpMenu.AddSeparator()
 	helpMenu.AddAction(aboutQtAct)

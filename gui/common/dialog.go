@@ -1,4 +1,4 @@
-package config
+package common
 
 // This file handles basic feedback messages.
 
@@ -7,7 +7,6 @@ import (
 	"io/ioutil"
 
 	"dfss/auth"
-
 	"github.com/spf13/viper"
 	"github.com/visualfc/goqt/ui"
 )

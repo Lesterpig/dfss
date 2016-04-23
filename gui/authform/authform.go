@@ -2,7 +2,7 @@ package authform
 
 import (
 	"dfss/dfssc/user"
-	"dfss/gui/config"
+	"dfss/gui/common"
 	"github.com/spf13/viper"
 	"github.com/visualfc/goqt/ui"
 )
@@ -27,7 +27,7 @@ func NewWidget(onAuth func()) *Widget {
 		)
 		form.SetDisabled(false)
 		if err != nil {
-			config.ShowMsgBox(err.Error(), true)
+			common.ShowMsgBox(err.Error(), true)
 			tokenField.SetFocus()
 			tokenField.SelectAll()
 		} else {

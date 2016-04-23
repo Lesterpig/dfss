@@ -4,6 +4,7 @@ import (
 	"io/ioutil"
 
 	"dfss/dfssc/user"
+	"dfss/gui/common"
 	"dfss/gui/config"
 
 	"github.com/spf13/viper"
@@ -41,7 +42,7 @@ func NewWidget(onRegistered func(pw string)) *Widget {
 			"", "", "", emailField.Text(), 2048,
 		)
 		if err != nil {
-			config.ShowMsgBox(err.Error(), true)
+			common.ShowMsgBox(err.Error(), true)
 		} else {
 			viper.Set("email", emailField.Text())
 			onRegistered(passwordField.Text())

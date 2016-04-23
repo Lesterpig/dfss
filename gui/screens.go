@@ -3,7 +3,7 @@ package main
 import (
 	"dfss/dfssc/sign"
 	"dfss/gui/authform"
-	"dfss/gui/config"
+	"dfss/gui/common"
 	"dfss/gui/contractform"
 	"dfss/gui/showcontract"
 	"dfss/gui/signform"
@@ -50,17 +50,17 @@ func (w *window) showShowContract(filename string) {
 
 	w.contract = showcontract.Load(filename)
 	if w.contract == nil {
-		config.ShowMsgBox("Unable to load file", true)
+		common.ShowMsgBox("Unable to load file", true)
 		return
 	}
 	w.setScreen(showcontract.NewWidget(w.contract, w.showSignForm))
 }
 
 func (w *window) showSignForm() {
-	config.PasswordDialog(func(err error, pwd string) {
+	common.PasswordDialog(func(err error, pwd string) {
 		widget := signform.NewWidget(w.contract, pwd)
 		if widget == nil {
-			config.ShowMsgBox("Unable to start the signing procedure", true)
+			common.ShowMsgBox("Unable to start the signing procedure", true)
 			return
 		}
 		w.setScreen(widget)
@@ -69,7 +69,7 @@ func (w *window) showSignForm() {
 
 func (w *window) showFetchForm() {
 	w.current.Q().SetDisabled(true)
-	config.PasswordDialog(func(err error, pwd string) {
+	common.PasswordDialog(func(err error, pwd string) {
 		if err != nil {
 			w.current.Q().SetDisabled(false)
 			return
@@ -87,11 +87,11 @@ func (w *window) showFetchForm() {
 			err := sign.FetchContract(pwd, uuid, path)
 
 			if err != nil {
-				config.ShowMsgBox(err.Error(), true)
+				common.ShowMsgBox(err.Error(), true)
 				return
 			}
 			w.showShowContract(path)
-			config.ShowMsgBox("Contract stored as "+path, false)
+			common.ShowMsgBox("Contract stored as "+path, false)
 		})
 
 		dialog.OnFinished(func(_ int32) {
