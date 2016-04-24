@@ -108,26 +108,19 @@
        <item row="2" column="1">
         <widget class="QPlainTextEdit" name="commentField"/>
        </item>
-       <item row="3" column="0">
-        <widget class="QPushButton" name="createButton">
-         <property name="text">
-          <string>Create contract</string>
-         </property>
-         <property name="default">
-          <bool>true</bool>
-         </property>
-        </widget>
-       </item>
-       <item row="3" column="1">
-        <widget class="QLabel" name="feedbackLabel">
-         <property name="text">
-          <string/>
-         </property>
-        </widget>
-       </item>
       </layout>
      </item>
     </layout>
+   </item>
+   <item row="1" column="0">
+    <widget class="QPushButton" name="createButton">
+     <property name="text">
+      <string>Create contract</string>
+     </property>
+     <property name="default">
+      <bool>true</bool>
+     </property>
+    </widget>
    </item>
   </layout>
  </widget>

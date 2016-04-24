@@ -3,6 +3,7 @@ package main
 import (
 	"dfss"
 	"dfss/dfssp/contract"
+	"dfss/gui/common"
 	"dfss/gui/config"
 	"github.com/spf13/viper"
 	"github.com/visualfc/goqt/ui"
@@ -33,13 +34,14 @@ func main() {
 
 	// Start first window
 	ui.Run(func() {
+		qw := ui.NewMainWindow()
 		w := &window{
-			QMainWindow: ui.NewMainWindow(),
+			QMainWindow: qw,
 		}
 
 		if viper.GetBool("authenticated") {
 			w.addActions()
-			w.showNewContractForm()
+			w.showWelcome()
 		} else if viper.GetBool("registered") {
 			w.showAuthForm()
 		} else {
@@ -72,6 +74,11 @@ func (w *window) addActions() {
 	fetchAct := ui.NewActionWithTextParent("&Fetch", w)
 	fetchAct.OnTriggered(w.showFetchForm)
 
+	helpAct := ui.NewActionWithTextParent("&Help", w)
+	helpAct.OnTriggered(func() {
+		common.ShowMsgBox(help, false)
+	})
+
 	aboutAct := ui.NewActionWithTextParent("&About", w)
 	aboutAct.OnTriggered(func() {
 		ui.QMessageBoxAbout(w, "About DFSS Client", about)
@@ -82,6 +89,9 @@ func (w *window) addActions() {
 		ui.QApplicationAboutQt()
 	})
 
+	userAct := ui.NewActionWithTextParent("Authenticated as "+viper.GetString("email")+" ("+viper.GetString("platform")+")", w)
+	userAct.SetDisabled(true)
+
 	fileMenu := w.MenuBar().AddMenuWithTitle("&File")
 	fileMenu.AddAction(newAct)
 	fileMenu.AddAction(openAct)
@@ -89,9 +99,12 @@ func (w *window) addActions() {
 	fileMenu.AddAction(fetchAct)
 
 	helpMenu := w.MenuBar().AddMenuWithTitle("&Help")
+	helpMenu.AddAction(helpAct)
 	helpMenu.AddAction(aboutAct)
 	helpMenu.AddSeparator()
 	helpMenu.AddAction(aboutQtAct)
+
+	w.MenuBar().AddAction(userAct)
 }
 
 func (w *window) setScreen(wi widget) {

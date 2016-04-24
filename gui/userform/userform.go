@@ -4,6 +4,7 @@ import (
 	"io/ioutil"
 
 	"dfss/dfssc/user"
+	"dfss/gui/common"
 	"dfss/gui/config"
 
 	"github.com/spf13/viper"
@@ -23,8 +24,6 @@ func NewWidget(onRegistered func(pw string)) *Widget {
 	hostField := ui.NewLineEditFromDriver(form.FindChild("hostField"))
 	passwordField := ui.NewLineEditFromDriver(form.FindChild("passwordField"))
 	passwordField.SetEchoMode(ui.QLineEdit_Password)
-
-	feedbackLabel := ui.NewLabelFromDriver(form.FindChild("feedbackLabel"))
 	registerButton := ui.NewPushButtonFromDriver(form.FindChild("registerButton"))
 
 	home := viper.GetString("home_dir")
@@ -33,7 +32,6 @@ func NewWidget(onRegistered func(pw string)) *Widget {
 
 	registerButton.OnClicked(func() {
 		form.SetDisabled(true)
-		feedbackLabel.SetText("Registration in progress...")
 		filter := "Root Certificates (*.pem);;Any (*.*)"
 		caFilename := ui.QFileDialogGetOpenFileNameWithParentCaptionDirFilterSelectedfilterOptions(form, "Select the CA file for the platform", home, filter, &filter, 0)
 		_ = copyCA(caFilename)
@@ -44,7 +42,7 @@ func NewWidget(onRegistered func(pw string)) *Widget {
 			"", "", "", emailField.Text(), 2048,
 		)
 		if err != nil {
-			feedbackLabel.SetText(err.Error())
+			common.ShowMsgBox(err.Error(), true)
 		} else {
 			viper.Set("email", emailField.Text())
 			onRegistered(passwordField.Text())

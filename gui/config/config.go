@@ -14,8 +14,8 @@ import (
 
 // Config is the structure that will be persisted in the configuration file
 type Config struct {
-	Email    string `json: email`
-	Platform string `json: platform`
+	Email    string `json:"email"`
+	Platform string `json:"platform"`
 }
 
 // Load loads the configuration file into memory.

@@ -2,7 +2,7 @@ package authform
 
 import (
 	"dfss/dfssc/user"
-
+	"dfss/gui/common"
 	"github.com/spf13/viper"
 	"github.com/visualfc/goqt/ui"
 )
@@ -17,7 +17,6 @@ func NewWidget(onAuth func()) *Widget {
 	form := loader.Load(file)
 
 	tokenField := ui.NewLineEditFromDriver(form.FindChild("tokenField"))
-	feedbackLabel := ui.NewLabelFromDriver(form.FindChild("feedbackLabel"))
 	authButton := ui.NewPushButtonFromDriver(form.FindChild("authButton"))
 
 	authButton.OnClicked(func() {
@@ -28,7 +27,7 @@ func NewWidget(onAuth func()) *Widget {
 		)
 		form.SetDisabled(false)
 		if err != nil {
-			feedbackLabel.SetText(err.Error())
+			common.ShowMsgBox(err.Error(), true)
 			tokenField.SetFocus()
 			tokenField.SelectAll()
 		} else {

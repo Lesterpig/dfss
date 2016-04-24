@@ -3,14 +3,23 @@ package main
 import (
 	"dfss/dfssc/sign"
 	"dfss/gui/authform"
-	"dfss/gui/config"
+	"dfss/gui/common"
 	"dfss/gui/contractform"
 	"dfss/gui/showcontract"
 	"dfss/gui/signform"
 	"dfss/gui/userform"
+	"dfss/gui/welcome"
 	"github.com/spf13/viper"
 	"github.com/visualfc/goqt/ui"
 )
+
+func (w *window) showWelcome() {
+	w.setScreen(welcome.NewWidget(
+		w.showNewContractForm,
+		func() { w.showShowContract("") },
+		w.showFetchForm,
+	))
+}
 
 func (w *window) showUserForm() {
 	w.setScreen(userform.NewWidget(func(pwd string) {
@@ -41,17 +50,17 @@ func (w *window) showShowContract(filename string) {
 
 	w.contract = showcontract.Load(filename)
 	if w.contract == nil {
-		w.showMsgBox("Unable to load file", true)
+		common.ShowMsgBox("Unable to load file", true)
 		return
 	}
 	w.setScreen(showcontract.NewWidget(w.contract, w.showSignForm))
 }
 
 func (w *window) showSignForm() {
-	config.PasswordDialog(func(err error, pwd string) {
+	common.PasswordDialog(func(err error, pwd string) {
 		widget := signform.NewWidget(w.contract, pwd)
 		if widget == nil {
-			w.showMsgBox("Unable to start the signing procedure", true)
+			common.ShowMsgBox("Unable to start the signing procedure", true)
 			return
 		}
 		w.setScreen(widget)
@@ -60,7 +69,7 @@ func (w *window) showSignForm() {
 
 func (w *window) showFetchForm() {
 	w.current.Q().SetDisabled(true)
-	config.PasswordDialog(func(err error, pwd string) {
+	common.PasswordDialog(func(err error, pwd string) {
 		if err != nil {
 			w.current.Q().SetDisabled(false)
 			return
@@ -78,28 +87,15 @@ func (w *window) showFetchForm() {
 			err := sign.FetchContract(pwd, uuid, path)
 
 			if err != nil {
-				w.showMsgBox(err.Error(), true)
+				common.ShowMsgBox(err.Error(), true)
 				return
 			}
-			w.showMsgBox("Contract stored as "+path, false)
 			w.showShowContract(path)
+			common.ShowMsgBox("Contract stored as "+path, false)
 		})
 
 		dialog.OnFinished(func(_ int32) {
 			w.current.Q().SetDisabled(false)
 		})
 	})
-}
-
-func (w *window) showMsgBox(content string, critical bool) {
-	m := ui.NewMessageBoxWithParent(w)
-	m.SetText(content)
-	if critical {
-		m.SetWindowTitle("Error")
-		m.SetIcon(ui.QMessageBox_Critical)
-	} else {
-		m.SetWindowTitle("Information")
-		m.SetIcon(ui.QMessageBox_Information)
-	}
-	m.Exec()
 }

@@ -10,5 +10,6 @@
         <file>images/digital_signature_pen.png</file>
         <file>signform/signform.ui</file>
         <file>showcontract/showcontract.ui</file>
+        <file>welcome/welcome.ui</file>
     </qresource>
 </RCC>
