@@ -10,7 +10,7 @@ import (
 
 // These two constants are used to configure arrows
 const ARROW_T = math.Pi / 6 // angle
-const ARROW_L = 15          // side length
+const ARROW_L = 30          // side length
 
 // DrawClients draws the different clients in a circle.
 func (w *Window) DrawClients() {

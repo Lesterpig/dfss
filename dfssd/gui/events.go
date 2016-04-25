@@ -68,7 +68,7 @@ func (w *Window) PrintQuantumInformation() {
 		return
 	}
 
-	quantum := float64(w.quantumField.Value())
+	quantum := float64(w.quantumField.Value()*1000)
 
 	beginning := w.scene.Events[0].Date.UnixNano()
 	totalDuration := w.scene.Events[len(w.scene.Events)-1].Date.UnixNano() - beginning
@@ -113,8 +113,8 @@ func (w *Window) initTimer() {
 			w.scene.currentTime = w.scene.Events[0].Date
 		}
 
-		quantum := time.Duration(w.quantumField.Value())
-		endOfQuantum := w.scene.currentTime.Add(quantum * time.Nanosecond)
+		quantum := time.Duration(w.quantumField.Value()) * time.Microsecond
+		endOfQuantum := w.scene.currentTime.Add(quantum)
 
 		for i := w.scene.currentEvent; i < nbEvents; i++ {
 			e := w.scene.Events[i]
