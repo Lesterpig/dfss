@@ -1,6 +1,48 @@
 CHANGELOG
 =========
 
+v0.2.0
+------
+> 25/04/2016
+
+#### CLI Client
+
+- Update command-line interface to match POSIX standards (!64)
+
+#### GUI Client
+
+- Add menu bar (!65)
+- Add show contract screen (!65)
+- Add fetch contract screen (!65)
+- Add signature screen (!61)
+- Add basic help message box (!66)
+- Add about message box for DFSS (!66)
+- Add about message box for Qt (!66)
+- Add user mail and selected platform information (!66)
+- Improve buttons and feedbacks (!66)
+  + Buttons now use the full width of the window
+  + Error messages are now displayed in message boxes
+
+#### Platform
+
+- Fix crash if a client disconnects before the ready signal (!60)
+- Update command-line interface to match POSIX standards (!63)
+
+#### TTP
+
+- Update command-line interface to match POSIX standards (!64)
+
+#### Demonstrator
+
+- Increase arrow length to 30px (!67)
+- Update default unit from nano-second to micro-second (!67)
+- Update command-line interface to match POSIX standards (!64)
+
+#### Misc
+
+- Improve security of network communication by checking server's certificate (!62)
+
+
 v0.1.0
 ------
 > 18/04/2016
