@@ -5,13 +5,11 @@ import (
 	"io/ioutil"
 	"path/filepath"
 
-	"github.com/spf13/viper"
-
 	"dfss/dfssc/common"
 	"dfss/dfssc/security"
 	"dfss/dfssp/api"
 	"dfss/net"
-
+	"github.com/spf13/viper"
 	"golang.org/x/net/context"
 )
 

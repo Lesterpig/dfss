@@ -8,8 +8,6 @@ import (
 	"sync"
 	"time"
 
-	"github.com/spf13/viper"
-
 	"dfss"
 	cAPI "dfss/dfssc/api"
 	"dfss/dfssc/common"
@@ -18,7 +16,7 @@ import (
 	pAPI "dfss/dfssp/api"
 	"dfss/dfssp/contract"
 	"dfss/net"
-
+	"github.com/spf13/viper"
 	"golang.org/x/net/context"
 	"google.golang.org/grpc"
 )
