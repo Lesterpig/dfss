@@ -8,7 +8,7 @@ import (
 )
 
 // Version represents the current version of the DFSS software suite
-const Version = "0.2.0-dev"
+const Version = "0.2.0"
 
 // VersionCmd is the cobra command common to all dfss modules
 var VersionCmd = &cobra.Command{

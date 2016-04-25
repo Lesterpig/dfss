@@ -40,14 +40,14 @@ You can configure several parameters for that (check the `help` command of `dfss
 For instance, if we are running the plaform on the `example.com` host:
 
 ```bash
-./dfssp -cn example.com -country FR -rootValidity 3650 init
+./dfssp --cn example.com --country FR --validity 3650 init
 ```
 
 Then, it is possible to create TTP credentials from generated root credentials.
 The generated files are stored in a subdirectory "ttp".
 
 ```bash
-./dfssp -cn ttp.example.com -country FR -certValidity 365 ttp
+./dfssp --cn ttp.example.com --country FR --validity 365 ttp
 ```
 
 You can then start the platform. Here we are considering a mongoDB database running on the same host.
@@ -70,7 +70,7 @@ Then:
 You can also start the TTP:
 
 ```bash
-./dfsst -cert ttp/cert.pem -key ttp/cert.pem start
+./dfsst --cert ttp/cert.pem --key ttp/cert.pem start
 ```
 
 ### Setup clients
@@ -79,18 +79,18 @@ Each client needs the `dfssp_rootCA.pem` file in order to connect to the platfor
 Clients can then register on the platform with the following command:
 
 ```bash
-./dfssc -ca path/to/dfssp_rootCA.pem -host example.com register
+./dfssc --ca path/to/dfssp_rootCA.pem --host example.com register
 ```
 
 A mail will be sent to the user containing a unique token. Use this token to authenticate onto the platform:
 
 ```bash
-./dfssc -ca path/to/dfssp_rootCA.pem -host example.com auth
+./dfssc --ca path/to/dfssp_rootCA.pem --host example.com auth
 ```
 
 When this is done, the client will have a certificate and a private key in the current directory.
 It's then possible to send new contracts to the platform:
 
 ```bash
-./dfssc -ca path/to/dfssp_rootCA.pem -host example.com new
+./dfssc --ca path/to/dfssp_rootCA.pem --host example.com new
 ```
