@@ -21,7 +21,7 @@ func FetchContract(passphrase, uuid, path string) error {
 		return err
 	}
 
-	conn, err := net.Connect(viper.GetString("platform_addrport"), cert, key, ca)
+	conn, err := net.Connect(viper.GetString("platform_addrport"), cert, key, ca, nil)
 	if err != nil {
 		return err
 	}

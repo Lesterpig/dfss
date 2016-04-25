@@ -83,7 +83,7 @@ func NewSignatureManager(passphrase string, c *contract.JSON) (*SignatureManager
 	m.cServer = m.GetServer()
 	go func() { log.Fatalln(net.Listen("0.0.0.0:"+strconv.Itoa(viper.GetInt("local_port")), m.cServer)) }()
 
-	conn, err := net.Connect(viper.GetString("platform_addrport"), m.auth.Cert, m.auth.Key, m.auth.CA)
+	conn, err := net.Connect(viper.GetString("platform_addrport"), m.auth.Cert, m.auth.Key, m.auth.CA, nil)
 	if err != nil {
 		return nil, err
 	}
@@ -146,7 +146,8 @@ func (m *SignatureManager) addPeer(user *pAPI.User) (ready bool, err error) {
 	addrPort := user.Ip + ":" + strconv.Itoa(int(user.Port))
 	m.OnSignerStatusUpdate(user.Email, StatusConnecting, addrPort)
 
-	conn, err := net.Connect(addrPort, m.auth.Cert, m.auth.Key, m.auth.CA)
+	// This is an certificate authentificated TLS connection
+	conn, err := net.Connect(addrPort, m.auth.Cert, m.auth.Key, m.auth.CA, user.KeyHash)
 	if err != nil {
 		m.OnSignerStatusUpdate(user.Email, StatusError, err.Error())
 		return false, err

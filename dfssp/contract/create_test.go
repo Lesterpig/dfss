@@ -59,7 +59,7 @@ func clientTest(t *testing.T) api.PlatformClient {
 	cert, _ := auth.PEMToCertificate(certData)
 	key, _ := auth.EncryptedPEMToPrivateKey(keyData, "password")
 
-	conn, err := net.Connect("localhost:9090", cert, key, ca)
+	conn, err := net.Connect("localhost:9090", cert, key, ca, nil)
 	if err != nil {
 		t.Fatal("Unable to connect:", err)
 	}
@@ -70,7 +70,7 @@ func clientTest(t *testing.T) api.PlatformClient {
 func TestAddContractBadAuth(t *testing.T) {
 	caData, _ := ioutil.ReadFile(filepath.Join("..", "testdata", "dfssp_rootCA.pem"))
 	ca, _ := auth.PEMToCertificate(caData)
-	conn, err := net.Connect("localhost:9090", nil, nil, ca)
+	conn, err := net.Connect("localhost:9090", nil, nil, ca, nil)
 	if err != nil {
 		t.Fatal("Unable to connect:", err)
 	}

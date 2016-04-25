@@ -69,7 +69,7 @@ func (m *CreateManager) sendRequest() (*api.ErrorCode, error) {
 		return nil, err
 	}
 
-	conn, err := net.Connect(viper.GetString("platform_addrport"), cert, key, ca)
+	conn, err := net.Connect(viper.GetString("platform_addrport"), cert, key, ca, nil)
 	if err != nil {
 		return nil, err
 	}
