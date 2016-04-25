@@ -146,13 +146,13 @@
           <enum>QAbstractSpinBox::CorrectToNearestValue</enum>
          </property>
          <property name="suffix">
-          <string> ns</string>
+          <string> us</string>
          </property>
          <property name="minimum">
           <number>1</number>
          </property>
          <property name="maximum">
-          <number>1000000</number>
+          <number>10000000</number>
          </property>
          <property name="singleStep">
           <number>100</number>
