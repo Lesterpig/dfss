@@ -4,7 +4,6 @@ import (
 	"testing"
 
 	"dfss/dfssp/contract"
-
 	"github.com/stretchr/testify/assert"
 )
 

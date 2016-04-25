@@ -40,6 +40,7 @@ func Load() {
 	// Fill virtual-only fields
 	viper.Set("registered", isFileValid(viper.GetString("file_key")))
 	viper.Set("authenticated", isFileValid(viper.GetString("file_cert")))
+	viper.Set("local_port", 9005)
 
 	return
 }
