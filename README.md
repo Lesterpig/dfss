@@ -3,7 +3,23 @@ DFSS
 
 > Distributed Fair Signing System
 
-This repository contains source code for this INSA Rennes project (work in progress).
+DFSS is a simple and secure way to e-sign contracts with a large number of participants, ensuring fairness and minimizing the involvement of the trusted third party (TTP).
+This repository contains source code for this INSA Rennes project.
+
+- Website: https://static.lesterpig.com/dfss_web/
+- Downloads: https://static.lesterpig.com/dfss/
+
+Project Status
+--------------
+
+The DFSS project is developed by fourth year students of the Computer Science department of INSA Rennes (FR).
+For now, the infrastructure is working, without the implementation of the signature cryptographic kernel (**Private Contract Signatures**), defined in many research papers, but not yet implemented.
+
+It's thus a *proof of concept* and not production-ready.
+
+Reference:
+- [Aybek Mukhamedo, Mark D. Ryan. Fair Multi-party Contract Signing using Private Contract Signatures.](https://www.researchgate.net/publication/222527059_Fair_multi-party_contract_signing_using_private_contract_signatures)
+- [Barbara Kordy, Saša Radomirović. Constructing Optimistic Multi-party Contract Signing Protocols.](http://people.irisa.fr/Barbara.Kordy/papers/CSF12.pdf)
 
 Configure workspace
 -------------------
