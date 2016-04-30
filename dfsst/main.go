@@ -1,3 +1,4 @@
+// Package dfsst is the dfss trusted third-party (ttp).
 package main
 
 import (

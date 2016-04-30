@@ -1,3 +1,4 @@
+// Package contractform provides the new contract screen.
 package contractform
 
 import (

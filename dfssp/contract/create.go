@@ -1,3 +1,4 @@
+// Package contract manages contracts and signatures (creation and execution).
 package contract
 
 import (

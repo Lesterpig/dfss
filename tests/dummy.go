@@ -1,3 +1,2 @@
+// Package tests provides DFSS integration tests.
 package tests
-
-// A test package, see test files.

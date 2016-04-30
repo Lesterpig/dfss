@@ -1,3 +1,4 @@
+// Package resolve provides the resolve protocol.
 package resolve
 
 import (

@@ -1,3 +1,4 @@
+// Package server provides the demonstration unsecure server.
 package server
 
 import (

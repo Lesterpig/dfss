@@ -1,5 +1,4 @@
-// Package common Holds the common function to be used by other package
-// Essentially handles I/O functions
+// Package common holds the common functions to be used by other packages.
 package common
 
 import (

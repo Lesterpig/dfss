@@ -1,3 +1,4 @@
+// Package common provides non-specific helpers, such as parallelism management.
 package common
 
 import (

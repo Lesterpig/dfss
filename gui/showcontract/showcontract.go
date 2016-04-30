@@ -1,3 +1,4 @@
+// Package showcontract provides the show contract screen.
 package showcontract
 
 import (

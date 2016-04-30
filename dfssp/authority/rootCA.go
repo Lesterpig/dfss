@@ -1,3 +1,4 @@
+// Package authority creates and manages platform certificates.
 package authority
 
 import (

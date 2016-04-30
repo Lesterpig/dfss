@@ -1,3 +1,4 @@
+// Package cmd handles flags and commands management.
 package cmd
 
 import (

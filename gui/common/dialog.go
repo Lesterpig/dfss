@@ -1,3 +1,4 @@
+// Package common provides GUI helpers, such as dialog boxes.
 package common
 
 // This file handles basic feedback messages.

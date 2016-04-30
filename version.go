@@ -1,3 +1,4 @@
+// Package dfss is the root of the dfss architecture.
 package dfss
 
 import (

@@ -1,3 +1,4 @@
+// Package mgdb simplifies the mapping between Go and Mgo.
 package mgdb
 
 import (

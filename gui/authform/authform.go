@@ -1,3 +1,4 @@
+// Package authform provides the authentication screen.
 package authform
 
 import (

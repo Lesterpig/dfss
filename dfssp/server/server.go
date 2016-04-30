@@ -1,3 +1,4 @@
+// Package server provides the platform server.
 package server
 
 import (

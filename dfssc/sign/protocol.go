@@ -1,3 +1,4 @@
+// Package sign handles contract and signature operations.
 package sign
 
 import (

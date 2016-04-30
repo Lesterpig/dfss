@@ -1,3 +1,4 @@
+// Package user handles user creation.
 package user
 
 import (
@@ -9,8 +10,6 @@ import (
 	"log"
 	"time"
 
-	"github.com/spf13/viper"
-
 	"dfss/auth"
 	"dfss/dfssp/api"
 	"dfss/dfssp/authority"
@@ -18,7 +17,7 @@ import (
 	"dfss/dfssp/entities"
 	"dfss/dfssp/templates"
 	"dfss/mgdb"
-
+	"github.com/spf13/viper"
 	"gopkg.in/mgo.v2/bson"
 )
 

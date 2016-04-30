@@ -1,3 +1,4 @@
+// Package entities contains database entities and helpers on these entities.
 package entities
 
 import (

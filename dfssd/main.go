@@ -1,3 +1,4 @@
+// Package dfssd is the dfss demonstrator.
 package main
 
 import (

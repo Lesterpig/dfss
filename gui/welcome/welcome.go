@@ -1,3 +1,4 @@
+// Package welcome provides the home screen for authenticated users.
 package welcome
 
 import (

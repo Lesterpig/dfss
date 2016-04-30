@@ -1,3 +1,4 @@
+// Package server provides the ttp server.
 package server
 
 import (

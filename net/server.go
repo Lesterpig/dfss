@@ -1,3 +1,4 @@
+// Package net wraps TLS and GRPC client/server to simplify connections.
 package net
 
 import (

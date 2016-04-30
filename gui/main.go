@@ -1,3 +1,4 @@
+// Package gui is the dfss GUI client.
 package main
 
 import (

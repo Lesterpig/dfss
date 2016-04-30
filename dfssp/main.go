@@ -1,3 +1,4 @@
+// Package dfssp is the dfss platform.
 package main
 
 import (

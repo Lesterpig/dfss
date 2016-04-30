@@ -1,3 +1,4 @@
+// Package dfssc is the dfss CLI client.
 package main
 
 import (

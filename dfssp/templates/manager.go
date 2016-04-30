@@ -1,3 +1,4 @@
+// Package templates stores and provides basic templates for mails or CLI.
 package templates
 
 import (

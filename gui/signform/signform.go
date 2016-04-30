@@ -1,3 +1,4 @@
+// Package signform provides the signature screen.
 package signform
 
 import (
