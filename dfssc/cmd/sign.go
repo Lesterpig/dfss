@@ -36,6 +36,7 @@ var signCmd = &cobra.Command{
 			os.Exit(2)
 		}
 
+		fmt.Println("Waiting for peers...")
 		manager.OnSignerStatusUpdate = signFeedbackFn
 		err = manager.ConnectToPeers()
 		if err != nil {
@@ -47,6 +48,7 @@ var signCmd = &cobra.Command{
 		var ready string
 		readStringParam("Do you REALLY want to sign "+contract.File.Name+"? Type 'yes' to confirm", "", &ready)
 		if ready != "yes" {
+			fmt.Println("Signature aborted!")
 			os.Exit(4)
 		}
 
