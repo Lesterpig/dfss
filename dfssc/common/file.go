@@ -2,6 +2,7 @@ package common
 
 import (
 	"encoding/json"
+	"errors"
 
 	"dfss/dfssp/contract"
 )
@@ -13,6 +14,10 @@ func UnmarshalDFSSFile(data []byte) (*contract.JSON, error) {
 	err := json.Unmarshal(data, c)
 	if err != nil {
 		return nil, err
+	}
+
+	if c.File == nil {
+		return nil, errors.New("empty file description")
 	}
 
 	return c, nil

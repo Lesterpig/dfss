@@ -2,9 +2,9 @@
 package showcontract
 
 import (
-	"encoding/json"
 	"io/ioutil"
 
+	"dfss/dfssc/common"
 	"dfss/dfssp/contract"
 	"github.com/visualfc/goqt/ui"
 )
@@ -49,8 +49,7 @@ func Load(filename string) *contract.JSON {
 		return nil
 	}
 
-	contract := new(contract.JSON)
-	err = json.Unmarshal(data, contract)
+	contract, err := common.UnmarshalDFSSFile(data)
 	if err != nil {
 		return nil
 	}
