@@ -103,9 +103,15 @@ func NewSignatureManager(passphrase string, c *contract.JSON) (*SignatureManager
 
 // ConnectToPeers tries to fetch the list of users for this contract, and tries to establish a connection to each peer.
 func (m *SignatureManager) ConnectToPeers() error {
+	localIps, err := net.ExternalInterfaceAddr()
+	if err != nil {
+		return err
+	}
+
 	stream, err := m.platform.JoinSignature(context.Background(), &pAPI.JoinSignatureRequest{
 		ContractUuid: m.contract.UUID,
 		Port:         uint32(viper.GetInt("local_port")),
+		Ip:           localIps,
 	})
 	if err != nil {
 		return err
@@ -142,11 +148,19 @@ func (m *SignatureManager) addPeer(user *pAPI.User) (ready bool, err error) {
 		return // Ignore if unknown
 	}
 
-	addrPort := user.Ip + ":" + strconv.Itoa(int(user.Port))
-	m.OnSignerStatusUpdate(user.Email, StatusConnecting, addrPort)
+	var conn *grpc.ClientConn
+	for _, ip := range user.Ip {
+		addrPort := ip + ":" + strconv.Itoa(int(user.Port))
+		m.OnSignerStatusUpdate(user.Email, StatusConnecting, addrPort)
 
-	// This is an certificate authentificated TLS connection
-	conn, err := net.Connect(addrPort, m.auth.Cert, m.auth.Key, m.auth.CA, user.KeyHash)
+		// This is an certificate authentificated TLS connection
+		conn, err = net.Connect(addrPort, m.auth.Cert, m.auth.Key, m.auth.CA, user.KeyHash)
+		if err == nil {
+
+			break
+		}
+	}
+
 	if err != nil {
 		m.OnSignerStatusUpdate(user.Email, StatusError, err.Error())
 		return false, err

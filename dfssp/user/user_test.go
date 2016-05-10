@@ -101,8 +101,6 @@ func TestMongoInsertUser(t *testing.T) {
 	user := entities.NewUser()
 	user.Email = "dfss1@mpcs.tk"
 	user.CertHash = []byte{0x01, 0x02}
-	user.ConnInfo.IP = "127.0.0.1"
-	user.ConnInfo.Port = 1111
 	user.Csr = "csr1"
 	user.RegToken = "regToken 1"
 
@@ -137,14 +135,6 @@ func equalUsers(t *testing.T, user1, user2 *entities.User) {
 		t.Fatal("Csr doesn't match : received ", user1.Csr, " and ", user2.Csr)
 	}
 
-	if user1.ConnInfo.IP != user2.ConnInfo.IP {
-		t.Fatal("ConnInfo.IP doesn't match : received ", user1.ConnInfo.IP, " and ", user2.ConnInfo.IP)
-	}
-
-	if user1.ConnInfo.Port != user2.ConnInfo.Port {
-		t.Fatal("ConnInfo.Port doesn't match : received ", user1.ConnInfo.Port, " and ", user2.ConnInfo.Port)
-	}
-
 	if user1.Certificate != user2.Certificate {
 		t.Fatal("Certificate doesn't match : received ", user1.Certificate, " and ", user2.Certificate)
 	}
@@ -154,8 +144,6 @@ func TestMongoFetchUser(t *testing.T) {
 	user := entities.NewUser()
 	user.Email = "dfss2@mpcs.tk"
 	user.CertHash = nil
-	user.ConnInfo.IP = "127.0.0.2"
-	user.ConnInfo.Port = 2222
 	user.Csr = "csr2"
 	user.RegToken = "regToken 2"
 
