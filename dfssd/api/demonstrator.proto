@@ -1,22 +1,24 @@
+/// Protobuf definitions for dfssd
 syntax = "proto3";
 
 package api;
 
+/// Procedures offered by dfssd
 service Demonstrator {
-    // Log message.
-    //
-    // Send the UnixNano timetamp, sender's identifier and log message
-    // Returns nothing ?
-    rpc SendLog(Log) returns (Ack) {}
+	/// Send a new log line to the demonstrator
+	rpc SendLog(Log) returns (Ack) {}
 }
 
-// Log message to display information
 message Log {
-    int64 timestamp = 1;
-    string identifier = 2;
-    string log = 3;
+	/// Unix nano timestamp as absolute time of event
+	int64 timestamp = 1;
+	/// Identifier of the sender.
+	// Should be an email, "platform" or "ttp".
+	string identifier = 2;
+	/// The log message
+	string log = 3;
 }
 
-// Empty ack message
+/// Acknowledgement message
 message Ack {
 }

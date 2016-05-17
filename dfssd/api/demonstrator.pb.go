@@ -32,11 +32,14 @@ var _ = math.Inf
 // is compatible with the proto package it is being compiled against.
 const _ = proto.ProtoPackageIsVersion1
 
-// Log message to display information
 type Log struct {
-	Timestamp  int64  `protobuf:"varint,1,opt,name=timestamp" json:"timestamp,omitempty"`
+	// / Unix nano timestamp as absolute time of event
+	Timestamp int64 `protobuf:"varint,1,opt,name=timestamp" json:"timestamp,omitempty"`
+	// / Identifier of the sender.
+	// Should be an email, "platform" or "ttp".
 	Identifier string `protobuf:"bytes,2,opt,name=identifier" json:"identifier,omitempty"`
-	Log        string `protobuf:"bytes,3,opt,name=log" json:"log,omitempty"`
+	// / The log message
+	Log string `protobuf:"bytes,3,opt,name=log" json:"log,omitempty"`
 }
 
 func (m *Log) Reset()                    { *m = Log{} }
@@ -44,7 +47,7 @@ func (m *Log) String() string            { return proto.CompactTextString(m) }
 func (*Log) ProtoMessage()               {}
 func (*Log) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{0} }
 
-// Empty ack message
+// / Acknowledgement message
 type Ack struct {
 }
 
@@ -69,10 +72,7 @@ const _ = grpc.SupportPackageIsVersion2
 // Client API for Demonstrator service
 
 type DemonstratorClient interface {
-	// Log message.
-	//
-	// Send the UnixNano timetamp, sender's identifier and log message
-	// Returns nothing ?
+	// / Send a new log line to the demonstrator
 	SendLog(ctx context.Context, in *Log, opts ...grpc.CallOption) (*Ack, error)
 }
 
@@ -96,10 +96,7 @@ func (c *demonstratorClient) SendLog(ctx context.Context, in *Log, opts ...grpc.
 // Server API for Demonstrator service
 
 type DemonstratorServer interface {
-	// Log message.
-	//
-	// Send the UnixNano timetamp, sender's identifier and log message
-	// Returns nothing ?
+	// / Send a new log line to the demonstrator
 	SendLog(context.Context, *Log) (*Ack, error)
 }
 

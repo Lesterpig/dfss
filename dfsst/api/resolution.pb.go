@@ -34,8 +34,8 @@ var _ = math.Inf
 // is compatible with the proto package it is being compiled against.
 const _ = proto.ProtoPackageIsVersion1
 
-// Alert message sent by a signer
 type AlertRequest struct {
+	// / Promises obtained at this point of the main protocol
 	Promises []*api2.Promise `protobuf:"bytes,1,rep,name=promises" json:"promises,omitempty"`
 }
 
@@ -51,7 +51,6 @@ func (m *AlertRequest) GetPromises() []*api2.Promise {
 	return nil
 }
 
-// RecoverRequest message to get a signed contract
 type RecoverRequest struct {
 	SignatureUUID string `protobuf:"bytes,1,opt,name=signatureUUID" json:"signatureUUID,omitempty"`
 }
@@ -61,11 +60,9 @@ func (m *RecoverRequest) String() string            { return proto.CompactTextSt
 func (*RecoverRequest) ProtoMessage()               {}
 func (*RecoverRequest) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{1} }
 
-// TTPResponse message to answer an Alert or Recover message
 type TTPResponse struct {
-	// Yes for abort token, No for signed contract
-	Abort bool `protobuf:"varint,1,opt,name=abort" json:"abort,omitempty"`
-	// Nil for abort token, non-empty otherwise
+	// / True for abort token, False when the TTP was able to generate the fully signed contract
+	Abort    bool   `protobuf:"varint,1,opt,name=abort" json:"abort,omitempty"`
 	Contract []byte `protobuf:"bytes,2,opt,name=contract,proto3" json:"contract,omitempty"`
 }
 
@@ -91,7 +88,11 @@ const _ = grpc.SupportPackageIsVersion2
 // Client API for TTP service
 
 type TTPClient interface {
+	// / Sent by a client when a signature encounters a problem.
+	// Triggers the resolve protocol.
 	Alert(ctx context.Context, in *AlertRequest, opts ...grpc.CallOption) (*TTPResponse, error)
+	// / Sent by a client after a crash or a self-deconnection.
+	// Tries to fetch the result of the resolve protocol, if any.
 	Recover(ctx context.Context, in *RecoverRequest, opts ...grpc.CallOption) (*TTPResponse, error)
 }
 
@@ -124,7 +125,11 @@ func (c *tTPClient) Recover(ctx context.Context, in *RecoverRequest, opts ...grp
 // Server API for TTP service
 
 type TTPServer interface {
+	// / Sent by a client when a signature encounters a problem.
+	// Triggers the resolve protocol.
 	Alert(context.Context, *AlertRequest) (*TTPResponse, error)
+	// / Sent by a client after a crash or a self-deconnection.
+	// Tries to fetch the result of the resolve protocol, if any.
 	Recover(context.Context, *RecoverRequest) (*TTPResponse, error)
 }
 

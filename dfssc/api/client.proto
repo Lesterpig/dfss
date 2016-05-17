@@ -1,42 +1,57 @@
+/// Protobuf definitions for dfssc
 syntax = "proto3";
 
 package api;
-
 import "dfss/dfssp/api/platform.proto";
 
+/// Procedures offered by dfssc
 service Client {
+	/// Handle reception of promises.
 	rpc TreatPromise(Promise) returns (ErrorCode) {}
+	/// Handle receptions of signatures.
 	rpc TreatSignature(Signature) returns (ErrorCode) {}
+	/// Permits initial handshake for P2P between clients.
 	rpc Discover(Hello) returns (Hello) {}
 }
 
+/// Context stores the current context of a specific promise or signature.
+// It is a kind of "symbolic" promise, with no real cryptographic proofs inside.
 message Context {
-	bytes recipientKeyHash = 1;	// SHA-512
-	bytes senderKeyHash = 2;	  // SHA-512
-	repeated uint32 sequence = 3; // Signing sequence
-	repeated bytes signers = 4; // List of the signers' hashes
+	/// SHA-512 certificate hash
+	bytes recipientKeyHash = 1;
+	/// SHA-512 certificate hash
+	bytes senderKeyHash = 2;
+	/// The signing sequence used
+	repeated uint32 sequence = 3;
+	/// The list of signers hashes, as provided by the dfss file.
+	// The order is very important.
+	repeated bytes signers = 4;
+	/// The contract document hash, as provided by the dfss file
 	bytes contractDocumentHash = 5;
+	/// The unique signature attemp ID, as provided by the platform during the ready signal
 	string signatureUUID = 6;
-	bytes signedHash = 7; // (sequence + signers' hashes + contractDocumentHash + signatureUUID) crypted by the platform
+	/// The signed metadata hashb, as provided by the platform during the ready signal
+	bytes signedHash = 7;
 }
 
-// Promise message contains all the required information to verify
-// the identity of the sender and receiver, and the actual promise
 message Promise {
+	/// Metadata
 	Context context = 1;
-	uint32 index = 2; // The index of the sequence for this message
+	/// The index of the sequence for this promise
+	uint32 index = 2;
+	/// The crypographic payload, currently NOT IMPLEMENTED
 	bytes payload = 3;
 }
 
-// Signature message contains all the required information to verify
-// the identity of the sender and receiver, and the actual signature
 message Signature {
+	/// Metadata
 	Context context = 1;
+	/// The crypographic payload, currently NOT IMPLEMENTED
 	bytes payload = 2;
 }
 
-// Hello message is used when discovering peers.
-// It contains the current version of the software.
+/// Hello message is used when discovering peers.
 message Hello {
+	/// Used version of DFSS client
 	string version = 1;
 }

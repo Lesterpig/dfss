@@ -1,28 +1,30 @@
+/// Protobuf definitions for dfsst
 syntax = "proto3";
 
 package api;
-
 import "dfss/dfssc/api/client.proto";
 
+/// Procedures offered by dfsst
 service TTP {
-    rpc Alert(AlertRequest) returns (TTPResponse) {}
-    rpc Recover(RecoverRequest) returns (TTPResponse) {}
+	/// Sent by a client when a signature encounters a problem.
+	// Triggers the resolve protocol.
+	rpc Alert(AlertRequest) returns (TTPResponse) {}
+	/// Sent by a client after a crash or a self-deconnection.
+	// Tries to fetch the result of the resolve protocol, if any.
+	rpc Recover(RecoverRequest) returns (TTPResponse) {}
 }
 
-// Alert message sent by a signer
 message AlertRequest {
+	/// Promises obtained at this point of the main protocol
 	repeated Promise promises = 1;
 }
 
-// RecoverRequest message to get a signed contract
 message RecoverRequest {
 	string signatureUUID = 1;
 }
 
-// TTPResponse message to answer an Alert or Recover message
 message TTPResponse {
-    // Yes for abort token, No for signed contract
-    bool abort = 1;
-    // Nil for abort token, non-empty otherwise
-    bytes contract = 2;
+	/// True for abort token, False when the TTP was able to generate the fully signed contract
+	bool abort = 1;
+	bytes contract = 2;
 }

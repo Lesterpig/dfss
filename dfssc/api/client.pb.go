@@ -35,14 +35,24 @@ var _ = math.Inf
 // is compatible with the proto package it is being compiled against.
 const _ = proto.ProtoPackageIsVersion1
 
+// / Context stores the current context of a specific promise or signature.
+// It is a kind of "symbolic" promise, with no real cryptographic proofs inside.
 type Context struct {
-	RecipientKeyHash     []byte   `protobuf:"bytes,1,opt,name=recipientKeyHash,proto3" json:"recipientKeyHash,omitempty"`
-	SenderKeyHash        []byte   `protobuf:"bytes,2,opt,name=senderKeyHash,proto3" json:"senderKeyHash,omitempty"`
-	Sequence             []uint32 `protobuf:"varint,3,rep,name=sequence" json:"sequence,omitempty"`
-	Signers              [][]byte `protobuf:"bytes,4,rep,name=signers,proto3" json:"signers,omitempty"`
-	ContractDocumentHash []byte   `protobuf:"bytes,5,opt,name=contractDocumentHash,proto3" json:"contractDocumentHash,omitempty"`
-	SignatureUUID        string   `protobuf:"bytes,6,opt,name=signatureUUID" json:"signatureUUID,omitempty"`
-	SignedHash           []byte   `protobuf:"bytes,7,opt,name=signedHash,proto3" json:"signedHash,omitempty"`
+	// / SHA-512 certificate hash
+	RecipientKeyHash []byte `protobuf:"bytes,1,opt,name=recipientKeyHash,proto3" json:"recipientKeyHash,omitempty"`
+	// / SHA-512 certificate hash
+	SenderKeyHash []byte `protobuf:"bytes,2,opt,name=senderKeyHash,proto3" json:"senderKeyHash,omitempty"`
+	// / The signing sequence used
+	Sequence []uint32 `protobuf:"varint,3,rep,name=sequence" json:"sequence,omitempty"`
+	// / The list of signers hashes, as provided by the dfss file.
+	// The order is very important.
+	Signers [][]byte `protobuf:"bytes,4,rep,name=signers,proto3" json:"signers,omitempty"`
+	// / The contract document hash, as provided by the dfss file
+	ContractDocumentHash []byte `protobuf:"bytes,5,opt,name=contractDocumentHash,proto3" json:"contractDocumentHash,omitempty"`
+	// / The unique signature attemp ID, as provided by the platform during the ready signal
+	SignatureUUID string `protobuf:"bytes,6,opt,name=signatureUUID" json:"signatureUUID,omitempty"`
+	// / The signed metadata hashb, as provided by the platform during the ready signal
+	SignedHash []byte `protobuf:"bytes,7,opt,name=signedHash,proto3" json:"signedHash,omitempty"`
 }
 
 func (m *Context) Reset()                    { *m = Context{} }
@@ -50,12 +60,13 @@ func (m *Context) String() string            { return proto.CompactTextString(m)
 func (*Context) ProtoMessage()               {}
 func (*Context) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{0} }
 
-// Promise message contains all the required information to verify
-// the identity of the sender and receiver, and the actual promise
 type Promise struct {
+	// / Metadata
 	Context *Context `protobuf:"bytes,1,opt,name=context" json:"context,omitempty"`
-	Index   uint32   `protobuf:"varint,2,opt,name=index" json:"index,omitempty"`
-	Payload []byte   `protobuf:"bytes,3,opt,name=payload,proto3" json:"payload,omitempty"`
+	// / The index of the sequence for this promise
+	Index uint32 `protobuf:"varint,2,opt,name=index" json:"index,omitempty"`
+	// / The crypographic payload, currently NOT IMPLEMENTED
+	Payload []byte `protobuf:"bytes,3,opt,name=payload,proto3" json:"payload,omitempty"`
 }
 
 func (m *Promise) Reset()                    { *m = Promise{} }
@@ -70,11 +81,11 @@ func (m *Promise) GetContext() *Context {
 	return nil
 }
 
-// Signature message contains all the required information to verify
-// the identity of the sender and receiver, and the actual signature
 type Signature struct {
+	// / Metadata
 	Context *Context `protobuf:"bytes,1,opt,name=context" json:"context,omitempty"`
-	Payload []byte   `protobuf:"bytes,2,opt,name=payload,proto3" json:"payload,omitempty"`
+	// / The crypographic payload, currently NOT IMPLEMENTED
+	Payload []byte `protobuf:"bytes,2,opt,name=payload,proto3" json:"payload,omitempty"`
 }
 
 func (m *Signature) Reset()                    { *m = Signature{} }
@@ -89,9 +100,9 @@ func (m *Signature) GetContext() *Context {
 	return nil
 }
 
-// Hello message is used when discovering peers.
-// It contains the current version of the software.
+// / Hello message is used when discovering peers.
 type Hello struct {
+	// / Used version of DFSS client
 	Version string `protobuf:"bytes,1,opt,name=version" json:"version,omitempty"`
 }
 
@@ -118,8 +129,11 @@ const _ = grpc.SupportPackageIsVersion2
 // Client API for Client service
 
 type ClientClient interface {
+	// / Handle reception of promises.
 	TreatPromise(ctx context.Context, in *Promise, opts ...grpc.CallOption) (*api1.ErrorCode, error)
+	// / Handle receptions of signatures.
 	TreatSignature(ctx context.Context, in *Signature, opts ...grpc.CallOption) (*api1.ErrorCode, error)
+	// / Permits initial handshake for P2P between clients.
 	Discover(ctx context.Context, in *Hello, opts ...grpc.CallOption) (*Hello, error)
 }
 
@@ -161,8 +175,11 @@ func (c *clientClient) Discover(ctx context.Context, in *Hello, opts ...grpc.Cal
 // Server API for Client service
 
 type ClientServer interface {
+	// / Handle reception of promises.
 	TreatPromise(context.Context, *Promise) (*api1.ErrorCode, error)
+	// / Handle receptions of signatures.
 	TreatSignature(context.Context, *Signature) (*api1.ErrorCode, error)
+	// / Permits initial handshake for P2P between clients.
 	Discover(context.Context, *Hello) (*Hello, error)
 }
 
