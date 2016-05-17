@@ -26,6 +26,13 @@ var signCmd = &cobra.Command{
 			os.Exit(1)
 		}
 
+		var contractPath string
+		readStringParam("Local contract path (empty means no verification)", "", &contractPath)
+		if !checkContractHash(contractPath, contract.File.Hash) {
+			fmt.Fprintln(os.Stderr, "Invalid contract file! Aborting.")
+			os.Exit(1)
+		}
+
 		var passphrase string
 		_ = readPassword(&passphrase, false)
 
@@ -33,7 +40,7 @@ var signCmd = &cobra.Command{
 		manager, err := sign.NewSignatureManager(passphrase, contract)
 		if err != nil {
 			fmt.Fprintln(os.Stderr, err)
-			os.Exit(2)
+			os.Exit(1)
 		}
 
 		fmt.Println("Waiting for peers...")
@@ -41,7 +48,7 @@ var signCmd = &cobra.Command{
 		err = manager.ConnectToPeers()
 		if err != nil {
 			fmt.Fprintln(os.Stderr, err)
-			os.Exit(3)
+			os.Exit(1)
 		}
 
 		// Confirmation
@@ -49,7 +56,7 @@ var signCmd = &cobra.Command{
 		readStringParam("Do you REALLY want to sign "+contract.File.Name+"? Type 'yes' to confirm", "", &ready)
 		if ready != "yes" {
 			fmt.Println("Signature aborted!")
-			os.Exit(4)
+			os.Exit(1)
 		}
 
 		// Ignition
@@ -57,7 +64,7 @@ var signCmd = &cobra.Command{
 		signatureUUID, err := manager.SendReadySign()
 		if err != nil {
 			fmt.Fprintln(os.Stderr, err)
-			os.Exit(5)
+			os.Exit(1)
 		}
 
 		// TODO Warning, integration tests are checking Stdout
@@ -68,18 +75,31 @@ var signCmd = &cobra.Command{
 		err = manager.Sign()
 		if err != nil {
 			fmt.Fprintln(os.Stderr, err)
-			os.Exit(5)
+			os.Exit(1)
 		}
 
 		// Persist evidencies, if any
 		err = manager.PersistSignaturesToFile()
 		if err != nil {
 			fmt.Fprintln(os.Stderr, err)
-			os.Exit(5)
+			os.Exit(1)
 		}
 
 		fmt.Println("Signature complete! See .proof file for evidences.")
 	},
+}
+
+func checkContractHash(filename string, expectedHash string) bool {
+	if filename == "" {
+		return true
+	}
+
+	ok, err := sign.CheckContractHash(filename, expectedHash)
+	if err != nil {
+		fmt.Fprintln(os.Stderr, err)
+	}
+
+	return ok
 }
 
 func signFeedbackFn(mail string, status sign.SignerStatus, data string) {
