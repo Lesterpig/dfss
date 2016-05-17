@@ -106,9 +106,6 @@
          </item>
          <item>
           <widget class="QToolButton" name="fileButton">
-           <property name="enabled">
-            <bool>false</bool>
-           </property>
            <property name="text">
             <string>Check with local</string>
            </property>
