@@ -29,7 +29,7 @@ func (manager *ArchivesManager) InitializeArchives(promise *cAPI.Promise, signat
 	present, archives := manager.ContainsSignature(signatureUUID)
 
 	if !present {
-		archives = NewSignatureArchives(signatureUUID, promise.Context.Sequence, *signers, promise.Context.ContractDocumentHash, promise.Context.SignedHash)
+		archives = NewSignatureArchives(signatureUUID, promise.Context.Sequence, *signers, promise.Context.ContractDocumentHash, promise.Context.Seal)
 	}
 
 	manager.Archives = archives

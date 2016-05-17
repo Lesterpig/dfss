@@ -140,6 +140,8 @@ message LaunchSignature {
 	repeated bytes keyHash = 3;
 	/// The signing sequence generated on-the-fly by the platform
 	repeated uint32 sequence = 4;
-	/// The cryptographic object of the signature of this structure (hash excepted) by the platform, for data certification.
-	bytes hash = 5;
+	/// The cryptographic object of the signature of this structure (hash and errorCode excepted) by the platform, for data certification.
+	/// The signature is computed using auth.SignStructure function:
+	/// PKCS1v15 + SHA512 hash of the string representation of the structure
+	bytes seal = 5;
 }

@@ -5,8 +5,7 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/spf13/viper"
-
+	"dfss/auth"
 	"dfss/dfssp/api"
 	"dfss/dfssp/authority"
 	"dfss/dfssp/common"
@@ -14,7 +13,7 @@ import (
 	"dfss/dfssp/user"
 	"dfss/mgdb"
 	"dfss/net"
-
+	"github.com/spf13/viper"
 	"golang.org/x/net/context"
 	"google.golang.org/grpc"
 )
@@ -96,7 +95,20 @@ func (s *platformServer) ReadySign(ctx context.Context, in *api.ReadySignRequest
 	if len(cn) == 0 {
 		return &api.LaunchSignature{ErrorCode: &api.ErrorCode{Code: api.ErrorCode_BADAUTH}}, nil
 	}
-	return contract.ReadySign(s.DB, s.Rooms, &ctx, in), nil
+
+	signal := contract.ReadySign(s.DB, s.Rooms, &ctx, in)
+	if signal.ErrorCode.Code == api.ErrorCode_SUCCESS {
+		sealedSignal := *signal
+		sealedSignal.ErrorCode = nil
+		sealedSignal.Seal = nil
+		var err error
+		signal.Seal, err = auth.SignStructure(s.Pid.Pkey, sealedSignal)
+		if err != nil {
+			return &api.LaunchSignature{ErrorCode: &api.ErrorCode{Code: api.ErrorCode_INTERR}}, nil
+		}
+	}
+
+	return signal, nil
 }
 
 // GetServer returns the GRPC server associated with the platform

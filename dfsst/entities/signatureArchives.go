@@ -24,10 +24,10 @@ func NewSigner(hash []byte) *Signer {
 type SignatureArchives struct {
 	ID bson.ObjectId `key:"_id" bson:"_id"` // Internal id of a SignatureArchives - The unique signature identifier
 
-	Sequence   []uint32 `key:"sequence" bson:"sequence"`     // Signing sequence
-	Signers    []Signer `key:"signers" bson:"signers"`       // List of signers
-	TextHash   []byte   `key:"textHash" bson:"textHash"`     // Small hash of the contract
-	SignedHash []byte   `key:"signedHash" bson:"SignedHash"` // Hash of the above fields, signed by the platform
+	Sequence []uint32 `key:"sequence" bson:"sequence"` // Signing sequence
+	Signers  []Signer `key:"signers" bson:"signers"`   // List of signers
+	TextHash []byte   `key:"textHash" bson:"textHash"` // Small hash of the contract
+	Seal     []byte   `key:"seal" bson:"seal"`         // Seal provided by the platform to authentify the context
 
 	ReceivedPromises []Promise       `key:"receivedPromises" bson:"receivedPromises"` // All valid received promises
 	AbortedSigners   []AbortedSigner `key:"abortedSigners" bson:"abortedSigners"`     // Signers that were sent an abort token
@@ -37,14 +37,14 @@ type SignatureArchives struct {
 }
 
 // NewSignatureArchives : creates a new SignatureArchives with the specified parameters
-func NewSignatureArchives(signatureUUID bson.ObjectId, sequence []uint32, signers []Signer, textHash, signedHash []byte) *SignatureArchives {
+func NewSignatureArchives(signatureUUID bson.ObjectId, sequence []uint32, signers []Signer, textHash, seal []byte) *SignatureArchives {
 	return &SignatureArchives{
 		ID: signatureUUID,
 
-		Sequence:   sequence,
-		Signers:    signers,
-		TextHash:   textHash,
-		SignedHash: signedHash,
+		Sequence: sequence,
+		Signers:  signers,
+		TextHash: textHash,
+		Seal:     seal,
 
 		ReceivedPromises: make([]Promise, 0),
 		AbortedSigners:   make([]AbortedSigner, 0),

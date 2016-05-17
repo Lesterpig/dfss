@@ -13,7 +13,6 @@ import (
 	"dfss/dfsst/resolve"
 	"dfss/mgdb"
 	"dfss/net"
-
 	"github.com/spf13/viper"
 	"golang.org/x/net/context"
 	"google.golang.org/grpc"
@@ -181,8 +180,8 @@ func (server *ttpServer) Recover(ctx context.Context, in *tAPI.RecoverRequest) (
 // GetServer returns the gRPC server.
 func GetServer() *grpc.Server {
 	// We can do that because NewAuthContainer is looking for "file_ca", "file_cert", and "file_key" in viper, which are set by the TTP
-	auth := security.NewAuthContainer(viper.GetString("password"))
-	ca, cert, key, err := auth.LoadFiles()
+	entities.AuthContainer = security.NewAuthContainer(viper.GetString("password"))
+	ca, cert, key, err := entities.AuthContainer.LoadFiles()
 	if err != nil {
 		fmt.Fprintln(os.Stderr, "An error occured during the private key and certificates retrieval:", err)
 		os.Exit(1)

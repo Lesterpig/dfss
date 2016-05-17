@@ -23,7 +23,7 @@ var (
 	signatureUUID        string
 	signatureUUIDBson    bson.ObjectId
 
-	signedHash []byte
+	seal []byte
 
 	signersEntities []Signer
 
@@ -48,7 +48,7 @@ func init() {
 	signatureUUIDBson = bson.NewObjectId()
 	signatureUUID = signatureUUIDBson.Hex()
 
-	signedHash = []byte{}
+	seal = []byte{}
 
 	signersEntities = make([]Signer, 0)
 	for _, s := range signers {
@@ -85,15 +85,15 @@ func TestInitializeArchives(t *testing.T) {
 			Sequence:             sequence,
 			Signers:              signers,
 			SignatureUUID:        signatureUUID,
-			SignedHash:           signedHash,
+			Seal:                 seal,
 		},
 	}
-	archives := NewSignatureArchives(signatureUUIDBson, sequence, signersEntities, contractDocumentHash, signedHash)
+	archives := NewSignatureArchives(signatureUUIDBson, sequence, signersEntities, contractDocumentHash, seal)
 	manager := &ArchivesManager{
 		DB:       dbManager,
 		Archives: archives,
 	}
-	arch := NewSignatureArchives(signatureUUIDBson, sequence, signersEntities, contractDocumentHash, signedHash)
+	arch := NewSignatureArchives(signatureUUIDBson, sequence, signersEntities, contractDocumentHash, seal)
 
 	manager.InitializeArchives(promise, signatureUUIDBson, &signersEntities)
 	arch.Signers = manager.Archives.Signers
@@ -114,7 +114,7 @@ func TestInitializeArchives(t *testing.T) {
 }
 
 func TestContainsSignature(t *testing.T) {
-	archives := NewSignatureArchives(signatureUUIDBson, sequence, signersEntities, contractDocumentHash, signedHash)
+	archives := NewSignatureArchives(signatureUUIDBson, sequence, signersEntities, contractDocumentHash, seal)
 	manager := &ArchivesManager{
 		DB:       dbManager,
 		Archives: archives,
@@ -138,7 +138,7 @@ func TestContainsSignature(t *testing.T) {
 }
 
 func TestHasReceivedAbortToken(t *testing.T) {
-	archives := NewSignatureArchives(signatureUUIDBson, sequence, signersEntities, contractDocumentHash, signedHash)
+	archives := NewSignatureArchives(signatureUUIDBson, sequence, signersEntities, contractDocumentHash, seal)
 	manager := &ArchivesManager{
 		DB:       dbManager,
 		Archives: archives,
@@ -164,7 +164,7 @@ func TestHasReceivedAbortToken(t *testing.T) {
 }
 
 func TestWasContractSigned(t *testing.T) {
-	archives := NewSignatureArchives(signatureUUIDBson, sequence, signersEntities, contractDocumentHash, signedHash)
+	archives := NewSignatureArchives(signatureUUIDBson, sequence, signersEntities, contractDocumentHash, seal)
 	manager := &ArchivesManager{
 		DB:       dbManager,
 		Archives: archives,
@@ -182,7 +182,7 @@ func TestWasContractSigned(t *testing.T) {
 }
 
 func TestHasSignerPromised(t *testing.T) {
-	archives := NewSignatureArchives(signatureUUIDBson, sequence, signersEntities, contractDocumentHash, signedHash)
+	archives := NewSignatureArchives(signatureUUIDBson, sequence, signersEntities, contractDocumentHash, seal)
 	manager := &ArchivesManager{
 		DB:       dbManager,
 		Archives: archives,
@@ -226,7 +226,7 @@ func TestHasSignerPromised(t *testing.T) {
 func TestAddToAbort(t *testing.T) {
 	// TODO
 	// Test the abortedIndex field, when promises will be implemented
-	archives := NewSignatureArchives(signatureUUIDBson, sequence, signersEntities, contractDocumentHash, signedHash)
+	archives := NewSignatureArchives(signatureUUIDBson, sequence, signersEntities, contractDocumentHash, seal)
 	manager := &ArchivesManager{
 		DB:       dbManager,
 		Archives: archives,
@@ -258,7 +258,7 @@ func TestAddToAbort(t *testing.T) {
 }
 
 func TestAddToDishonest(t *testing.T) {
-	archives := NewSignatureArchives(signatureUUIDBson, sequence, signersEntities, contractDocumentHash, signedHash)
+	archives := NewSignatureArchives(signatureUUIDBson, sequence, signersEntities, contractDocumentHash, seal)
 	manager := &ArchivesManager{
 		DB:       dbManager,
 		Archives: archives,
@@ -290,7 +290,7 @@ func TestAddToDishonest(t *testing.T) {
 }
 
 func TestAddPromise(t *testing.T) {
-	archives := NewSignatureArchives(signatureUUIDBson, sequence, signersEntities, contractDocumentHash, signedHash)
+	archives := NewSignatureArchives(signatureUUIDBson, sequence, signersEntities, contractDocumentHash, seal)
 	manager := &ArchivesManager{
 		DB:       dbManager,
 		Archives: archives,

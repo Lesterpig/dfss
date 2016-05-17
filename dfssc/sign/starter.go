@@ -42,6 +42,7 @@ type SignatureManager struct {
 	keyHash      [][]byte
 	mail         string
 	archives     *Archives
+	seal         []byte
 
 	// Callbacks
 	OnSignerStatusUpdate func(mail string, status SignerStatus, data string)
@@ -215,6 +216,7 @@ func (m *SignatureManager) SendReadySign() (signatureUUID string, err error) {
 	m.sequence = launch.Sequence
 	m.uuid = launch.SignatureUuid
 	m.keyHash = launch.KeyHash
+	m.seal = launch.Seal
 	signatureUUID = m.uuid
 	return
 }
