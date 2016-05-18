@@ -27,7 +27,7 @@ var signCmd = &cobra.Command{
 		}
 
 		var contractPath string
-		readStringParam("Local contract path (empty means no verification)", "", &contractPath)
+		readStringParam("Local contract path [skip]", "", &contractPath)
 		if !checkContractHash(contractPath, contract.File.Hash) {
 			fmt.Fprintln(os.Stderr, "Invalid contract file! Aborting.")
 			os.Exit(1)
