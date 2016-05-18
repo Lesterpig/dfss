@@ -112,9 +112,10 @@ func (manager *ArchivesManager) AddToDishonest(signerIndex uint32) {
 }
 
 // AddPromise : adds the specified promises to the list of received promises of the SignatureArchives.
+// If we have already a promise from this client, does not add it.
 func (manager *ArchivesManager) AddPromise(promise *Promise) {
 	for _, p := range manager.Archives.ReceivedPromises {
-		if (&p).Equal(promise) {
+		if p.SenderKeyIndex == promise.SenderKeyIndex {
 			return
 		}
 	}

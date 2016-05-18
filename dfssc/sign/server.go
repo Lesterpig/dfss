@@ -4,6 +4,7 @@ import (
 	"dfss"
 	cAPI "dfss/dfssc/api"
 	pAPI "dfss/dfssp/api"
+	"dfss/dfsst/entities"
 	"dfss/net"
 	"golang.org/x/net/context"
 	"google.golang.org/grpc"
@@ -26,6 +27,12 @@ func getServerErrorCode(c chan interface{}, in interface{}) *pAPI.ErrorCode {
 //
 // Handle incoming TreatPromise messages
 func (s *clientServer) TreatPromise(ctx context.Context, in *cAPI.Promise) (*pAPI.ErrorCode, error) {
+	// we check that the incoming promise is valid (ie. no data inconsistency)
+	// we do not check that we expected that promise
+	valid, _, _, _ := entities.IsRequestValid(ctx, []*cAPI.Promise{in})
+	if !valid {
+		return &pAPI.ErrorCode{Code: pAPI.ErrorCode_SUCCESS}, nil
+	}
 	return getServerErrorCode(s.incomingPromises, in), nil
 }
 

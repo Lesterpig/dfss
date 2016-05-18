@@ -1,6 +1,8 @@
 package sign
 
 import (
+	"crypto/rsa"
+	"crypto/x509"
 	"errors"
 	"fmt"
 	"strconv"
@@ -14,6 +16,8 @@ import (
 	dAPI "dfss/dfssd/api"
 	pAPI "dfss/dfssp/api"
 	"dfss/dfssp/contract"
+	tAPI "dfss/dfsst/api"
+	"dfss/dfsst/entities"
 	"dfss/net"
 	"github.com/spf13/viper"
 	"golang.org/x/net/context"
@@ -25,25 +29,28 @@ const chanBufferSize = 100
 
 // SignatureManager handles the signature of a contract.
 type SignatureManager struct {
-	auth         *security.AuthContainer
-	contract     *contract.JSON // contains the contractUUID, the list of the signers' hashes, the hash of the contract
-	platform     pAPI.PlatformClient
-	platformConn *grpc.ClientConn
-	peersConn    map[string]*grpc.ClientConn
-	peers        map[string]*cAPI.ClientClient
-	hashToID     map[string]uint32
-	nbReady      int
-	cServer      *grpc.Server
-	cServerIface clientServer
-	sequence     []uint32
-	currentIndex int
-	uuid         string
-	keyHash      [][]byte
-	mail         string
-	archives     *Archives
-	seal         []byte
-	cancelled    bool
-	finished     bool
+	auth           *security.AuthContainer
+	contract       *contract.JSON // contains the contractUUID, the list of the signers' hashes, the hash of the contract
+	platform       pAPI.PlatformClient
+	platformConn   *grpc.ClientConn
+	ttp            tAPI.TTPClient
+	peersConn      map[string]*grpc.ClientConn
+	peers          map[string]*cAPI.ClientClient
+	hashToID       map[string]uint32
+	nbReady        int
+	cServer        *grpc.Server
+	cServerIface   clientServer
+	sequence       []uint32
+	lastValidIndex int // the last index at which we sent a promise
+	currentIndex   int
+	myID           uint32
+	uuid           string
+	keyHash        [][]byte
+	mail           string
+	archives       *Archives
+	seal           []byte
+	cancelled      bool
+	finished       bool
 
 	// Callbacks
 	OnSignerStatusUpdate func(mail string, status SignerStatus, data string)
@@ -53,8 +60,7 @@ type SignatureManager struct {
 
 // Archives stores the received and sent messages, as evidence if needed
 type Archives struct {
-	sentPromises       []*cAPI.Promise
-	receivedPromises   []*cAPI.Promise
+	receivedPromises   []*cAPI.Promise // TODO: improve by using a map
 	sentSignatures     []*cAPI.Signature
 	receivedSignatures []*cAPI.Signature
 	mutex              sync.Mutex
@@ -66,7 +72,6 @@ func NewSignatureManager(passphrase string, c *contract.JSON) (*SignatureManager
 		auth:     security.NewAuthContainer(passphrase),
 		contract: c,
 		archives: &Archives{
-			sentPromises:       make([]*cAPI.Promise, 0),
 			receivedPromises:   make([]*cAPI.Promise, 0),
 			sentSignatures:     make([]*cAPI.Signature, 0),
 			receivedSignatures: make([]*cAPI.Signature, 0),
@@ -85,13 +90,19 @@ func NewSignatureManager(passphrase string, c *contract.JSON) (*SignatureManager
 	m.cServer = m.GetServer()
 	go func() { _ = net.Listen("0.0.0.0:"+strconv.Itoa(viper.GetInt("local_port")), m.cServer) }()
 
-	conn, err := net.Connect(viper.GetString("platform_addrport"), m.auth.Cert, m.auth.Key, m.auth.CA, nil)
+	connp, err := net.Connect(viper.GetString("platform_addrport"), m.auth.Cert, m.auth.Key, m.auth.CA, nil)
 	if err != nil {
 		return nil, err
 	}
 
-	m.platform = pAPI.NewPlatformClient(conn)
-	m.platformConn = conn
+	m.platform = pAPI.NewPlatformClient(connp)
+	m.platformConn = connp
+
+	// connect to the ttp
+	connt, err := m.connectToTTP(m.auth.Cert, m.auth.Key, m.auth.CA)
+	if err == nil {
+		m.ttp = tAPI.NewTTPClient(connt)
+	}
 
 	m.peersConn = make(map[string]*grpc.ClientConn)
 	m.peers = make(map[string]*cAPI.ClientClient)
@@ -101,7 +112,22 @@ func NewSignatureManager(passphrase string, c *contract.JSON) (*SignatureManager
 		}
 	}
 
+	// Initialize TTP AuthContainer
+	// This is needed to use platform seal verification client-side
+	entities.AuthContainer = m.auth
+
 	return m, nil
+}
+
+// connectToTTP : tries to open a connection with the ttp specified in the contract.
+// If there was no specified ttp, returns an error.
+// Otherwise, returns the connection, or an error if something else occured.
+func (m *SignatureManager) connectToTTP(cert *x509.Certificate, key *rsa.PrivateKey, ca *x509.Certificate) (*grpc.ClientConn, error) {
+	if m.contract.TTP == nil {
+		return nil, errors.New("No specified ttp in contract")
+	}
+	addrPort := m.contract.TTP.IP + ":" + string(m.contract.TTP.Port)
+	return net.Connect(addrPort, cert, key, ca, nil)
 }
 
 // ConnectToPeers tries to fetch the list of users for this contract, and tries to establish a connection to each peer.
@@ -282,23 +308,26 @@ func (m *SignatureManager) SendReadySign() (signatureUUID string, err error) {
 }
 
 // Initialize computes the values needed for the start of the signing
-func (m *SignatureManager) Initialize() (uint32, int, error) {
+func (m *SignatureManager) Initialize() (int, error) {
 	myID, err := m.FindID()
 	if err != nil {
-		return 0, 0, err
+		return 0, err
 	}
+	m.myID = myID
 
 	m.currentIndex, err = common.FindNextIndex(m.sequence, myID, -1)
 	if err != nil {
-		return 0, 0, err
+		return 0, err
 	}
 
 	nextIndex, err := common.FindNextIndex(m.sequence, myID, m.currentIndex)
 	if err != nil {
-		return 0, 0, err
+		return 0, err
 	}
 
-	return myID, nextIndex, nil
+	m.lastValidIndex = 0
+
+	return nextIndex, nil
 }
 
 // FindID finds the sequence id for the user's email and the contract to sign

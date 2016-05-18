@@ -2,12 +2,19 @@
 package sign
 
 import (
+	"bytes"
+	"errors"
 	"fmt"
+	"io/ioutil"
 	"time"
 
 	cAPI "dfss/dfssc/api"
 	"dfss/dfssc/common"
 	dAPI "dfss/dfssd/api"
+	tAPI "dfss/dfsst/api"
+	"dfss/net"
+	"golang.org/x/net/context"
+	"google.golang.org/grpc"
 )
 
 // Sign performs all the message exchanges for the contract to be signed
@@ -24,7 +31,7 @@ func (m *SignatureManager) Sign() error {
 		m.closeConnections()
 	}()
 
-	myID, nextIndex, err := m.Initialize()
+	nextIndex, err := m.Initialize()
 	if err != nil {
 		return err
 	}
@@ -45,24 +52,27 @@ func (m *SignatureManager) Sign() error {
 		dAPI.DLog("starting round at index [" + fmt.Sprintf("%d", m.currentIndex) + "] with nextIndex=" + fmt.Sprintf("%d", nextIndex))
 
 		// Set of promises we are waiting for
-		var pendingSet []uint32
-		pendingSet, err = common.GetPendingSet(m.sequence, myID, m.currentIndex)
+		var pendingSet []common.SequenceCoordinate
+		pendingSet, err = common.GetPendingSet(m.sequence, m.myID, m.currentIndex)
 		if err != nil {
 			return err
 		}
 
 		// Set of the promises we must send
-		var sendSet []uint32
-		sendSet, err = common.GetSendSet(m.sequence, myID, m.currentIndex)
+		var sendSet []common.SequenceCoordinate
+		sendSet, err = common.GetSendSet(m.sequence, m.myID, m.currentIndex)
 		if err != nil {
 			return err
 		}
 
 		// Exchange messages
-		m.promiseRound(pendingSet, sendSet, myID)
+		err = m.promiseRound(pendingSet, sendSet)
+		if err != nil {
+			return err
+		}
 
 		m.currentIndex = nextIndex
-		nextIndex, err = common.FindNextIndex(m.sequence, myID, m.currentIndex)
+		nextIndex, err = common.FindNextIndex(m.sequence, m.myID, m.currentIndex)
 		if err != nil {
 			return err
 		}
@@ -78,7 +88,7 @@ func (m *SignatureManager) Sign() error {
 	dAPI.DLog("exiting signature round")
 	m.OnProgressUpdate(seqLen+1, seqLen+1)
 
-	return nil
+	return m.PersistSignaturesToFile()
 }
 
 // GetClient retrieves the Client to the specified sequence id provided it exists
@@ -98,45 +108,52 @@ func (m *SignatureManager) makeSignersHashToIDMap() {
 }
 
 // promiseRound describes a promise round: reception and sending
-func (m *SignatureManager) promiseRound(pendingSet, sendSet []uint32, myID uint32) {
-
+func (m *SignatureManager) promiseRound(pendingSet, sendSet []common.SequenceCoordinate) error {
 	// Reception of the due promises
+	var promises []*cAPI.Promise
 	for len(pendingSet) > 0 {
 		select {
 		case promiseIface := <-m.cServerIface.incomingPromises:
 			promise := (promiseIface).(*cAPI.Promise)
-			senderID, exist := m.hashToID[fmt.Sprintf("%x", promise.Context.SenderKeyHash)]
-			if exist {
+			valid, senderID := m.checkPromise(pendingSet, promise)
+			if valid {
 				var err error
-				pendingSet, err = common.Remove(pendingSet, senderID)
+				pendingSet, err = common.RemoveCoordinate(pendingSet, senderID)
 				if err != nil {
 					continue
 				}
-				m.archives.receivedPromises = append(m.archives.receivedPromises, promise)
+				promises = append(promises, promise)
+			} else {
+				return m.resolve()
 			}
 
 		case <-time.After(time.Minute):
-			// TODO contact TTP
-			return
+			return m.resolve()
 		}
 	}
 
+	// Now that we received everything, we update the evidence we will give to the ttp
+	m.updateReceivedPromises(promises)
+	m.lastValidIndex = m.currentIndex
+
 	c := make(chan *cAPI.Promise, chanBufferSize)
 	// Sending of due promises
-	for _, id := range sendSet {
-		go func(id uint32, m *SignatureManager) {
-			promise, err := m.CreatePromise(myID, id)
+	for _, coord := range sendSet {
+		go func(coord common.SequenceCoordinate, m *SignatureManager) {
+			promise, err := m.CreatePromise(m.myID, coord.Signer, uint32(m.currentIndex))
 			if err == nil {
-				_ = m.SendEvidence(promise, nil, id)
+				_ = m.SendEvidence(promise, nil, coord.Signer)
 			}
 			c <- promise
-		}(id, m)
+		}(coord, m)
 	}
 
 	// Verifying we sent all the due promises
 	for range sendSet {
 		<-c
 	}
+
+	return nil
 }
 
 // closeConnections tries to close all established connection with other peers and platform.
@@ -148,4 +165,109 @@ func (m *SignatureManager) closeConnections() {
 		delete(m.peers, k)
 	}
 	m.cServer.Stop()
+}
+
+// updateReceivedPromises : updates the RecievedPromises field of the SignatureManager with the provided promises:
+// if we don't yet have a promise from this signer, we add it to the array.
+// otherwise we replace the one we have by the provided promise.
+func (m *SignatureManager) updateReceivedPromises(promises []*cAPI.Promise) {
+	for _, p := range promises {
+		present, index := m.containsPromiseFrom(p.Context.SenderKeyHash, p.Index)
+
+		if present {
+			// it's present, so there is no index error
+			_ = m.removeReceivedPromise(index)
+		}
+		m.archives.receivedPromises = append(m.archives.receivedPromises, p)
+	}
+}
+
+// containsPromiseFrom : determines if the SignatureManager has already archived a promise from the specified signer, previous to the specified index.
+func (m *SignatureManager) containsPromiseFrom(signer []byte, index uint32) (bool, int) {
+	for i, p := range m.archives.receivedPromises {
+		if bytes.Equal(p.Context.SenderKeyHash, signer) {
+			return p.Index < index, i
+		}
+	}
+	return false, 0
+}
+
+// removeReceivedPromise : removes the promise at the specified index from the archived received promises.
+// If the index is invalid, return an error.
+// If the promise is not there, does nothing.
+func (m *SignatureManager) removeReceivedPromise(index int) error {
+	promises := m.archives.receivedPromises
+	if index < 0 || index >= len(promises) {
+		return errors.New("Index out of range")
+	}
+
+	m.archives.receivedPromises = append(promises[:index], promises[index+1:]...)
+
+	return nil
+}
+
+// callForResolve : calls the ttp for resolution.
+func (m *SignatureManager) callForResolve() (*tAPI.TTPResponse, error) {
+	selfPromise, err := m.CreatePromise(m.myID, m.myID, uint32(m.lastValidIndex))
+	if err != nil {
+		return nil, err
+	}
+
+	toSend := append(m.archives.receivedPromises, selfPromise)
+
+	request := &tAPI.AlertRequest{Promises: toSend}
+
+	ctx, cancel := context.WithTimeout(context.Background(), net.DefaultTimeout)
+	defer cancel()
+	response, err := m.ttp.Alert(ctx, request)
+	if err != nil {
+		return nil, errors.New(grpc.ErrorDesc(err))
+	}
+
+	return response, nil
+}
+
+// resolve : calls for the resolution, and persists the contract if obtained.
+func (m *SignatureManager) resolve() error {
+	if m.ttp == nil {
+		return errors.New("No connection to TTP, aborting!")
+	}
+
+	response, err := m.callForResolve()
+	if err != nil {
+		return err
+	}
+	if response.Abort {
+		return nil
+	}
+	return ioutil.WriteFile(m.mail+"-"+m.contract.UUID+".proof", response.Contract, 0600)
+}
+
+// checkPromise : verifies that the promise is valid wrt the expected promises.
+// We assume that the promise data is consistent wrt the platform seal.
+func (m *SignatureManager) checkPromise(expected []common.SequenceCoordinate, promise *cAPI.Promise) (bool, uint32) {
+	// the promise is consistent, but not for the expected signature
+	// this should not happen
+	if promise.Context.SignatureUUID != m.uuid {
+		return false, 0
+	}
+
+	// the promise is not for us
+	recipientID, exist := m.hashToID[fmt.Sprintf("%x", promise.Context.RecipientKeyHash)]
+	if !exist || recipientID != m.myID {
+		return false, 0
+	}
+
+	// we didn't expect a promise from this client
+	senderID, exist := m.hashToID[fmt.Sprintf("%x", promise.Context.SenderKeyHash)]
+	if !exist {
+		return false, 0
+	}
+	for _, c := range expected {
+		if c.Signer == senderID && c.Index == promise.Index {
+			return true, senderID
+		}
+	}
+
+	return false, 0
 }

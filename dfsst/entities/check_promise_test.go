@@ -83,14 +83,18 @@ func TestIsPromiseValid(t *testing.T) {
 func TestIsPromiseFromAtoB(t *testing.T) {
 	// TODO
 	// This requires the implementation of promises
+	sender := []byte{1}
+	recipient := []byte{2}
+	index := uint32(5)
 	promise := &cAPI.Promise{
 		Context: &cAPI.Context{
-			RecipientKeyHash: []byte{},
-			SenderKeyHash:    []byte{},
+			RecipientKeyHash: recipient,
+			SenderKeyHash:    sender,
 			Signers:          signers,
 		},
+		Index: index,
 	}
-	ok := IsPromiseFromAtoB(promise)
+	ok := IsPromiseFromAtoB(promise, sender, recipient, index)
 	assert.Equal(t, ok, true)
 }
 

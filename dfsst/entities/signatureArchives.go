@@ -29,7 +29,7 @@ type SignatureArchives struct {
 	TextHash []byte   `key:"textHash" bson:"textHash"` // Small hash of the contract
 	Seal     []byte   `key:"seal" bson:"seal"`         // Seal provided by the platform to authentify the context
 
-	ReceivedPromises []Promise       `key:"receivedPromises" bson:"receivedPromises"` // All valid received promises
+	ReceivedPromises []Promise       `key:"receivedPromises" bson:"receivedPromises"` // Set of valid received promises (1 by sender)
 	AbortedSigners   []AbortedSigner `key:"abortedSigners" bson:"abortedSigners"`     // Signers that were sent an abort token
 	DishonestSigners []uint32        `key:"dishonestSigners" bson:"dishonestSigners"` // Indexes of the signers that were evaluated as dishonest
 
@@ -59,9 +59,9 @@ type Promise struct {
 	ID bson.ObjectId `key:"_id" bson:"_id"` // Internal id of a Promise
 
 	RecipientKeyIndex uint32 `key:"recipientKeyIndex" bson:"recipientKeyIndex"` // Index of the hash of the recipient's certificate in
-	// the `Signers` field of the enclosing SignatureArchives
+	// the `Signers` field of the enclosing SignatureArchives (identical to the one in the signers hashes array of the incoming promises)
 	SenderKeyIndex uint32 `key:"senderKeyIndex" bson:"senderKeyIndex"` // Index of the hash of the sender's certificate in
-	// the `Signers` field of the enclosing SignatureArchives
+	// the `Signers` field of the enclosing SignatureArchives (identical to the one in the signers hashes array of the incoming promises)
 	SequenceIndex uint32 `key:"sequenceIndex" bson:"sequenceIndex"` // Sequence index of the promise
 }
 

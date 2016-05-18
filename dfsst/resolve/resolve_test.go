@@ -6,6 +6,7 @@ import (
 	"testing"
 
 	"crypto/sha512"
+	cAPI "dfss/dfssc/api"
 	"dfss/dfsst/entities"
 	"dfss/mgdb"
 	"github.com/stretchr/testify/assert"
@@ -73,8 +74,304 @@ func TestMain(m *testing.M) {
 }
 
 func TestArePromisesComplete(t *testing.T) {
-	// TODO
-	// This requires the implementation of the call to the ttp
+	var promises []*entities.Promise
+	promise := &cAPI.Promise{
+		Context: &cAPI.Context{
+			RecipientKeyHash: []byte{},
+			Sequence:         sequence,
+			Signers:          signers,
+		},
+	}
+
+	complete := ArePromisesComplete(promises, promise, 2)
+	assert.False(t, complete)
+
+	promise.Context.RecipientKeyHash = signers[2]
+	complete = ArePromisesComplete(promises, promise, 2)
+	assert.False(t, complete)
+
+	for i := 1; i > -1; i-- {
+		p := &entities.Promise{
+			RecipientKeyIndex: 2,
+			SenderKeyIndex:    sequence[i],
+			SequenceIndex:     uint32(i),
+		}
+		promises = append(promises, p)
+	}
+
+	complete = ArePromisesComplete(promises, promise, 2)
+	assert.False(t, complete)
+
+	selfPromise := &entities.Promise{
+		RecipientKeyIndex: 2,
+		SenderKeyIndex:    2,
+		SequenceIndex:     2,
+	}
+	promises = append(promises, selfPromise)
+
+	complete = ArePromisesComplete(promises, promise, 2)
+	assert.True(t, complete)
+
+	promises = []*entities.Promise{}
+	for i := 7; i > 5; i-- {
+		p := &entities.Promise{
+			RecipientKeyIndex: 2,
+			SenderKeyIndex:    sequence[i],
+			SequenceIndex:     uint32(i),
+		}
+		promises = append(promises, p)
+	}
+
+	complete = ArePromisesComplete(promises, promise, 8)
+	assert.False(t, complete)
+
+	selfPromise = &entities.Promise{
+		RecipientKeyIndex: 2,
+		SenderKeyIndex:    2,
+		SequenceIndex:     8,
+	}
+	promises = append(promises, selfPromise)
+	complete = ArePromisesComplete(promises, promise, 8)
+	assert.True(t, complete)
+}
+
+func TestGenerateExpectedPromises(t *testing.T) {
+	var expected []*entities.Promise
+	promise := &cAPI.Promise{
+		Context: &cAPI.Context{
+			RecipientKeyHash: []byte{},
+			Sequence:         sequence,
+			Signers:          signers,
+		},
+	}
+
+	promises, err := generateExpectedPromises(promise, 1)
+	assert.Equal(t, err.Error(), "Signer's hash couldn't be matched")
+	assert.Nil(t, promises)
+
+	promise.Context.RecipientKeyHash = signers[1]
+	promises, err = generateExpectedPromises(promise, 1)
+	assert.Nil(t, err)
+	assert.Equal(t, len(promises), 2)
+	assert.True(t, promises[0].Equal(&entities.Promise{
+		RecipientKeyIndex: 1,
+		SenderKeyIndex:    0,
+		SequenceIndex:     0,
+	}))
+	assert.True(t, promises[1].Equal(&entities.Promise{
+		RecipientKeyIndex: 1,
+		SenderKeyIndex:    1,
+		SequenceIndex:     1,
+	}))
+
+	promise.Context.RecipientKeyHash = signers[2]
+	promises, err = generateExpectedPromises(promise, 1)
+	assert.Equal(t, err.Error(), "Signer at step is not recipient")
+	assert.Nil(t, promises)
+
+	promises, err = generateExpectedPromises(promise, 2)
+	assert.Nil(t, err)
+
+	for i := 1; i > -1; i-- {
+		p := &entities.Promise{
+			RecipientKeyIndex: 2,
+			SenderKeyIndex:    sequence[i],
+			SequenceIndex:     uint32(i),
+		}
+		expected = append(expected, p)
+	}
+	selfPromise := &entities.Promise{
+		RecipientKeyIndex: 2,
+		SenderKeyIndex:    2,
+		SequenceIndex:     2,
+	}
+	expected = append(expected, selfPromise)
+	assert.Equal(t, len(promises), 3)
+	assert.Equal(t, len(promises), len(expected))
+	for i := 0; i < len(promises); i++ {
+		assert.True(t, expected[i].Equal(promises[i]))
+	}
+
+	expected = []*entities.Promise{}
+	promises, err = generateExpectedPromises(promise, 8)
+	assert.Nil(t, err)
+
+	for i := 7; i > 5; i-- {
+		p := &entities.Promise{
+			RecipientKeyIndex: 2,
+			SenderKeyIndex:    sequence[i],
+			SequenceIndex:     uint32(i),
+		}
+		expected = append(expected, p)
+	}
+	selfPromise = &entities.Promise{
+		RecipientKeyIndex: 2,
+		SenderKeyIndex:    2,
+		SequenceIndex:     8,
+	}
+	expected = append(expected, selfPromise)
+	assert.Equal(t, len(promises), 3)
+	assert.Equal(t, len(promises), len(expected))
+	for i := 0; i < len(promises); i++ {
+		assert.True(t, expected[i].Equal(promises[i]))
+	}
+}
+
+func TestGenerationRound(t *testing.T) {
+	var expected []*entities.Promise
+
+	roundPromises, err := generationRound(sequence, 2, -1)
+	assert.Equal(t, err.Error(), "Index out of range")
+	assert.Equal(t, len(roundPromises), 0)
+
+	roundPromises, err = generationRound(sequence, 2, 2)
+	for i := 1; i > -1; i-- {
+		p := &entities.Promise{
+			RecipientKeyIndex: 2,
+			SenderKeyIndex:    sequence[i],
+			SequenceIndex:     uint32(i),
+		}
+		expected = append(expected, p)
+	}
+
+	assert.Equal(t, err, nil)
+	assert.Equal(t, len(roundPromises), 2)
+	for i := 0; i < 2; i++ {
+		assert.True(t, expected[i].Equal(roundPromises[i]))
+	}
+
+	expected = []*entities.Promise{}
+	roundPromises, err = generationRound(sequence, 2, 5)
+	for i := 4; i > 2; i-- {
+		p := &entities.Promise{
+			RecipientKeyIndex: 2,
+			SenderKeyIndex:    sequence[i],
+			SequenceIndex:     uint32(i),
+		}
+		expected = append(expected, p)
+	}
+
+	assert.Equal(t, err, nil)
+	assert.Equal(t, len(roundPromises), 2)
+	for i := 0; i < 2; i++ {
+		assert.True(t, expected[i].Equal(roundPromises[i]))
+	}
+
+	expected = []*entities.Promise{}
+	roundPromises, err = generationRound(sequence, 2, 8)
+	for i := 7; i > 5; i-- {
+		p := &entities.Promise{
+			RecipientKeyIndex: 2,
+			SenderKeyIndex:    sequence[i],
+			SequenceIndex:     uint32(i),
+		}
+		expected = append(expected, p)
+	}
+
+	assert.Equal(t, err, nil)
+	assert.Equal(t, len(roundPromises), 2)
+	for i := 0; i < 2; i++ {
+		assert.True(t, expected[i].Equal(roundPromises[i]))
+	}
+
+	roundPromises, err = generationRound(sequence, 2, 9)
+	assert.Equal(t, err.Error(), "Index out of range")
+	assert.Equal(t, len(roundPromises), 0)
+}
+
+func TestAddPromiseToExpected(t *testing.T) {
+	promise0 := &entities.Promise{
+		RecipientKeyIndex: 2,
+		SenderKeyIndex:    0,
+		SequenceIndex:     0,
+	}
+
+	promise1 := &entities.Promise{
+		RecipientKeyIndex: 2,
+		SenderKeyIndex:    1,
+		SequenceIndex:     1,
+	}
+
+	promise2 := &entities.Promise{
+		RecipientKeyIndex: 2,
+		SenderKeyIndex:    1,
+		SequenceIndex:     2,
+	}
+
+	expected := []*entities.Promise{}
+
+	assert.Equal(t, len(expected), 0)
+
+	expected = addPromiseToExpected(expected, promise0)
+	assert.Equal(t, len(expected), 1)
+	assert.True(t, promise0.Equal(expected[0]))
+
+	expected = addPromiseToExpected(expected, promise0)
+	assert.Equal(t, len(expected), 1)
+	assert.True(t, promise0.Equal(expected[0]))
+
+	expected = addPromiseToExpected(expected, promise1)
+	assert.Equal(t, len(expected), 2)
+	assert.True(t, promise0.Equal(expected[0]))
+	assert.True(t, promise1.Equal(expected[1]))
+
+	expected = addPromiseToExpected(expected, promise2)
+	assert.Equal(t, len(expected), 2)
+	assert.True(t, promise0.Equal(expected[0]))
+	assert.True(t, promise2.Equal(expected[1]))
+}
+
+func TestContainsPreviousPromise(t *testing.T) {
+	promise0 := &entities.Promise{
+		RecipientKeyIndex: 2,
+		SenderKeyIndex:    0,
+		SequenceIndex:     0,
+	}
+
+	promise1 := &entities.Promise{
+		RecipientKeyIndex: 2,
+		SenderKeyIndex:    1,
+		SequenceIndex:     1,
+	}
+
+	promise2 := &entities.Promise{
+		RecipientKeyIndex: 2,
+		SenderKeyIndex:    1,
+		SequenceIndex:     2,
+	}
+
+	promises := []*entities.Promise{}
+
+	assert.Equal(t, containsPreviousPromise(promises, promise1), -1)
+
+	promises = append(promises, promise0)
+	assert.Equal(t, containsPreviousPromise(promises, promise1), -1)
+
+	promises = append(promises, promise1)
+	assert.Equal(t, containsPreviousPromise(promises, promise1), -1)
+	assert.Equal(t, containsPreviousPromise(promises, promise2), 1)
+
+	promises = append(promises, promise2)
+	assert.Equal(t, containsPreviousPromise(promises, promise2), 1)
+}
+
+func TestContainsPromise(t *testing.T) {
+	promise0 := &entities.Promise{
+		RecipientKeyIndex: 2,
+		SenderKeyIndex:    0,
+		SequenceIndex:     0,
+	}
+
+	promise1 := &entities.Promise{
+		RecipientKeyIndex: 2,
+		SenderKeyIndex:    1,
+		SequenceIndex:     1,
+	}
+
+	promises := []*entities.Promise{promise0}
+
+	assert.False(t, containsPromise(promises, promise1))
+	assert.True(t, containsPromise(promises, promise0))
 }
 
 func TestSolve(t *testing.T) {
@@ -115,14 +412,47 @@ func TestSolve(t *testing.T) {
 	ok, contract = Solve(manager)
 	assert.Equal(t, ok, true)
 	if len(contract) == 0 {
-		t.Fatal("Contract should have need generated")
+		t.Fatal("Contract should have beed generated")
 	}
 }
 
 // TO MODIFY WHEN SOURCE FUNCTION WILL BE UPDATED
 func TestGenerateSignedContract(t *testing.T) {
 	// TODO
-	assert.Equal(t, true, true)
+	id := bson.NewObjectId()
+	var promises []entities.Promise
+	for i := 1; i > -1; i-- {
+		p := entities.Promise{
+			RecipientKeyIndex: 2,
+			SenderKeyIndex:    sequence[i],
+			SequenceIndex:     uint32(i),
+		}
+		promises = append(promises, p)
+	}
+	selfPromise := entities.Promise{
+		RecipientKeyIndex: 2,
+		SenderKeyIndex:    2,
+		SequenceIndex:     2,
+	}
+	promises = append(promises, selfPromise)
+
+	archives := &entities.SignatureArchives{
+		ID:               id,
+		Signers:          signersEntities,
+		ReceivedPromises: promises,
+	}
+
+	contract := GenerateSignedContract(archives)
+
+	var pseudoContract string
+	for _, p := range promises {
+		signature := "SIGNATURE FROM SIGNER " + string(signersEntities[p.SenderKeyIndex].Hash)
+		signature += " ON SIGNATURE n° " + string(id) + "\n"
+		pseudoContract += signature
+	}
+
+	expected := []byte(pseudoContract)
+	assert.Equal(t, contract, expected)
 }
 
 func TestComputeDishonestSigners(t *testing.T) {

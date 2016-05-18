@@ -27,7 +27,11 @@ type ttpServer struct {
 
 // Alert route for the TTP.
 func (server *ttpServer) Alert(ctx context.Context, in *tAPI.AlertRequest) (*tAPI.TTPResponse, error) {
-	valid, signatureUUID, signers, senderIndex := entities.IsRequestValid(ctx, in)
+	valid, signatureUUID, signers, senderIndex := entities.IsRequestValid(ctx, in.Promises)
+	if !valid {
+		return nil, errors.New(InternalError)
+	}
+	valid = int(in.Index) >= len(in.Promises[0].Context.Sequence)
 	if !valid {
 		return nil, errors.New(InternalError)
 	}
@@ -46,7 +50,7 @@ func (server *ttpServer) Alert(ctx context.Context, in *tAPI.AlertRequest) (*tAP
 	}
 
 	// We check that the sender of the request sent valid and complete information
-	stop, message, tmpPromises, err := server.handleInvalidPromises(manager, in.Promises, senderIndex)
+	stop, message, tmpPromises, err := server.handleInvalidPromises(manager, in.Promises, senderIndex, in.Index)
 	if stop {
 		return message, err
 	}
@@ -109,9 +113,9 @@ func (server *ttpServer) handleAbortedSender(manager *entities.ArchivesManager, 
 //
 // Updates the database with the new aborted signer.
 // If an error occurs during this process, it is returned.
-func (server *ttpServer) handleInvalidPromises(manager *entities.ArchivesManager, promises []*cAPI.Promise, senderIndex uint32) (bool, *tAPI.TTPResponse, []*entities.Promise, error) {
+func (server *ttpServer) handleInvalidPromises(manager *entities.ArchivesManager, promises []*cAPI.Promise, senderIndex, stepIndex uint32) (bool, *tAPI.TTPResponse, []*entities.Promise, error) {
 	valid, tmpPromises := entities.ArePromisesValid(promises)
-	complete := resolve.ArePromisesComplete(tmpPromises, promises[0])
+	complete := resolve.ArePromisesComplete(tmpPromises, promises[0], stepIndex)
 	if !valid || !complete {
 		manager.AddToAbort(senderIndex)
 		manager.AddToDishonest(senderIndex)

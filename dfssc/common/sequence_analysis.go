@@ -4,6 +4,11 @@ import (
 	"errors"
 )
 
+// SequenceCoordinate : contains both the sequence id of a signer, and the index of the occurence in the sequence
+type SequenceCoordinate struct {
+	Signer, Index uint32
+}
+
 // FindNextIndex analyses the specified sequence and tries to find the next occurence of id after the specified index (excluded)
 // Therefore to find the first occurence of the id in the sequence, use -1 as the index
 //
@@ -30,8 +35,8 @@ func FindNextIndex(s []uint32, id uint32, index int) (int, error) {
 //
 // If the index is not the one of the specified id in the sequence, the result still holds, but may be incomplete for your needs
 // If the id is not valid for the specified sequence, the result will be the set of ids of the sequence
-func GetPendingSet(s []uint32, id uint32, index int) ([]uint32, error) {
-	res := []uint32{}
+func GetPendingSet(s []uint32, id uint32, index int) ([]SequenceCoordinate, error) {
+	res := []SequenceCoordinate{}
 
 	if index >= len(s) || index < 0 {
 		return res, errors.New("Index out of range")
@@ -44,8 +49,8 @@ func GetPendingSet(s []uint32, id uint32, index int) ([]uint32, error) {
 
 	for curIndex > -1 && s[curIndex] != id {
 		curID := s[curIndex]
-		if !contains(res, curID) {
-			res = append(res, curID)
+		if !containsCoordinate(res, curID) {
+			res = append(res, SequenceCoordinate{Signer: curID, Index: uint32(curIndex)})
 		}
 		curIndex--
 	}
@@ -59,8 +64,8 @@ func GetPendingSet(s []uint32, id uint32, index int) ([]uint32, error) {
 //
 // If the index is not the one of the specified id in the sequence, the result still holds, but may be incomplete for your needs
 // If the id is not valid for the specified sequence, the result will be the set of ids of the sequence
-func GetSendSet(s []uint32, id uint32, index int) ([]uint32, error) {
-	res := []uint32{}
+func GetSendSet(s []uint32, id uint32, index int) ([]SequenceCoordinate, error) {
+	res := []SequenceCoordinate{}
 
 	if index >= len(s) || index < 0 {
 		return res, errors.New("Index out of range")
@@ -73,8 +78,8 @@ func GetSendSet(s []uint32, id uint32, index int) ([]uint32, error) {
 
 	for curIndex < len(s) && s[curIndex] != id {
 		curID := s[curIndex]
-		if !contains(res, curID) {
-			res = append(res, curID)
+		if !containsCoordinate(res, curID) {
+			res = append(res, SequenceCoordinate{Signer: curID, Index: uint32(curIndex)})
 		}
 		curIndex++
 	}
@@ -82,7 +87,17 @@ func GetSendSet(s []uint32, id uint32, index int) ([]uint32, error) {
 	return res, nil
 }
 
-// contains determines if s contains e
+// containsCoordinate: determines if s contains the specified signer sequence id e
+func containsCoordinate(s []SequenceCoordinate, e uint32) bool {
+	for _, a := range s {
+		if a.Signer == e {
+			return true
+		}
+	}
+	return false
+}
+
+// contains : determines if s contains e
 func contains(s []uint32, e uint32) bool {
 	for _, a := range s {
 		if a == e {
@@ -108,7 +123,17 @@ func GetAllButOne(s []uint32, e uint32) []uint32 {
 	return res
 }
 
-// Remove an ID from the sequence
+// RemoveCoordinate : removes the first occurence of an ID from the coordinates array
+func RemoveCoordinate(s []SequenceCoordinate, e uint32) ([]SequenceCoordinate, error) {
+	for i, a := range s {
+		if a.Signer == e {
+			return append(s[:i], s[i+1:]...), nil
+		}
+	}
+	return s, errors.New("ID not in sequence")
+}
+
+// Remove the first occurence of an ID from the ids array
 func Remove(s []uint32, e uint32) ([]uint32, error) {
 	for i, a := range s {
 		if a == e {
