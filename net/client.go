@@ -154,8 +154,8 @@ func ExternalInterfaceAddr() ([]string, error) {
 		return nil, err
 	}
 
-	var extAddrs = make([]string, len(addrs))
-	var localhostAddrs = make([]string, 1)
+	var extAddrs = make([]string, 0)
+	var localhostAddrs = make([]string, 0)
 
 	for _, a := range addrs {
 		if strings.ContainsRune(a.String(), ':') {
