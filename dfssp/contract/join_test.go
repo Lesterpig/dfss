@@ -36,7 +36,6 @@ func TestJoinSignature(t *testing.T) {
 	assert.Equal(t, api.ErrorCode_SUCCESS, user.ErrorCode.Code)
 	assert.Equal(t, contractID.Hex(), user.ContractUuid)
 	assert.Equal(t, "test@test.com", user.User.Email)
-	assert.Equal(t, "127.0.0.1", user.User.Ip)
 	assert.Equal(t, uint32(5050), user.User.Port)
 }
 

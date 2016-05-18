@@ -101,6 +101,8 @@ message JoinSignatureRequest {
 	string contractUuid = 1;
 	/// The open port for P2P communication of the client
 	uint32 port = 2;
+	/// The offered ips for P2P communication of the client
+	repeated string ip = 3;
 }
 
 /// UserConnected is emitted by the platform to the client to announce a new client connection, through a stream.
@@ -120,7 +122,7 @@ message User {
 	bytes keyHash = 1;
 	string email = 2;
 	/// The IP offered by the user for P2P
-	string ip = 3;
+	repeated string ip = 3;
 	/// The port offered by the user for P2P
 	uint32 port = 4;
 }

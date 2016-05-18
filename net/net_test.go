@@ -3,6 +3,7 @@ package net
 import (
 	"fmt"
 	"net"
+	"regexp"
 	"testing"
 	"time"
 
@@ -252,4 +253,20 @@ func Example() {
 	// Output:
 	// 42
 	// 43
+}
+
+// INTERFACE TEST
+
+func TestExternalInterfaces(t *testing.T) {
+	ips, err := ExternalInterfaceAddr()
+	if err != nil {
+		panic("Cannot read interfaces config")
+	}
+
+	isAnIPV4 := regexp.MustCompile("^(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?).(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?).(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?).(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$")
+	for _, ip := range ips {
+		if !isAnIPV4.MatchString(ip) {
+			panic(ip + " is not a valid IPv4!")
+		}
+	}
 }

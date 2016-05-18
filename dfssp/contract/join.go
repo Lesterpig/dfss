@@ -46,7 +46,7 @@ func JoinSignature(db *mgdb.MongoManager, rooms *common.WaitingGroupMap, in *api
 	rooms.Broadcast(roomID, &api.User{
 		KeyHash: hash,
 		Email:   net.GetCN(&ctx),
-		Ip:      host,
+		Ip:      append(in.Ip, host),
 		Port:    in.Port,
 	})
 

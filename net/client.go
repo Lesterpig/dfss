@@ -7,6 +7,7 @@ import (
 	"crypto/x509"
 	"errors"
 	"net"
+	"strings"
 	"time"
 
 	"dfss/auth"
@@ -143,4 +144,31 @@ func (c *tlsCreds) ClientHandshake(addr string, rawConn net.Conn, timeout time.D
 
 func (c *tlsCreds) ServerHandshake(rawConn net.Conn) (net.Conn, credentials.AuthInfo, error) {
 	return nil, nil, errors.New("Server side handshake not implemented")
+}
+
+// ExternalInterfaceAddr returns a list of the system's network interface addresses
+// Returns only ipv4 address if there is a lo interface, it is put at the end
+func ExternalInterfaceAddr() ([]string, error) {
+	addrs, err := net.InterfaceAddrs()
+	if err != nil {
+		return nil, err
+	}
+
+	var extAddrs = make([]string, 0)
+	var localhostAddrs = make([]string, 0)
+
+	for _, a := range addrs {
+		if strings.ContainsRune(a.String(), ':') {
+			// ipv6, do nothing
+		} else if strings.ContainsRune(a.String(), '/') {
+			ip := strings.Split(a.String(), "/")[0]
+			if strings.HasPrefix(ip, "127") {
+				// move localhost ip at the end if present
+				localhostAddrs = append(localhostAddrs, ip)
+			} else {
+				extAddrs = append(extAddrs, ip)
+			}
+		}
+	}
+	return append(extAddrs, localhostAddrs...), nil
 }
