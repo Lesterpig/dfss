@@ -263,9 +263,9 @@ func TestExternalInterfaces(t *testing.T) {
 		panic("Cannot read interfaces config")
 	}
 
-	isAnIpV4 := regexp.MustCompile("^(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?).(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?).(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?).(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$")
+	isAnIPV4 := regexp.MustCompile("^(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?).(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?).(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?).(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$")
 	for _, ip := range ips {
-		if !isAnIpV4.MatchString(ip) {
+		if !isAnIPV4.MatchString(ip) {
 			panic(ip + " is not a valid IPv4!")
 		}
 	}
