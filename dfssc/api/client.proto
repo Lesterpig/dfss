@@ -30,8 +30,8 @@ message Context {
 	bytes contractDocumentHash = 5;
 	/// The unique signature attemp ID, as provided by the platform during the ready signal
 	string signatureUUID = 6;
-	/// The signed metadata hashb, as provided by the platform during the ready signal
-	bytes signedHash = 7;
+	/// The signed metadata seal, as provided by the platform during the ready signal
+	bytes seal = 7;
 }
 
 message Promise {

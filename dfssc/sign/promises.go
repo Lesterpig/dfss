@@ -21,6 +21,7 @@ func (m *SignatureManager) createContext(from, to uint32) (*cAPI.Context, error)
 		Signers:              m.keyHash,
 		ContractDocumentHash: []byte(m.contract.File.Hash),
 		SignatureUUID:        m.uuid,
+		Seal:                 m.seal,
 	}, nil
 }
 

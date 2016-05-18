@@ -32,13 +32,10 @@ func TestIsPromiseSignedByPlatform(t *testing.T) {
 	valid, sigID, _ = IsPromiseSignedByPlatform(promise)
 	assert.Equal(t, valid, false)
 
-	// TODO
-	// when 'IsPlatformSignedHashValid' is implemented
 	promise.Context.Signers = signers
-	valid, sigID, signerss := IsPromiseSignedByPlatform(promise)
-	assert.Equal(t, valid, true)
+	valid, sigID, _ = IsPromiseSignedByPlatform(promise)
+	assert.Equal(t, valid, false)
 	assert.Equal(t, sigID, signatureUUIDBson)
-	assert.Equal(t, len(signerss), len(signers))
 }
 
 func TestGetSenderHashFromContext(t *testing.T) {
@@ -114,18 +111,17 @@ func TestIsSignerHashValid(t *testing.T) {
 	assert.Equal(t, bytes.Equal(signer.Hash, signers[0]), true)
 }
 
-// TO MODIFY WHEN SOURCE FUNCTION WILL BE UPDATED
-func TestIsPlatformSignedHashValid(t *testing.T) {
+func TestIsPlatformSealValid(t *testing.T) {
 	promise := &cAPI.Promise{
 		Context: &cAPI.Context{
 			ContractDocumentHash: contractDocumentHash,
 			Sequence:             sequence,
 			Signers:              signers,
 			SignatureUUID:        signatureUUID,
-			SignedHash:           signedHash,
+			Seal:                 seal,
 		},
 	}
 
-	b := IsPlatformSignedHashValid(promise)
-	assert.Equal(t, b, true)
+	b := IsPlatformSealValid(promise)
+	assert.Equal(t, b, false)
 }

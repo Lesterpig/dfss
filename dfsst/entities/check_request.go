@@ -7,6 +7,7 @@ import (
 	"crypto/sha512"
 	"dfss/auth"
 	cAPI "dfss/dfssc/api"
+	pAPI "dfss/dfssp/api"
 	tAPI "dfss/dfsst/api"
 	"dfss/net"
 	"golang.org/x/net/context"
@@ -68,7 +69,7 @@ func IsPromiseSignedByPlatform(promise *cAPI.Promise) (bool, bson.ObjectId, []Si
 		return false, signatureUUID, nil
 	}
 
-	ok = IsPlatformSignedHashValid(promise)
+	ok = IsPlatformSealValid(promise)
 	if !ok {
 		return false, signatureUUID, nil
 	}
@@ -137,9 +138,19 @@ func IsSignerHashValid(hash []byte) (bool, *Signer) {
 	return true, NewSigner(hash)
 }
 
-// IsPlatformSignedHashValid : verifies that the specified promise contains the expected information signed by the platform.
-func IsPlatformSignedHashValid(promise *cAPI.Promise) bool {
-	// TODO
-	// This requires the implementation of promise sending by the clients
-	return true
+// IsPlatformSealValid : verifies that the specified promise contains the expected information signed by the platform.
+func IsPlatformSealValid(promise *cAPI.Promise) bool {
+	if AuthContainer == nil {
+		return false
+	}
+
+	theoric := pAPI.LaunchSignature{
+		SignatureUuid: promise.Context.SignatureUUID,
+		DocumentHash:  promise.Context.ContractDocumentHash,
+		KeyHash:       promise.Context.Signers,
+		Sequence:      promise.Context.Sequence,
+	}
+
+	ok, _ := auth.VerifyStructure(AuthContainer.CA, theoric, promise.Context.Seal)
+	return ok
 }
