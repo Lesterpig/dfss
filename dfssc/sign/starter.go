@@ -156,7 +156,6 @@ func (m *SignatureManager) addPeer(user *pAPI.User) (ready bool, err error) {
 		// This is an certificate authentificated TLS connection
 		conn, err = net.Connect(addrPort, m.auth.Cert, m.auth.Key, m.auth.CA, user.KeyHash)
 		if err == nil {
-
 			break
 		}
 	}

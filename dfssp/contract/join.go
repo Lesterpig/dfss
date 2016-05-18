@@ -1,6 +1,7 @@
 package contract
 
 import (
+	n "net"
 	"time"
 
 	"dfss/auth"
@@ -20,7 +21,7 @@ import (
 // There is no timeout, this function will shut down on stream disconnection or on error.
 func JoinSignature(db *mgdb.MongoManager, rooms *common.WaitingGroupMap, in *api.JoinSignatureRequest, stream api.Platform_JoinSignatureServer) {
 	ctx := stream.Context()
-	state, _, _ := net.GetTLSState(&ctx)
+	state, addr, _ := net.GetTLSState(&ctx)
 	hash := auth.GetCertificateHash(state.VerifiedChains[0][0])
 
 	if !checkJoinSignatureRequest(db, &stream, in.ContractUuid, hash) {
@@ -41,10 +42,11 @@ func JoinSignature(db *mgdb.MongoManager, rooms *common.WaitingGroupMap, in *api
 	}
 
 	// Broadcast self identity
+	host, _, _ := n.SplitHostPort(addr.String())
 	rooms.Broadcast(roomID, &api.User{
 		KeyHash: hash,
 		Email:   net.GetCN(&ctx),
-		Ip:      in.Ip,
+		Ip:      append(in.Ip, host),
 		Port:    in.Port,
 	})
 
