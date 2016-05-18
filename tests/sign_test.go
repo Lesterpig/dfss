@@ -56,9 +56,10 @@ func TestSignContract(t *testing.T) {
 	// Create contract
 	client1 = newClient(client1)
 	setLastArg(client1, "new", true)
+	contractFilePath := filepath.Join("testdata", "contract.txt")
 	client1.Stdin = strings.NewReader(
 		"password\n" +
-			filepath.Join("testdata", "contract.txt") + "\n" +
+			contractFilePath + "\n" +
 			"\n" +
 			"client1@example.com\n" +
 			"client2@example.com\n" +
@@ -76,6 +77,14 @@ func TestSignContract(t *testing.T) {
 	err = ioutil.WriteFile(contractPath, contractData, os.ModePerm)
 	assert.Equal(t, nil, err)
 
+	// Test with wrong file, should abort
+	wrongFileClient := newClient(client1)
+	setLastArg(wrongFileClient, "sign", true)
+	setLastArg(wrongFileClient, contractPath, false)
+	wrongFileClient.Stdin = strings.NewReader("wrongfile.txt\npassword\nyes\n")
+	_, err = wrongFileClient.Output()
+	assert.NotNil(t, err)
+
 	// Sign!
 	clients[0] = newClient(client1)
 	clients[1] = newClient(client2)
@@ -87,7 +96,7 @@ func TestSignContract(t *testing.T) {
 		setLastArg(clients[i], contractPath, false)
 		go func(c *exec.Cmd, i int) {
 			time.Sleep(time.Duration(i*2) * time.Second)
-			c.Stdin = strings.NewReader("password\nyes\n")
+			c.Stdin = strings.NewReader(contractFilePath + "\npassword\nyes\n")
 			c.Stderr = os.Stderr
 			output, err1 := c.Output()
 			if err1 != nil {
