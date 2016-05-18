@@ -14,10 +14,11 @@ import (
 
 // readySignal is the structure that is transmitted accross goroutines
 type readySignal struct {
-	ready    bool     // If true, this is the ready signal. If not, this is a new connection signal
-	data     string   // Various data (CN or SignatureUUID)
-	chain    [][]byte // Only used to broadcast hash chain (signers hashes in order)
-	sequence []uint32 // Only used to broadcast signature sequence
+	ready        bool     // If true, this is the ready signal. If not, this is a new connection signal
+	data         string   // Various data (CN or SignatureUUID)
+	documentHash []byte   // Contract document SHA-512 hash
+	chain        [][]byte // Only used to broadcast hash chain (signers hashes in order)
+	sequence     []uint32 // Only used to broadcast signature sequence
 }
 
 // ReadySign is the last job of the platform before the signature can occur.
@@ -56,6 +57,7 @@ func ReadySign(db *mgdb.MongoManager, rooms *common.WaitingGroupMap, ctx *contex
 					return &api.LaunchSignature{
 						ErrorCode:     &api.ErrorCode{Code: api.ErrorCode_SUCCESS},
 						SignatureUuid: s.data,
+						DocumentHash:  s.documentHash,
 						KeyHash:       s.chain,
 						Sequence:      s.sequence,
 					}
@@ -110,10 +112,11 @@ func masterReadyRoutine(db *mgdb.MongoManager, rooms *common.WaitingGroupMap, co
 			ready := FindAndUpdatePendingSigner(cn, &signersReady, &contract.Signers)
 			if ready {
 				rooms.Broadcast(roomID, &readySignal{
-					ready:    true,
-					data:     bson.NewObjectId().Hex(),
-					chain:    contract.GetHashChain(),
-					sequence: GenerateSignSequence(len(contract.Signers)),
+					ready:        true,
+					data:         bson.NewObjectId().Hex(),
+					documentHash: contract.File.Hash,
+					chain:        contract.GetHashChain(),
+					sequence:     GenerateSignSequence(len(contract.Signers)),
 				})
 				work = false
 			}

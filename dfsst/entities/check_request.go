@@ -146,6 +146,7 @@ func IsPlatformSealValid(promise *cAPI.Promise) bool {
 
 	theoric := pAPI.LaunchSignature{
 		SignatureUuid: promise.Context.SignatureUUID,
+		DocumentHash:  promise.Context.ContractDocumentHash,
 		KeyHash:       promise.Context.Signers,
 		Sequence:      promise.Context.Sequence,
 	}
