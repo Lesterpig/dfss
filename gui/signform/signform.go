@@ -22,9 +22,11 @@ type Widget struct {
 	table                    *ui.QTableWidget
 	progressBar              *ui.QProgressBar
 	feedbackLabel            *ui.QLabel
+	cancelButton             *ui.QPushButton
 	lines                    []line
 	statusMax, statusCurrent int32
 	feedback                 string
+	running                  bool
 }
 
 func NewWidget(contract *contract.JSON, pwd string) *Widget {
@@ -40,6 +42,7 @@ func NewWidget(contract *contract.JSON, pwd string) *Widget {
 	w.feedbackLabel = ui.NewLabelFromDriver(w.FindChild("mainLabel"))
 	w.table = ui.NewTableWidgetFromDriver(w.FindChild("signersTable"))
 	w.progressBar = ui.NewProgressBarFromDriver(w.FindChild("progressBar"))
+	w.cancelButton = ui.NewPushButtonFromDriver(w.FindChild("cancelButton"))
 
 	m, err := sign.NewSignatureManager(
 		pwd,
@@ -56,6 +59,18 @@ func NewWidget(contract *contract.JSON, pwd string) *Widget {
 		w.statusMax = int32(max)
 	}
 
+	w.cancelButton.OnClicked(func() {
+		// Render an immediate feedback to user
+		f := "Cancelling signature process..."
+		w.feedback = f
+		w.feedbackLabel.SetText(f)
+		w.cancelButton.SetDisabled(true)
+		w.statusMax = 1
+		w.statusCurrent = 0
+		// Ask for cancellation in a separate goroutine to avoid blocking Qt
+		go func() { w.manager.Cancel <- true }()
+	})
+
 	w.initLines()
 	w.signerUpdated(viper.GetString("email"), sign.StatusConnected, "It's you!")
 	go func() {
@@ -70,6 +85,8 @@ func NewWidget(contract *contract.JSON, pwd string) *Widget {
 	return w
 }
 
+// execute() is called in a goroutine OUTSIDE of Qt loop.
+// WE SHOULD NOT CALL ANY QT FUNCTION FROM IT.
 func (w *Widget) execute() error {
 	w.feedback = "Connecting to peers..."
 	err := w.manager.ConnectToPeers()
@@ -84,6 +101,7 @@ func (w *Widget) execute() error {
 	}
 
 	w.feedback = "Signature in progress..."
+	w.running = true
 	err = w.manager.Sign()
 	if err != nil {
 		return err
@@ -109,6 +127,7 @@ func (w *Widget) Tick() {
 	w.feedbackLabel.SetText(w.feedback)
 	w.progressBar.SetMaximum(w.statusMax)
 	w.progressBar.SetValue(w.statusCurrent)
+	w.cancelButton.SetDisabled(w.running || w.manager.IsTerminated())
 	for _, l := range w.lines {
 		l.cellA.SetIcon(icons[l.status])
 		l.cellA.SetText(icons_labels[l.status])

@@ -3,7 +3,6 @@ package sign
 import (
 	"errors"
 	"fmt"
-	"log"
 	"strconv"
 	"sync"
 	"time"
@@ -43,10 +42,13 @@ type SignatureManager struct {
 	mail         string
 	archives     *Archives
 	seal         []byte
+	cancelled    bool
+	finished     bool
 
 	// Callbacks
 	OnSignerStatusUpdate func(mail string, status SignerStatus, data string)
 	OnProgressUpdate     func(current int, end int)
+	Cancel               chan interface{}
 }
 
 // Archives stores the received and sent messages, as evidence if needed
@@ -69,6 +71,7 @@ func NewSignatureManager(passphrase string, c *contract.JSON) (*SignatureManager
 			sentSignatures:     make([]*cAPI.Signature, 0),
 			receivedSignatures: make([]*cAPI.Signature, 0),
 		},
+		Cancel: make(chan interface{}),
 	}
 	var err error
 	_, _, _, err = m.auth.LoadFiles()
@@ -80,7 +83,7 @@ func NewSignatureManager(passphrase string, c *contract.JSON) (*SignatureManager
 	dAPI.SetIdentifier(m.mail)
 
 	m.cServer = m.GetServer()
-	go func() { log.Fatalln(net.Listen("0.0.0.0:"+strconv.Itoa(viper.GetInt("local_port")), m.cServer)) }()
+	go func() { _ = net.Listen("0.0.0.0:"+strconv.Itoa(viper.GetInt("local_port")), m.cServer) }()
 
 	conn, err := net.Connect(viper.GetString("platform_addrport"), m.auth.Cert, m.auth.Key, m.auth.CA, nil)
 	if err != nil {
@@ -114,28 +117,49 @@ func (m *SignatureManager) ConnectToPeers() error {
 		Ip:           localIps,
 	})
 	if err != nil {
+		m.finished = true
+		m.closeConnections()
 		return err
 	}
 
-	for {
+	c := make(chan error)
+	go connectToPeersLoop(m, stream, c)
+
+	select {
+	case err = <-c:
+		if err != nil {
+			m.finished = true
+			m.closeConnections()
+		}
+		return err
+	case <-m.Cancel:
+		m.cancelled = true
+		m.closeConnections()
+		return errors.New("Signature cancelled")
+	}
+}
+
+func connectToPeersLoop(m *SignatureManager, stream pAPI.Platform_JoinSignatureClient, c chan error) {
+	for !m.cancelled {
 		userConnected, err := stream.Recv()
 		if err != nil {
-			return err
+			c <- err
+			return
 		}
 		errorCode := userConnected.GetErrorCode()
 		if errorCode.Code != pAPI.ErrorCode_SUCCESS {
-			return errors.New(errorCode.Message)
+			c <- errors.New(errorCode.Message)
+			return
 		}
 		ready, err := m.addPeer(userConnected.User)
 		if err != nil {
 			continue // Unable to connect to this user, ignore it for the moment
 		}
 		if ready {
-			break
+			c <- nil
+			return
 		}
 	}
-
-	return nil
 }
 
 // addPeer stores a peer from the platform and tries to establish a connection to this peer.
@@ -156,6 +180,11 @@ func (m *SignatureManager) addPeer(user *pAPI.User) (ready bool, err error) {
 		// This is an certificate authentificated TLS connection
 		conn, err = net.Connect(addrPort, m.auth.Cert, m.auth.Key, m.auth.CA, user.KeyHash)
 		if err == nil {
+			break
+		}
+
+		if m.cancelled {
+			err = errors.New("Signature cancelled")
 			break
 		}
 	}
@@ -200,28 +229,46 @@ func (m *SignatureManager) addPeer(user *pAPI.User) (ready bool, err error) {
 func (m *SignatureManager) SendReadySign() (signatureUUID string, err error) {
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Minute)
 	defer cancel()
-	launch, err := m.platform.ReadySign(ctx, &pAPI.ReadySignRequest{
-		ContractUuid: m.contract.UUID,
-	})
-	if err != nil {
+
+	c := make(chan *pAPI.LaunchSignature)
+	go func() {
+		launch, _ := m.platform.ReadySign(ctx, &pAPI.ReadySignRequest{
+			ContractUuid: m.contract.UUID,
+		})
+		c <- launch
+	}()
+
+	var launch *pAPI.LaunchSignature
+	select {
+	case launch = <-c: // OK
+	case <-m.Cancel:
+		m.cancelled = true
+		m.closeConnections()
+		err = errors.New("Signature cancelled")
 		return
 	}
 
 	errorCode := launch.GetErrorCode()
 	if errorCode.Code != pAPI.ErrorCode_SUCCESS {
 		err = errors.New(errorCode.Code.String() + " " + errorCode.Message)
+		m.finished = true
+		m.closeConnections()
 		return
 	}
 
 	// Check signers from platform data
 	if len(m.contract.Signers) != len(launch.KeyHash) {
 		err = errors.New("Corrupted DFSS file: bad number of signers, unable to sign safely")
+		m.finished = true
+		m.closeConnections()
 		return
 	}
 
 	for i, s := range m.contract.Signers {
 		if s.Hash != fmt.Sprintf("%x", launch.KeyHash[i]) {
 			err = errors.New("Corrupted DFSS file: signer " + s.Email + " has an invalid hash, unable to sign safely")
+			m.finished = true
+			m.closeConnections()
 			return
 		}
 	}
@@ -263,4 +310,9 @@ func (m *SignatureManager) FindID() (uint32, error) {
 		}
 	}
 	return 0, errors.New("Mail couldn't be found amongst signers")
+}
+
+// IsTerminated returns true if the signature is cancelled or finished
+func (m *SignatureManager) IsTerminated() bool {
+	return m.cancelled || m.finished
 }
