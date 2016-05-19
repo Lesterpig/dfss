@@ -91,6 +91,7 @@ func (w *Window) initTimer() {
 	w.timer.OnTimeout(func() {
 		nbEvents := len(w.scene.Events)
 		if w.scene.currentEvent >= nbEvents {
+			w.stopButton.Click()
 			w.replayButton.Click()
 			return
 		}
@@ -116,6 +117,7 @@ func (w *Window) initTimer() {
 		quantum := time.Duration(w.quantumField.Value()) * time.Microsecond
 		endOfQuantum := w.scene.currentTime.Add(quantum)
 
+		drawnEvents := 0
 		for i := w.scene.currentEvent; i < nbEvents; i++ {
 			e := w.scene.Events[i]
 
@@ -125,10 +127,15 @@ func (w *Window) initTimer() {
 
 			w.DrawEvent(&e)
 			w.scene.currentEvent++
+			drawnEvents++
 		}
 
 		w.PrintQuantumInformation()
 		w.scene.currentTime = endOfQuantum
+
+		if w.speedSlider.Value() == 0 && drawnEvents > 0 {
+			w.stopButton.Click() // step-by-step
+		}
 	})
 }
 
