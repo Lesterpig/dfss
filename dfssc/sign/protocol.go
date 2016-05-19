@@ -18,6 +18,12 @@ import (
 // * Promises rounds
 // * Signature round
 func (m *SignatureManager) Sign() error {
+
+	defer func() {
+		m.finished = true
+		m.closeConnections()
+	}()
+
 	myID, nextIndex, err := m.Initialize()
 	if err != nil {
 		return err
@@ -72,9 +78,7 @@ func (m *SignatureManager) Sign() error {
 	dAPI.DLog("exiting signature round")
 	m.OnProgressUpdate(seqLen+1, seqLen+1)
 
-	// Network's job is done, cleaning time
-	// Shutdown and platform client and TODO peer server & connections
-	return m.platformConn.Close()
+	return nil
 }
 
 // GetClient retrieves the Client to the specified sequence id provided it exists
@@ -135,11 +139,13 @@ func (m *SignatureManager) promiseRound(pendingSet, sendSet []uint32, myID uint3
 	}
 }
 
-// closeAllPeerClient tries to close all established connection with other peers
-func (m *SignatureManager) closeAllPeerClient() {
-	for k, client := range m.peersConn {
-		_ = client.Close()
-		// Remove associated grpc client
+// closeConnections tries to close all established connection with other peers and platform.
+// It also stops the local server.
+func (m *SignatureManager) closeConnections() {
+	_ = m.platformConn.Close()
+	for k, peer := range m.peersConn {
+		_ = peer.Close()
 		delete(m.peers, k)
 	}
+	m.cServer.Stop()
 }
