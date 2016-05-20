@@ -39,7 +39,8 @@ func init() {
 	RootCmd.PersistentFlags().String("host", "localhost:9000", "host of the dfss platform")
 	RootCmd.PersistentFlags().IntP("port", "p", 9005, "port to use for P2P communication between clients")
 
-	signCmd.Flags().Duration("slowdown", 0, "Delay between each promises round")
+	signCmd.Flags().Duration("slowdown", 0, "delay between each promises round (test only)")
+	signCmd.Flags().Int("stopbefore", 0, "stop signature just before the promises round n, -1 to stop right before signature round (test only)")
 
 	// Store flag values into viper
 	_ = viper.BindPFlag("verbose", RootCmd.PersistentFlags().Lookup("verbose"))
