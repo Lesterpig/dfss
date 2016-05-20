@@ -73,7 +73,6 @@ Code lint:
   stage: test
   except:
     - /^[0-9]+\./
-  allow_failure: True
   tags:
     - golang
     - lint
