@@ -75,6 +75,7 @@ func TestNewContract(t *testing.T) {
 	assert.Equal(t, nil, err)
 
 	// Check database²
+	time.Sleep(time.Second) // Allowed delay to let some time to propagate the contract readiness
 	contract = getContract("contract.txt", 0)
 	assert.Equal(t, true, contract.Ready)
 	assert.True(t, len(contract.Signers[0].Hash) > 0)
