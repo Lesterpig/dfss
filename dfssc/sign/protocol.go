@@ -8,6 +8,7 @@ import (
 	cAPI "dfss/dfssc/api"
 	"dfss/dfssc/common"
 	dAPI "dfss/dfssd/api"
+	"github.com/spf13/viper"
 )
 
 // Sign performs all the message exchanges for the contract to be signed
@@ -42,6 +43,7 @@ func (m *SignatureManager) Sign() error {
 	// Follow the sequence until there is no next occurence of me
 	for m.currentIndex >= 0 {
 		m.OnProgressUpdate(m.currentIndex, seqLen+1)
+		time.Sleep(viper.GetDuration("slowdown"))
 		dAPI.DLog("starting round at index [" + fmt.Sprintf("%d", m.currentIndex) + "] with nextIndex=" + fmt.Sprintf("%d", nextIndex))
 
 		// Set of promises we are waiting for
