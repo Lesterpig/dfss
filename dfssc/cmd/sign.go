@@ -19,6 +19,7 @@ var signCmd = &cobra.Command{
 		}
 
 		_ = viper.BindPFlag("slowdown", cmd.Flags().Lookup("slowdown"))
+		_ = viper.BindPFlag("stopbefore", cmd.Flags().Lookup("stopbefore"))
 
 		filename := args[0]
 		fmt.Println("You are going to sign the following contract:")
