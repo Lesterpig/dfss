@@ -122,7 +122,11 @@ func (w *Window) addActions() {
 	w.playButton.OnClicked(func() {
 		w.playButton.SetDisabled(true)
 		w.stopButton.SetDisabled(false)
-		speed := 2000 / w.speedSlider.Value()
+		s := w.speedSlider.Value()
+		if s == 0 {
+			s = 100 // step-by-step arbitrary speed value
+		}
+		speed := 2000 / s
 		w.timer.StartWithMsec(speed)
 	})
 

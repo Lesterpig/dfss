@@ -6,6 +6,7 @@ import (
 	"errors"
 	"fmt"
 	"io/ioutil"
+	"os"
 	"time"
 
 	cAPI "dfss/dfssc/api"
@@ -15,6 +16,7 @@ import (
 	"dfss/net"
 	"golang.org/x/net/context"
 	"google.golang.org/grpc"
+	"github.com/spf13/viper"
 )
 
 // Sign performs all the message exchanges for the contract to be signed
@@ -48,7 +50,9 @@ func (m *SignatureManager) Sign() error {
 	// Promess rounds
 	// Follow the sequence until there is no next occurence of me
 	for m.currentIndex >= 0 {
+		stopIfNeeded(m.currentIndex)
 		m.OnProgressUpdate(m.currentIndex, seqLen+1)
+		time.Sleep(viper.GetDuration("slowdown"))
 		dAPI.DLog("starting round at index [" + fmt.Sprintf("%d", m.currentIndex) + "] with nextIndex=" + fmt.Sprintf("%d", nextIndex))
 
 		// Set of promises we are waiting for
@@ -78,16 +82,17 @@ func (m *SignatureManager) Sign() error {
 		}
 	}
 
+	// Signature round
+	stopIfNeeded(-1)
 	m.OnProgressUpdate(seqLen, seqLen+1)
 	dAPI.DLog("entering signature round")
-	// Signature round
 	err = m.ExchangeAllSignatures()
 	if err != nil {
 		return err
 	}
+
 	dAPI.DLog("exiting signature round")
 	m.OnProgressUpdate(seqLen+1, seqLen+1)
-
 	return m.PersistSignaturesToFile()
 }
 
@@ -270,4 +275,15 @@ func (m *SignatureManager) checkPromise(expected []common.SequenceCoordinate, pr
 	}
 
 	return false, 0
+}
+
+func stopIfNeeded(index int) {
+	s := viper.GetInt("stopbefore")
+	if s == 0 {
+		return
+	}
+
+	if index == -1 && s == -1 || index+1 == s {
+		os.Exit(0)
+	}
 }

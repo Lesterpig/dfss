@@ -6,6 +6,7 @@ import (
 
 	"dfss/dfssc/sign"
 	"github.com/spf13/cobra"
+	"github.com/spf13/viper"
 )
 
 var signCmd = &cobra.Command{
@@ -16,6 +17,9 @@ var signCmd = &cobra.Command{
 			_ = cmd.Usage()
 			os.Exit(1)
 		}
+
+		_ = viper.BindPFlag("slowdown", cmd.Flags().Lookup("slowdown"))
+		_ = viper.BindPFlag("stopbefore", cmd.Flags().Lookup("stopbefore"))
 
 		filename := args[0]
 		fmt.Println("You are going to sign the following contract:")

@@ -3,7 +3,6 @@ package cmd
 
 import (
 	"dfss"
-
 	dapi "dfss/dfssd/api"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
@@ -31,7 +30,7 @@ A tool to sign multiparty contract using a secure cryptographic protocol`,
 // All of the flags will be gathered by viper, this is why
 // we do not store their values
 func init() {
-	// Bind flags to the dfsst command
+	// Bind flags to the dfssc command
 	RootCmd.PersistentFlags().BoolP("verbose", "v", false, "print verbose messages")
 	RootCmd.PersistentFlags().String("ca", "ca.pem", "path to the root certificate")
 	RootCmd.PersistentFlags().String("cert", "cert.pem", "path to the user's certificate")
@@ -39,6 +38,9 @@ func init() {
 	RootCmd.PersistentFlags().StringP("demo", "d", "", "demonstrator address and port, empty will disable it")
 	RootCmd.PersistentFlags().String("host", "localhost:9000", "host of the dfss platform")
 	RootCmd.PersistentFlags().IntP("port", "p", 9005, "port to use for P2P communication between clients")
+
+	signCmd.Flags().Duration("slowdown", 0, "delay between each promises round (test only)")
+	signCmd.Flags().Int("stopbefore", 0, "stop signature just before the promises round n, -1 to stop right before signature round (test only)")
 
 	// Store flag values into viper
 	_ = viper.BindPFlag("verbose", RootCmd.PersistentFlags().Lookup("verbose"))
