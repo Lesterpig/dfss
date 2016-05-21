@@ -25,6 +25,8 @@ func (m *SignatureManager) createContext(from, to uint32) (*cAPI.Context, error)
 		Signers:              m.keyHash,
 		ContractDocumentHash: h,
 		SignatureUUID:        m.uuid,
+		TtpAddrPort:          m.ttpData.Addrport,
+		TtpHash:              m.ttpData.Hash,
 		Seal:                 m.seal,
 	}, nil
 }

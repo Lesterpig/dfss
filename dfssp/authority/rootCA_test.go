@@ -8,10 +8,9 @@ import (
 	"path/filepath"
 	"testing"
 
-	"github.com/spf13/viper"
-
 	"dfss/auth"
 	"dfss/dfssc/common"
+	"github.com/spf13/viper"
 )
 
 var (
@@ -36,9 +35,9 @@ func TestInitialize(t *testing.T) {
 	certPath := filepath.Join(path, RootCAFileName)
 
 	v := common.MockViper("key_size", 1024, "validity", 365, "country", "country", "organization", "organization", "unit", "unit", "cn", "cn", "path", path)
-	err := Initialize(v, nil, nil)
+	hash, err := Initialize(v, nil, nil)
 
-	if err != nil {
+	if err != nil || hash == nil {
 		t.Fatal(err)
 	}
 
@@ -60,8 +59,8 @@ func Example() {
 
 	// Generate root certificate and key
 	v := common.MockViper("key_size", 1024, "validity", 365, "country", "UK", "organization", "DFSS", "unit", "unit", "cn", "ROOT", "path", path)
-	err := Initialize(v, nil, nil)
-	if err != nil {
+	hash, err := Initialize(v, nil, nil)
+	if err != nil || hash == nil {
 		fmt.Println(err)
 		return
 	}
@@ -79,7 +78,7 @@ func Example() {
 	// Generate child certificate and key
 	childPath := filepath.Join(path, "child")
 	v = common.MockViper("key_size", 1024, "validity", 10, "country", "FR", "organization", "DFSS", "unit", "unit", "cn", "CHILD", "path", childPath)
-	err = Initialize(v, pid.RootCA, pid.Pkey)
+	_, err = Initialize(v, pid.RootCA, pid.Pkey)
 	if err != nil {
 		fmt.Println(err)
 		return
@@ -107,7 +106,7 @@ func CheckFile(path, name string) {
 func TestStart(t *testing.T) {
 	path, _ := ioutil.TempDir("", "")
 	v := common.MockViper("key_size", 1024, "validity", 365, "country", "country", "organization", "organization", "unit", "unit", "cn", "cn", "path", path)
-	_ = Initialize(v, nil, nil)
+	_, _ = Initialize(v, nil, nil)
 
 	pid, err := Start(path)
 	if err != nil {

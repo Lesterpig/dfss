@@ -143,11 +143,19 @@ func IsPlatformSealValid(promise *cAPI.Promise) bool {
 		return false
 	}
 
+	var ttp *pAPI.LaunchSignature_TTP
+	if promise.Context.TtpAddrPort != "" {
+		ttp = new(pAPI.LaunchSignature_TTP)
+		ttp.Addrport = promise.Context.TtpAddrPort
+		ttp.Hash = promise.Context.TtpHash
+	}
+
 	theoric := pAPI.LaunchSignature{
 		SignatureUuid: promise.Context.SignatureUUID,
 		DocumentHash:  promise.Context.ContractDocumentHash,
 		KeyHash:       promise.Context.Signers,
 		Sequence:      promise.Context.Sequence,
+		Ttp:           ttp,
 	}
 
 	ok, _ := auth.VerifyStructure(AuthContainer.CA, theoric, promise.Context.Seal)

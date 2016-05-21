@@ -21,12 +21,6 @@ type SignerJSON struct {
 	Hash  string
 }
 
-// TTPJSON is the structure used to store TTP information in JSON format
-type TTPJSON struct {
-	IP   string
-	Port uint
-}
-
 // JSON is the structure used to store contract information in JSON format
 type JSON struct {
 	UUID    string
@@ -34,11 +28,10 @@ type JSON struct {
 	Comment string
 	File    *FileJSON
 	Signers []SignerJSON
-	TTP     *TTPJSON
 }
 
 // GetJSON returns indented json from a contract and some ttp information (nil allowed)
-func GetJSON(c *entities.Contract, ttp *TTPJSON) ([]byte, error) {
+func GetJSON(c *entities.Contract) ([]byte, error) {
 	data := JSON{
 		UUID:    c.ID.Hex(),
 		Date:    &c.Date,
@@ -49,7 +42,6 @@ func GetJSON(c *entities.Contract, ttp *TTPJSON) ([]byte, error) {
 			Hosted: c.File.Hosted,
 		},
 		Signers: make([]SignerJSON, len(c.Signers)),
-		TTP:     ttp,
 	}
 
 	for i, s := range c.Signers {

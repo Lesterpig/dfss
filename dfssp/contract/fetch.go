@@ -23,7 +23,7 @@ func Fetch(db *mgdb.MongoManager, contractUUID string, clientHash []byte) *api.C
 		}
 	}
 
-	data, err := GetJSON(contract, nil)
+	data, err := GetJSON(contract)
 	if err != nil {
 		return &api.Contract{
 			ErrorCode: &api.ErrorCode{Code: api.ErrorCode_INTERR},

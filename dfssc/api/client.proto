@@ -30,8 +30,13 @@ message Context {
 	bytes contractDocumentHash = 5;
 	/// The unique signature attemp ID, as provided by the platform during the ready signal
 	string signatureUUID = 6;
+	/// The TTP address provided by the platform, to use in case of issue during signature.
+	/// Empty if no TTP used.
+	string ttpAddrPort = 7;
+	/// The TTP certificate SHA-512 hash
+	bytes ttpHash = 8;
 	/// The signed metadata seal, as provided by the platform during the ready signal
-	bytes seal = 7;
+	bytes seal = 10;
 }
 
 message Promise {

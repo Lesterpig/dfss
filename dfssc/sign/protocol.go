@@ -14,9 +14,9 @@ import (
 	dAPI "dfss/dfssd/api"
 	tAPI "dfss/dfsst/api"
 	"dfss/net"
+	"github.com/spf13/viper"
 	"golang.org/x/net/context"
 	"google.golang.org/grpc"
-	"github.com/spf13/viper"
 )
 
 // Sign performs all the message exchanges for the contract to be signed
@@ -49,8 +49,10 @@ func (m *SignatureManager) Sign() error {
 
 	// Promess rounds
 	// Follow the sequence until there is no next occurence of me
+	round := 0
 	for m.currentIndex >= 0 {
-		stopIfNeeded(m.currentIndex)
+		round = round + 1
+		stopIfNeeded(round)
 		m.OnProgressUpdate(m.currentIndex, seqLen+1)
 		time.Sleep(viper.GetDuration("slowdown"))
 		dAPI.DLog("starting round at index [" + fmt.Sprintf("%d", m.currentIndex) + "] with nextIndex=" + fmt.Sprintf("%d", nextIndex))
@@ -132,7 +134,7 @@ func (m *SignatureManager) promiseRound(pendingSet, sendSet []common.SequenceCoo
 				return m.resolve()
 			}
 
-		case <-time.After(time.Minute):
+		case <-time.After(net.DefaultTimeout):
 			return m.resolve()
 		}
 	}
@@ -235,16 +237,20 @@ func (m *SignatureManager) callForResolve() (*tAPI.TTPResponse, error) {
 // resolve : calls for the resolution, and persists the contract if obtained.
 func (m *SignatureManager) resolve() error {
 	if m.ttp == nil {
+		dAPI.DLog("unable to contact TTP")
 		return errors.New("No connection to TTP, aborting!")
 	}
 
+	dAPI.DLog("contacting TTP")
 	response, err := m.callForResolve()
 	if err != nil {
 		return err
 	}
 	if response.Abort {
+		dAPI.DLog("contacted TTP, received abort token")
 		return nil
 	}
+	dAPI.DLog("contacted TTP, received signed contract")
 	return ioutil.WriteFile(m.mail+"-"+m.contract.UUID+".proof", response.Contract, 0600)
 }
 
@@ -283,7 +289,7 @@ func stopIfNeeded(index int) {
 		return
 	}
 
-	if index == -1 && s == -1 || index+1 == s {
+	if index == -1 && s == -1 || index == s {
 		os.Exit(0)
 	}
 }

@@ -31,13 +31,14 @@ func startPlatform(tmpDir string) (platform, ttp, demo *exec.Cmd, stop func(), c
 
 	// Init
 	cmd := exec.Command(path, "--path", dir, "-v", "init")
+	ttpsPath := filepath.Join(dir, "ttps")
 	err = cmd.Run()
 	if err != nil {
 		return
 	}
 
 	// Create TTP working directory
-	cmd = exec.Command(path, "--path", dir, "-v", "--cn", "ttp", "ttp")
+	cmd = exec.Command(path, "--path", dir, "--ttps", ttpsPath, "--addr", "localhost:9098", "ttp")
 	err = cmd.Run()
 	if err != nil {
 		return
@@ -50,13 +51,13 @@ func startPlatform(tmpDir string) (platform, ttp, demo *exec.Cmd, stop func(), c
 	}
 
 	// Start platform
-	platform = exec.Command(path, "--db", dbURI, "--path", dir, "-p", testPort, "-v", "start")
+	platform = exec.Command(path, "--db", dbURI, "--path", dir, "-p", testPort, "--ttps", ttpsPath, "-d", "localhost:9099", "-v", "start")
 	platform.Stdout = os.Stdout
 	platform.Stderr = os.Stderr
 	err = platform.Start()
 
 	// Start TTP
-	ttp = exec.Command(ttpPath, "--db", dbURI, "--port", "9098", "start")
+	ttp = exec.Command(ttpPath, "--db", dbURI, "--port", "9098", "-d", "localhost:9099", "-v", "start")
 	ttp.Dir = filepath.Join(dir, "ttp")
 	ttp.Stdout = os.Stdout
 	ttp.Stderr = os.Stderr

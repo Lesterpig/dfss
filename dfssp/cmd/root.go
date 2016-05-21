@@ -46,11 +46,14 @@ func init() {
 	ttpCmd.Flags().String("org", "DFSS", "organization for the ttp certificate")
 	ttpCmd.Flags().String("unit", "INSA Rennes", "organizational unit for the ttp certificate")
 	ttpCmd.Flags().IntP("key", "k", 2048, "encoding size for the private key of the ttp")
+	ttpCmd.Flags().StringP("ttps", "t", "ttps", "file containing available TTPs list")
+	ttpCmd.Flags().StringP("addr", "a", "localhost:9098", "address of the ttp to be transmitted to signers")
 
 	startCmd.Flags().IntP("validity", "c", 365, "validity duration for the child certificates (days)")
 	startCmd.Flags().StringP("address", "a", "0.0.0.0", "address to bind for listening")
 	startCmd.Flags().StringP("port", "p", "9000", "port to bind for listening")
 	startCmd.Flags().String("db", "mongodb://localhost/dfss", "server url in standard MongoDB format for accessing database")
+	startCmd.Flags().StringP("ttps", "t", "", "file containing available TTPs list, disabled by default")
 
 	// Bind viper to flags
 	_ = viper.BindPFlag("verbose", RootCmd.PersistentFlags().Lookup("verbose"))

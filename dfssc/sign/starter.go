@@ -1,8 +1,6 @@
 package sign
 
 import (
-	"crypto/rsa"
-	"crypto/x509"
 	"errors"
 	"fmt"
 	"strconv"
@@ -34,6 +32,7 @@ type SignatureManager struct {
 	platform       pAPI.PlatformClient
 	platformConn   *grpc.ClientConn
 	ttp            tAPI.TTPClient
+	ttpData        *pAPI.LaunchSignature_TTP
 	peersConn      map[string]*grpc.ClientConn
 	peers          map[string]*cAPI.ClientClient
 	hashToID       map[string]uint32
@@ -98,12 +97,6 @@ func NewSignatureManager(passphrase string, c *contract.JSON) (*SignatureManager
 	m.platform = pAPI.NewPlatformClient(connp)
 	m.platformConn = connp
 
-	// connect to the ttp
-	connt, err := m.connectToTTP(m.auth.Cert, m.auth.Key, m.auth.CA)
-	if err == nil {
-		m.ttp = tAPI.NewTTPClient(connt)
-	}
-
 	m.peersConn = make(map[string]*grpc.ClientConn)
 	m.peers = make(map[string]*cAPI.ClientClient)
 	for _, u := range c.Signers {
@@ -117,17 +110,6 @@ func NewSignatureManager(passphrase string, c *contract.JSON) (*SignatureManager
 	entities.AuthContainer = m.auth
 
 	return m, nil
-}
-
-// connectToTTP : tries to open a connection with the ttp specified in the contract.
-// If there was no specified ttp, returns an error.
-// Otherwise, returns the connection, or an error if something else occured.
-func (m *SignatureManager) connectToTTP(cert *x509.Certificate, key *rsa.PrivateKey, ca *x509.Certificate) (*grpc.ClientConn, error) {
-	if m.contract.TTP == nil {
-		return nil, errors.New("No specified ttp in contract")
-	}
-	addrPort := m.contract.TTP.IP + ":" + string(m.contract.TTP.Port)
-	return net.Connect(addrPort, cert, key, ca, nil)
 }
 
 // ConnectToPeers tries to fetch the list of users for this contract, and tries to establish a connection to each peer.
@@ -299,12 +281,36 @@ func (m *SignatureManager) SendReadySign() (signatureUUID string, err error) {
 		}
 	}
 
+	// Connect to TTP, if any
+	err = m.connectToTTP(launch.Ttp)
+
 	m.sequence = launch.Sequence
 	m.uuid = launch.SignatureUuid
 	m.keyHash = launch.KeyHash
 	m.seal = launch.Seal
 	signatureUUID = m.uuid
 	return
+}
+
+// connectToTTP : tries to open a connection with the ttp specified in the contract.
+func (m *SignatureManager) connectToTTP(ttp *pAPI.LaunchSignature_TTP) error {
+	if ttp == nil {
+		m.ttpData = &pAPI.LaunchSignature_TTP{
+			Addrport: "",
+			Hash:     []byte{},
+		}
+		return nil
+	}
+
+	// TODO check that the connection spots missing TTP and returns an error quickly enough
+	conn, err := net.Connect(ttp.Addrport, m.auth.Cert, m.auth.Key, m.auth.CA, ttp.Hash)
+	if err != nil {
+		return err
+	}
+
+	m.ttpData = ttp
+	m.ttp = tAPI.NewTTPClient(conn)
+	return nil
 }
 
 // Initialize computes the values needed for the start of the signing

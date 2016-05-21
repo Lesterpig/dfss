@@ -47,11 +47,10 @@ allow multiline and accents: éÉ`,
       "Email": "b",
       "Hash": "bb"
     }
-  ],
-  "TTP": null
+  ]
 }`
 
-	j, err := GetJSON(c, nil)
+	j, err := GetJSON(c)
 	assert.Equal(t, nil, err)
 	assert.Equal(t, expected, string(j))
 

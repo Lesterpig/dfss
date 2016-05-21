@@ -8,6 +8,7 @@ import (
 
 	cAPI "dfss/dfssc/api"
 	"dfss/dfssc/security"
+	dAPI "dfss/dfssd/api"
 	tAPI "dfss/dfsst/api"
 	"dfss/dfsst/entities"
 	"dfss/dfsst/resolve"
@@ -29,10 +30,12 @@ type ttpServer struct {
 func (server *ttpServer) Alert(ctx context.Context, in *tAPI.AlertRequest) (*tAPI.TTPResponse, error) {
 	valid, signatureUUID, signers, senderIndex := entities.IsRequestValid(ctx, in.Promises)
 	if !valid {
+		dAPI.DLog("invalid request from " + net.GetCN(&ctx))
 		return nil, errors.New(InternalError)
 	}
 	valid = int(in.Index) >= len(in.Promises[0].Context.Sequence)
 	if !valid {
+		dAPI.DLog("invalid sequence index from " + net.GetCN(&ctx))
 		return nil, errors.New(InternalError)
 	}
 	// Now we know that the request contains information correctly signed by the platform,
@@ -46,6 +49,7 @@ func (server *ttpServer) Alert(ctx context.Context, in *tAPI.AlertRequest) (*tAP
 	// We check if we have already sent an abort token to the sender of the request
 	stop, message, err := server.handleAbortedSender(manager, senderIndex)
 	if stop {
+		dAPI.DLog("already sent an abort token to " + net.GetCN(&ctx))
 		return message, err
 	}
 
