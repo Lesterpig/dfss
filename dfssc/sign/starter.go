@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"strconv"
 	"sync"
-	"time"
 
 	"dfss"
 	cAPI "dfss/dfssc/api"
@@ -210,7 +209,7 @@ func (m *SignatureManager) addPeer(user *pAPI.User) (ready bool, err error) {
 	// need to create another way to access it
 	m.peersConn[user.Email] = conn
 
-	ctx, cancel := context.WithTimeout(context.Background(), time.Minute)
+	ctx, cancel := context.WithTimeout(context.Background(), viper.GetDuration("timeout"))
 	defer cancel()
 	msg, err := client.Discover(ctx, &cAPI.Hello{Version: dfss.Version})
 	if err != nil {
@@ -235,7 +234,7 @@ func (m *SignatureManager) addPeer(user *pAPI.User) (ready bool, err error) {
 
 // SendReadySign sends the READY signal to the platform, and wait (potentially a long time) for START signal.
 func (m *SignatureManager) SendReadySign() (signatureUUID string, err error) {
-	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Minute)
+	ctx, cancel := context.WithTimeout(context.Background(), 10*viper.GetDuration("timeout"))
 	defer cancel()
 
 	c := make(chan *pAPI.LaunchSignature)

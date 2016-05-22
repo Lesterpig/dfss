@@ -2,6 +2,8 @@
 package cmd
 
 import (
+	"time"
+
 	"dfss"
 	dapi "dfss/dfssd/api"
 	"github.com/spf13/cobra"
@@ -39,6 +41,7 @@ func init() {
 	RootCmd.PersistentFlags().String("host", "localhost:9000", "host of the dfss platform")
 	RootCmd.PersistentFlags().IntP("port", "p", 9005, "port to use for P2P communication between clients")
 
+	signCmd.Flags().Duration("timeout", time.Minute, "time to wait before fallback")
 	signCmd.Flags().Duration("slowdown", 0, "delay between each promises round (test only)")
 	signCmd.Flags().Int("stopbefore", 0, "stop signature just before the promises round n, -1 to stop right before signature round (test only)")
 

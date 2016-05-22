@@ -3,11 +3,11 @@ package sign
 import (
 	"encoding/hex"
 	"errors"
-	"time"
 
 	cAPI "dfss/dfssc/api"
 	dAPI "dfss/dfssd/api"
 	pAPI "dfss/dfssp/api"
+	"github.com/spf13/viper"
 	"golang.org/x/net/context"
 )
 
@@ -59,7 +59,7 @@ func (m *SignatureManager) SendEvidence(promise *cAPI.Promise, signature *cAPI.S
 		return
 	}
 
-	ctx, cancel := context.WithTimeout(context.Background(), time.Minute)
+	ctx, cancel := context.WithTimeout(context.Background(), viper.GetDuration("timeout"))
 	defer cancel()
 
 	var result *pAPI.ErrorCode
