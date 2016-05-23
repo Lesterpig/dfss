@@ -3,6 +3,7 @@ package sign
 import (
 	"dfss"
 	cAPI "dfss/dfssc/api"
+	dAPI "dfss/dfssd/api"
 	pAPI "dfss/dfssp/api"
 	"dfss/dfsst/entities"
 	"dfss/net"
@@ -31,8 +32,10 @@ func (s *clientServer) TreatPromise(ctx context.Context, in *cAPI.Promise) (*pAP
 	// we do not check that we expected that promise
 	valid, _, _, _ := entities.IsRequestValid(ctx, []*cAPI.Promise{in})
 	if !valid {
+		dAPI.DLog("TreatPromise route did not treat promise from " + net.GetCN(&ctx) + " because it is invalid")
 		return &pAPI.ErrorCode{Code: pAPI.ErrorCode_SUCCESS}, nil
 	}
+	dAPI.DLog("TreatPromise route treated promise from " + net.GetCN(&ctx) + " because it is valid")
 	return getServerErrorCode(s.incomingPromises, in), nil
 }
 

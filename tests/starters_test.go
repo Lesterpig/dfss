@@ -50,6 +50,13 @@ func startPlatform(tmpDir string) (platform, ttp, demo *exec.Cmd, stop func(), c
 		return
 	}
 
+	// Start demonstrator
+	demo = exec.Command(demoPath, "--port", "9099", "nogui")
+	demo.Stdout = os.Stdout
+	demo.Stderr = os.Stderr
+	err = demo.Start()
+	time.Sleep(time.Second)
+
 	// Start platform
 	platform = exec.Command(path, "--db", dbURI, "--path", dir, "-p", testPort, "--ttps", ttpsPath, "-d", "localhost:9099", "-v", "start")
 	platform.Stdout = os.Stdout
@@ -63,12 +70,6 @@ func startPlatform(tmpDir string) (platform, ttp, demo *exec.Cmd, stop func(), c
 	ttp.Stderr = os.Stderr
 	_ = ioutil.WriteFile(filepath.Join(ttp.Dir, "ca.pem"), ca, 0600)
 	err = ttp.Start()
-
-	// Start demonstrator
-	demo = exec.Command(demoPath, "--port", "9099", "nogui")
-	demo.Stdout = os.Stdout
-	demo.Stderr = os.Stderr
-	err = demo.Start()
 
 	stop = func() {
 		_ = platform.Process.Kill()

@@ -74,14 +74,17 @@ func (m *SignatureManager) SendEvidence(promise *cAPI.Promise, signature *cAPI.S
 	if err == nil && result != nil && result.Code == pAPI.ErrorCode_SUCCESS {
 		m.archives.mutex.Lock()
 		if promise != nil {
-			dAPI.DLog("sent promise to " + mail)
+			dAPI.DLog("successfully sent promise to " + mail)
 		} else {
-			dAPI.DLog("sent signature to " + mail)
+			dAPI.DLog("successfully sent signature to " + mail)
 			m.archives.sentSignatures = append(m.archives.sentSignatures, signature)
 		}
 		m.archives.mutex.Unlock()
 	} else {
-		dAPI.DLog("unable to send evidence to " + mail)
+		dAPI.DLog("was unable to send evidence to " + mail)
+		if err != nil {
+			return
+		}
 		err = errors.New("received wrong error code")
 	}
 

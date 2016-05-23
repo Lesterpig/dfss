@@ -1,6 +1,7 @@
 package tests
 
 import (
+	"bufio"
 	"io/ioutil"
 	"os"
 	"os/exec"
@@ -140,16 +141,28 @@ func checkProofFile(t *testing.T, nb int) {
 	assert.Equal(t, nb, matches, "Invalid number of proof file(s)")
 }
 
-// TestSignContractFailure tests the signature with a faulty client.
-// In this test, everything should not work fine, because client1 shutdowns way too early.
+// TestSignContractFailure tests the signature with a faulty client, when contract can't be generated.
+// In this test, everything should not work fine, because client3 shutdowns way too early.
 func TestSignContractFailure(t *testing.T) {
+	signatureHelper(t, "1", 0)
+}
+
+// TestSignContractSuccess tests the signature with a faulty client, when contract can be generated.
+// In this test, everything should not work fine, because client3 shutdowns way too early.
+func TestSignContractSuccess(t *testing.T) {
+	signatureHelper(t, "2", 2)
+}
+
+// signatureHelper : launches a parametrized signature, with the number of rounds a client will accomplish before shutting down,
+// and the number of proof files expected to be generated.
+func signatureHelper(t *testing.T, round string, nbFiles int) {
 	// Setup
 	stop, clients, contractPath, contractFilePath := setupSignature(t)
 	defer stop()
 
 	// Configure client3 to be faulty
 	setLastArg(clients[2], "--stopbefore", true)
-	setLastArg(clients[2], "1", false)
+	setLastArg(clients[2], round, false)
 	setLastArg(clients[2], "sign", false)
 
 	// Sign!
@@ -159,6 +172,7 @@ func TestSignContractFailure(t *testing.T) {
 		setLastArg(clients[i], contractPath, false)
 		go func(c *exec.Cmd, i int) {
 			c.Stdin = strings.NewReader(contractFilePath + "\npassword\nyes\n")
+			c.Stderr = bufio.NewWriter(os.Stdout)
 			output, _ := c.Output()
 			closeChannel <- output
 		}(clients[i], i)
@@ -169,6 +183,6 @@ func TestSignContractFailure(t *testing.T) {
 		<-closeChannel
 	}
 
-	checkProofFile(t, 0)
+	checkProofFile(t, nbFiles)
 	time.Sleep(time.Second)
 }

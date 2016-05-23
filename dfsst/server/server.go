@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"os"
+	"sync"
 
 	cAPI "dfss/dfssc/api"
 	"dfss/dfssc/security"
@@ -22,18 +23,25 @@ import (
 // InternalError : constant string used to return a generic error message through gRPC in case of an internal error.
 const InternalError string = "Internal server error"
 
+var mutex sync.Mutex
+
 type ttpServer struct {
 	DB *mgdb.MongoManager
 }
 
 // Alert route for the TTP.
 func (server *ttpServer) Alert(ctx context.Context, in *tAPI.AlertRequest) (*tAPI.TTPResponse, error) {
+	mutex.Lock()
+	defer mutex.Unlock()
+
 	valid, signatureUUID, signers, senderIndex := entities.IsRequestValid(ctx, in.Promises)
 	if !valid {
 		dAPI.DLog("invalid request from " + net.GetCN(&ctx))
 		return nil, errors.New(InternalError)
 	}
-	valid = int(in.Index) >= len(in.Promises[0].Context.Sequence)
+
+	dAPI.DLog("resolve index is: " + fmt.Sprint(in.Index))
+	valid = int(in.Index) < len(in.Promises[0].Context.Sequence)
 	if !valid {
 		dAPI.DLog("invalid sequence index from " + net.GetCN(&ctx))
 		return nil, errors.New(InternalError)
@@ -42,8 +50,14 @@ func (server *ttpServer) Alert(ctx context.Context, in *tAPI.AlertRequest) (*tAP
 	// with the same signatureUUID (thus signed information) for all promises, and sent by a valid signer
 	// wrt to the signed signers' hashes
 
+	dAPI.DLog("Resolve request from " + net.GetCN(&ctx) + " is valid")
+
 	manager := entities.NewArchivesManager(server.DB)
-	manager.InitializeArchives(in.Promises[0], signatureUUID, &signers)
+	err := manager.InitializeArchives(in.Promises[0], signatureUUID, &signers)
+	if err != nil {
+		dAPI.DLog("error occured during the initialization of the signature archives")
+		return nil, err
+	}
 	// Now archives contains the new or already present SignatureArchives
 
 	// We check if we have already sent an abort token to the sender of the request
@@ -56,6 +70,7 @@ func (server *ttpServer) Alert(ctx context.Context, in *tAPI.AlertRequest) (*tAP
 	// We check that the sender of the request sent valid and complete information
 	stop, message, tmpPromises, err := server.handleInvalidPromises(manager, in.Promises, senderIndex, in.Index)
 	if stop {
+		dAPI.DLog("invalid promise caused stop")
 		return message, err
 	}
 	// Now we are sure that the sender of the AlertRequest is not dishonest
@@ -63,6 +78,7 @@ func (server *ttpServer) Alert(ctx context.Context, in *tAPI.AlertRequest) (*tAP
 	// We try to use the already generated contract if it exists
 	generated, contract := manager.WasContractSigned()
 	if generated {
+		dAPI.DLog("sending the signed contract")
 		return &tAPI.TTPResponse{
 			Abort:    false,
 			Contract: contract,
@@ -75,8 +91,9 @@ func (server *ttpServer) Alert(ctx context.Context, in *tAPI.AlertRequest) (*tAP
 	// Try to generate the contract now
 	message, err = server.handleContractGenerationTry(manager)
 	// We manually update the database
-	ok, _ := server.DB.Get("signatures").UpdateByID(manager.Archives)
+	ok, err := server.DB.Get("signatures").UpdateByID(*(manager.Archives))
 	if !ok {
+		dAPI.DLog("error during 'UpdateByID' l.81" + fmt.Sprint(err.Error()))
 		return nil, errors.New(InternalError)
 	}
 
@@ -90,10 +107,12 @@ func (server *ttpServer) Alert(ctx context.Context, in *tAPI.AlertRequest) (*tAP
 // If an error occurs during this process, it is returned.
 func (server *ttpServer) handleAbortedSender(manager *entities.ArchivesManager, senderIndex uint32) (bool, *tAPI.TTPResponse, error) {
 	if manager.HasReceivedAbortToken(senderIndex) {
+		dAPI.DLog("Sender has already contacted the ttp. He is dishonnest.")
 		manager.AddToDishonest(senderIndex)
 
-		ok, _ := manager.DB.Get("signatures").UpdateByID(manager.Archives)
+		ok, err := manager.DB.Get("signatures").UpdateByID(*(manager.Archives))
 		if !ok {
+			dAPI.DLog("error during 'UpdateByID' l.99" + fmt.Sprint(err.Error()))
 			return true, nil, errors.New(InternalError)
 		}
 
@@ -102,7 +121,7 @@ func (server *ttpServer) handleAbortedSender(manager *entities.ArchivesManager, 
 			Contract: nil,
 		}, nil
 	}
-
+	dAPI.DLog("sender has never contacted the ttp before")
 	return false, nil, nil
 }
 
@@ -119,16 +138,30 @@ func (server *ttpServer) handleAbortedSender(manager *entities.ArchivesManager, 
 // If an error occurs during this process, it is returned.
 func (server *ttpServer) handleInvalidPromises(manager *entities.ArchivesManager, promises []*cAPI.Promise, senderIndex, stepIndex uint32) (bool, *tAPI.TTPResponse, []*entities.Promise, error) {
 	valid, tmpPromises := entities.ArePromisesValid(promises)
+	if valid {
+		dAPI.DLog("received promises are valid")
+	}
 	complete := resolve.ArePromisesComplete(tmpPromises, promises[0], stepIndex)
+	if complete {
+		dAPI.DLog("received promises are complete")
+	}
 	if !valid || !complete {
+		if !valid {
+			dAPI.DLog("received promises are not valid")
+		}
+		if !complete {
+			dAPI.DLog("received promises are not complete")
+		}
 		manager.AddToAbort(senderIndex)
 		manager.AddToDishonest(senderIndex)
 
-		ok, _ := manager.DB.Get("signatures").UpdateByID(manager.Archives)
+		ok, err := manager.DB.Get("signatures").UpdateByID(*(manager.Archives))
 		if !ok {
+			dAPI.DLog("error during 'UpdateByID' l.132" + fmt.Sprint(err.Error()))
 			return true, nil, nil, errors.New(InternalError)
 		}
 
+		dAPI.DLog("sending an abort token")
 		return true, &tAPI.TTPResponse{
 			Abort:    true,
 			Contract: nil,
@@ -164,6 +197,7 @@ func (server *ttpServer) updateArchiveWithEvidence(manager *entities.ArchivesMan
 func (server *ttpServer) handleContractGenerationTry(manager *entities.ArchivesManager) (*tAPI.TTPResponse, error) {
 	generated, contract := resolve.Solve(manager)
 	if !generated {
+		dAPI.DLog("contract couldn't be generated. Sending an abort token.")
 		return &tAPI.TTPResponse{
 			Abort:    true,
 			Contract: nil,
@@ -172,7 +206,7 @@ func (server *ttpServer) handleContractGenerationTry(manager *entities.ArchivesM
 
 	// We add the generated contract to the signatureArchives
 	manager.Archives.SignedContract = contract
-
+	dAPI.DLog("contract was generated. Sending the signed contract.")
 	return &tAPI.TTPResponse{
 		Abort:    false,
 		Contract: contract,

@@ -82,7 +82,6 @@ func TestRegisterAuth(t *testing.T) {
 }
 
 func registerAndAuth(client *exec.Cmd, mail, password, keySize string, authMail, authToken bool) error {
-
 	setLastArg(client, "register", false)
 	client.Stdin = strings.NewReader(
 		mail + "\n" +

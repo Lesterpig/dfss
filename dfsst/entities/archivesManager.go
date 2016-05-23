@@ -25,14 +25,19 @@ func NewArchivesManager(db *mgdb.MongoManager) *ArchivesManager {
 // InitializeArchives : if an entry in the database for this signature exists, retrieves it, otherwise creates it.
 //
 // This function should only be called after function IsRequestValid.
-func (manager *ArchivesManager) InitializeArchives(promise *cAPI.Promise, signatureUUID bson.ObjectId, signers *[]Signer) {
+func (manager *ArchivesManager) InitializeArchives(promise *cAPI.Promise, signatureUUID bson.ObjectId, signers *[]Signer) error {
 	present, archives := manager.ContainsSignature(signatureUUID)
 
 	if !present {
 		archives = NewSignatureArchives(signatureUUID, promise.Context.Sequence, *signers, promise.Context.ContractDocumentHash, promise.Context.Seal)
+		ok, err := manager.DB.Get("signatures").Insert(*archives)
+		if !ok {
+			return err
+		}
 	}
 
 	manager.Archives = archives
+	return nil
 }
 
 // ContainsSignature : checks if the specified signatureUUID matches a SignatureArchives in the database.
@@ -70,10 +75,10 @@ func (manager *ArchivesManager) WasContractSigned() (bool, []byte) {
 	return false, []byte{}
 }
 
-// HasSignerPromised : determines if the specified signer has promised to sign to at least one other signer.
+// HasSignerPromised : determines if the specified signer has promised to sign at least one time.
 func (manager *ArchivesManager) HasSignerPromised(signer uint32) bool {
 	for _, p := range manager.Archives.ReceivedPromises {
-		if (p.SenderKeyIndex == signer) && (p.RecipientKeyIndex != signer) {
+		if p.SenderKeyIndex == signer {
 			return true
 		}
 	}

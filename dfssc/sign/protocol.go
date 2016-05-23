@@ -72,8 +72,10 @@ func (m *SignatureManager) Sign() error {
 		}
 
 		// Exchange messages
-		err = m.promiseRound(pendingSet, sendSet)
-		if err != nil {
+		var stop bool
+		stop, err = m.promiseRound(pendingSet, sendSet)
+		if err != nil || stop {
+			dAPI.DLog("stopping protocol execution")
 			return err
 		}
 
@@ -115,7 +117,9 @@ func (m *SignatureManager) makeSignersHashToIDMap() {
 }
 
 // promiseRound describes a promise round: reception and sending
-func (m *SignatureManager) promiseRound(pendingSet, sendSet []common.SequenceCoordinate) error {
+// returns true if the client has to stop the protocol, false otherwise.
+// returns an error if any occured.
+func (m *SignatureManager) promiseRound(pendingSet, sendSet []common.SequenceCoordinate) (bool, error) {
 	// Reception of the due promises
 	var promises []*cAPI.Promise
 	for len(pendingSet) > 0 {
@@ -131,11 +135,11 @@ func (m *SignatureManager) promiseRound(pendingSet, sendSet []common.SequenceCoo
 				}
 				promises = append(promises, promise)
 			} else {
-				return m.resolve()
+				return true, m.resolve()
 			}
 
 		case <-time.After(net.DefaultTimeout):
-			return m.resolve()
+			return true, m.resolve()
 		}
 	}
 
@@ -143,24 +147,29 @@ func (m *SignatureManager) promiseRound(pendingSet, sendSet []common.SequenceCoo
 	m.updateReceivedPromises(promises)
 	m.lastValidIndex = m.currentIndex
 
-	c := make(chan *cAPI.Promise, chanBufferSize)
+	c := make(chan error, chanBufferSize)
 	// Sending of due promises
 	for _, coord := range sendSet {
 		go func(coord common.SequenceCoordinate, m *SignatureManager) {
 			promise, err := m.CreatePromise(m.myID, coord.Signer, uint32(m.currentIndex))
 			if err == nil {
-				_ = m.SendEvidence(promise, nil, coord.Signer)
+				err = m.SendEvidence(promise, nil, coord.Signer)
 			}
-			c <- promise
+			c <- err
 		}(coord, m)
 	}
 
 	// Verifying we sent all the due promises
 	for range sendSet {
-		<-c
+		v := <-c
+		if v != nil {
+			// We couldn't send a due promise
+			dAPI.DLog("Couldn't send promise: " + v.Error())
+			return true, m.resolve()
+		}
 	}
 
-	return nil
+	return false, nil
 }
 
 // closeConnections tries to close all established connection with other peers and platform.
@@ -222,7 +231,7 @@ func (m *SignatureManager) callForResolve() (*tAPI.TTPResponse, error) {
 
 	toSend := append(m.archives.receivedPromises, selfPromise)
 
-	request := &tAPI.AlertRequest{Promises: toSend}
+	request := &tAPI.AlertRequest{Promises: toSend, Index: uint32(m.lastValidIndex)}
 
 	ctx, cancel := context.WithTimeout(context.Background(), net.DefaultTimeout)
 	defer cancel()
@@ -241,9 +250,10 @@ func (m *SignatureManager) resolve() error {
 		return errors.New("No connection to TTP, aborting!")
 	}
 
-	dAPI.DLog("contacting TTP")
+	dAPI.DLog("contacting TTP with resolve index " + fmt.Sprint(m.lastValidIndex))
 	response, err := m.callForResolve()
 	if err != nil {
+		dAPI.DLog("Resolve call generated an error: " + err.Error())
 		return err
 	}
 	if response.Abort {

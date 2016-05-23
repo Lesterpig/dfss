@@ -3,9 +3,11 @@ package resolve
 
 import (
 	"errors"
+	"fmt"
 
 	cAPI "dfss/dfssc/api"
 	"dfss/dfssc/common"
+	dAPI "dfss/dfssd/api"
 	"dfss/dfsst/entities"
 )
 
@@ -15,19 +17,23 @@ import (
 func ArePromisesComplete(promiseEntities []*entities.Promise, promise *cAPI.Promise, step uint32) bool {
 	expected, err := generateExpectedPromises(promise, step)
 	if err != nil {
+		dAPI.DLog("error occured during the generation of expected promises")
 		return false
 	}
 
 	if len(promiseEntities) != len(expected) {
+		dAPI.DLog("promise sets are not equal, nb received: " + fmt.Sprint(len(promiseEntities)) + " ; expected: " + fmt.Sprint(len(expected)))
 		return false
 	}
 
-	for _, p := range expected {
+	for i, p := range expected {
 		if !containsPromise(promiseEntities, p) {
+			dAPI.DLog("promise sets are not equal, promise at index: " + fmt.Sprint(i))
 			return false
 		}
 	}
 
+	dAPI.DLog("promise sets are equal")
 	return true
 }
 
@@ -39,42 +45,59 @@ func generateExpectedPromises(promise *cAPI.Promise, step uint32) ([]*entities.P
 	recipientH := promise.Context.RecipientKeyHash
 	recipientID, err := entities.GetIndexOfSigner(promise, recipientH)
 	if err != nil {
+		dAPI.DLog(err.Error())
 		return nil, err
 	}
 
-	if seq[int(step)] != recipientID {
+	// if step is 0, then it means that the resolve call occured during the first round.
+	// therefore, there is no way we can generate the signed contract.
+	// so we don't check the 0 case, because it has no consequence on the folloing of the resolve algorithm: an abort token will be sent
+	// checking the 0 case would cause an error in the consistency between of the resolve index and the promise recipient sequence index.
+	if (step != 0) && (seq[int(step)] != recipientID) {
+		dAPI.DLog("sequence index at step " + fmt.Sprint(int(step)) + " is " + fmt.Sprint(seq[int(step)]) + ", recipientID is " + fmt.Sprint(recipientID))
 		return nil, errors.New("Signer at step is not recipient")
 	}
 
 	currentIndex, err := common.FindNextIndex(seq, recipientID, -1)
 	if err != nil {
+		dAPI.DLog(err.Error())
 		return nil, err
 	}
 
+	dAPI.DLog("resolve index is: " + fmt.Sprint(step))
+	dAPI.DLog("first index is: " + fmt.Sprint(currentIndex))
 	for currentIndex <= int(step) {
+		dAPI.DLog("started generation round with currentIndex " + fmt.Sprint(currentIndex))
 		roundPromises, err := generationRound(seq, recipientID, currentIndex)
 		if err != nil {
+			dAPI.DLog("error occured during the generation round, currentIndex: " + fmt.Sprint(currentIndex))
 			return nil, err
 		}
 
+		dAPI.DLog(fmt.Sprint(len(roundPromises)) + " promises were generated for this round")
 		for _, p := range roundPromises {
 			res = addPromiseToExpected(res, p)
 		}
 
-		currentIndex, _ = common.FindNextIndex(seq, recipientID, currentIndex)
-
+		dAPI.DLog("total number of expected promises this far: " + fmt.Sprint(len(res)))
+		currentIndex, err = common.FindNextIndex(seq, recipientID, currentIndex)
+		if err != nil {
+			dAPI.DLog(err.Error())
+		}
 		// if it was the last occurence, then we finish
 		if currentIndex == -1 {
 			break
 		}
 	}
 
+	dAPI.DLog("promise from rounds have been generated")
 	selfPromise := &entities.Promise{
 		RecipientKeyIndex: recipientID,
 		SenderKeyIndex:    recipientID,
 		SequenceIndex:     step,
 	}
 
+	dAPI.DLog("adding self promise")
 	return append(res, selfPromise), nil
 }
 
