@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"strconv"
 	"sync"
+	"time"
 
 	"dfss"
 	cAPI "dfss/dfssc/api"
@@ -84,6 +85,8 @@ func NewSignatureManager(passphrase string, c *contract.JSON) (*SignatureManager
 
 	m.mail = m.auth.Cert.Subject.CommonName
 	dAPI.SetIdentifier(m.mail)
+
+	net.DefaultTimeout = viper.GetDuration("timeout")
 
 	m.cServer = m.GetServer()
 	go func() { _ = net.Listen("0.0.0.0:"+strconv.Itoa(viper.GetInt("local_port")), m.cServer) }()
@@ -234,7 +237,7 @@ func (m *SignatureManager) addPeer(user *pAPI.User) (ready bool, err error) {
 
 // SendReadySign sends the READY signal to the platform, and wait (potentially a long time) for START signal.
 func (m *SignatureManager) SendReadySign() (signatureUUID string, err error) {
-	ctx, cancel := context.WithTimeout(context.Background(), 10*viper.GetDuration("timeout"))
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Minute)
 	defer cancel()
 
 	c := make(chan *pAPI.LaunchSignature)
