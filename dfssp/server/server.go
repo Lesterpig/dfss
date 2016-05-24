@@ -6,6 +6,7 @@ import (
 	"os"
 
 	"dfss/auth"
+	dAPI "dfss/dfssd/api"
 	"dfss/dfssp/api"
 	"dfss/dfssp/authority"
 	"dfss/dfssp/common"
@@ -110,6 +111,7 @@ func (s *platformServer) ReadySign(ctx context.Context, in *api.ReadySignRequest
 		}
 	}
 
+	dAPI.DLog("sync with " + cn)
 	return signal, nil
 }
 

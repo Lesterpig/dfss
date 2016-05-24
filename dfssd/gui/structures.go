@@ -41,6 +41,10 @@ type EventType int
 const (
 	PROMISE EventType = iota
 	SIGNATURE
+	SYNC
+	TTPCALL
+	TTPABORT
+	TTPSIGNED
 	OTHER
 )
 
