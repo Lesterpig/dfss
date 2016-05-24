@@ -35,10 +35,10 @@ func (w *Window) AddEvent(e *api.Log) {
 
 	var receiver string
 	var index int
-	if n, _ := fmt.Sscanf(e.Log, "sent promise to %s", &receiver); n > 0 {
+	if n, _ := fmt.Sscanf(e.Log, "successfully sent promise to %s", &receiver); n > 0 {
 		event.Type = PROMISE
 		event.Receiver = w.scene.identifierToIndex(receiver)
-	} else if n, _ := fmt.Sscanf(e.Log, "sent signature to %s", &receiver); n > 0 {
+	} else if n, _ := fmt.Sscanf(e.Log, "successfully sent signature to %s", &receiver); n > 0 {
 		event.Type = SIGNATURE
 		event.Receiver = w.scene.identifierToIndex(receiver)
 	} else if n, _ := fmt.Sscanf(e.Log, "contacting TTP with resolve index %d", &index); n > 0 {

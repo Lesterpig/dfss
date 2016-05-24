@@ -43,32 +43,6 @@ func TestWrongRegisterRequest(t *testing.T) {
 	assert.Equal(t, errCode.Code, api.ErrorCode_INVARG)
 }
 
-func TestWrongAuthRequest(t *testing.T) {
-	// Get a client to the invalid server (cert duration is -1)
-	client := clientTest(t, InvalidServ)
-
-	// Invalid mail length
-	inv := &api.AuthRequest{}
-	msg, err := client.Auth(context.Background(), inv)
-	if msg != nil || err == nil {
-		t.Fatal("The request should have been evaluated as invalid")
-	}
-
-	// Invalid token length
-	inv.Email = "foo"
-	msg, err = client.Auth(context.Background(), inv)
-	if msg != nil || err == nil {
-		t.Fatal("The request should have been evaluated as invalid")
-	}
-
-	// Invalid certificate validity duration
-	inv.Token = "foo"
-	msg, err = client.Auth(context.Background(), inv)
-	if msg != nil || err == nil {
-		t.Fatal("The request should have been evaluated as invalid")
-	}
-}
-
 func TestAuthUserNotFound(t *testing.T) {
 	mail := "wrong@wrong.wrong"
 	token := "wrong"

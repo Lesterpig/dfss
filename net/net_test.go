@@ -138,13 +138,7 @@ func TestServerClientBadAuthWrongCertificateHash(t *testing.T) {
 	cert, _ := auth.PEMToCertificate([]byte(clientCertFixture))
 	key, _ := auth.PEMToPrivateKey([]byte(clientKeyFixture))
 
-	// The connection won't fail immediately, because grpc is connecting in the background
-	conn, _ := Connect("localhost:9000", cert, key, ca, auth.GetCertificateHash(cert))
-
-	// We have to ask for a specific query in order to test the certificate hash
-	client := pb.NewTestClient(conn)
-	_, err := client.Ping(context.Background(), &pb.Hop{Id: 1})
-
+	_, err := Connect("localhost:9000", cert, key, ca, auth.GetCertificateHash(cert))
 	if err == nil {
 		t.Fatal("Successfully connected with bad hash")
 	}

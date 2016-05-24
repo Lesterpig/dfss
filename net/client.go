@@ -60,6 +60,7 @@ func Connect(addrPort string, cert *x509.Certificate, key *rsa.PrivateKey, ca *x
 		addrPort,
 		grpc.WithTransportCredentials(&tlsCreds{config: conf, serverCertHash: serverCertHash}),
 		grpc.WithTimeout(DefaultTimeout),
+		grpc.WithBlock(),
 	)
 }
 
