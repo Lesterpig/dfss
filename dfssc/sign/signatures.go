@@ -6,6 +6,7 @@ import (
 
 	cAPI "dfss/dfssc/api"
 	"dfss/dfssc/common"
+	"dfss/net"
 )
 
 // ExchangeAllSignatures creates and sends signatures to all the signers of the contract
@@ -83,7 +84,7 @@ func (m *SignatureManager) ReceiveAllSignatures(out chan error) {
 				m.archives.receivedSignatures = append(m.archives.receivedSignatures, signature)
 			}
 
-		case <-time.After(time.Minute):
+		case <-time.After(net.DefaultTimeout):
 			out <- fmt.Errorf("Signature reception timeout!")
 			return
 		}

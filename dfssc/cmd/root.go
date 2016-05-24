@@ -2,7 +2,10 @@
 package cmd
 
 import (
+	"time"
+
 	"dfss"
+	"dfss/net"
 	dapi "dfss/dfssd/api"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
@@ -20,6 +23,7 @@ A tool to sign multiparty contract using a secure cryptographic protocol`,
 		_ = cmd.Help()
 	},
 	PersistentPreRun: func(cmd *cobra.Command, args []string) {
+		net.DefaultTimeout = viper.GetDuration("timeout")
 		dapi.Configure(viper.GetString("demo") != "", viper.GetString("demo"), "client")
 	},
 	PersistentPostRun: func(cmd *cobra.Command, args []string) {
@@ -38,6 +42,7 @@ func init() {
 	RootCmd.PersistentFlags().StringP("demo", "d", "", "demonstrator address and port, empty will disable it")
 	RootCmd.PersistentFlags().String("host", "localhost:9000", "host of the dfss platform")
 	RootCmd.PersistentFlags().IntP("port", "p", 9005, "port to use for P2P communication between clients")
+	RootCmd.PersistentFlags().Duration("timeout", 10*time.Second, "time to wait for connection and evidences before failing")
 
 	signCmd.Flags().Duration("slowdown", 0, "delay between each promises round (test only)")
 	signCmd.Flags().Int("stopbefore", 0, "stop signature just before the promises round n, -1 to stop right before signature round (test only)")
@@ -50,6 +55,7 @@ func init() {
 	_ = viper.BindPFlag("demo", RootCmd.PersistentFlags().Lookup("demo"))
 	_ = viper.BindPFlag("local_port", RootCmd.PersistentFlags().Lookup("port"))
 	_ = viper.BindPFlag("platform_addrport", RootCmd.PersistentFlags().Lookup("host"))
+	_ = viper.BindPFlag("timeout", RootCmd.PersistentFlags().Lookup("timeout"))
 
 	// Bind subcommands to root
 	RootCmd.AddCommand(dfss.VersionCmd, registerCmd, authCmd, newCmd, showCmd, fetchCmd, importCmd, exportCmd, signCmd)
