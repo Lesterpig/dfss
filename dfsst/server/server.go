@@ -18,27 +18,36 @@ import (
 	"github.com/spf13/viper"
 	"golang.org/x/net/context"
 	"google.golang.org/grpc"
+	"gopkg.in/mgo.v2/bson"
 )
 
 // InternalError : constant string used to return a generic error message through gRPC in case of an internal error.
 const InternalError string = "Internal server error"
 
-var mutex sync.Mutex
-
 type ttpServer struct {
-	DB *mgdb.MongoManager
+	DB        *mgdb.MongoManager
+	globalMut *sync.Mutex
+	mutMap    map[bson.ObjectId]*sync.Mutex
 }
 
 // Alert route for the TTP.
 func (server *ttpServer) Alert(ctx context.Context, in *tAPI.AlertRequest) (*tAPI.TTPResponse, error) {
-	mutex.Lock()
-	defer mutex.Unlock()
-
 	valid, signatureUUID, signers, senderIndex := entities.IsRequestValid(ctx, in.Promises)
 	if !valid {
 		dAPI.DLog("invalid request from " + net.GetCN(&ctx))
 		return nil, errors.New(InternalError)
 	}
+
+	server.globalMut.Lock()
+
+	_, ok := server.mutMap[signatureUUID]
+	if !ok {
+		server.mutMap[signatureUUID] = &sync.Mutex{}
+	}
+	server.mutMap[signatureUUID].Lock()
+
+	server.globalMut.Unlock()
+	defer server.mutMap[signatureUUID].Unlock()
 
 	dAPI.DLog("resolve index is: " + fmt.Sprint(in.Index))
 	valid = int(in.Index) < len(in.Promises[0].Context.Sequence)
@@ -91,7 +100,7 @@ func (server *ttpServer) Alert(ctx context.Context, in *tAPI.AlertRequest) (*tAP
 	// Try to generate the contract now
 	message, err = server.handleContractGenerationTry(manager)
 	// We manually update the database
-	ok, err := server.DB.Get("signatures").UpdateByID(*(manager.Archives))
+	ok, err = server.DB.Get("signatures").UpdateByID(*(manager.Archives))
 	if !ok {
 		dAPI.DLog("error during 'UpdateByID' l.81" + fmt.Sprint(err.Error()))
 		return nil, errors.New(InternalError)
@@ -235,9 +244,14 @@ func GetServer() *grpc.Server {
 		os.Exit(2)
 	}
 
+	mutmap := make(map[bson.ObjectId]*sync.Mutex)
+
 	server := &ttpServer{
-		DB: dbManager,
+		DB:        dbManager,
+		globalMut: &sync.Mutex{},
+		mutMap:    mutmap,
 	}
+
 	netServer := net.NewServer(cert, key, ca)
 	tAPI.RegisterTTPServer(netServer, server)
 	return netServer
