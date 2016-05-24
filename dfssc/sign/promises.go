@@ -7,7 +7,7 @@ import (
 	cAPI "dfss/dfssc/api"
 	dAPI "dfss/dfssd/api"
 	pAPI "dfss/dfssp/api"
-	"github.com/spf13/viper"
+	"dfss/net"
 	"golang.org/x/net/context"
 )
 
@@ -59,7 +59,7 @@ func (m *SignatureManager) SendEvidence(promise *cAPI.Promise, signature *cAPI.S
 		return
 	}
 
-	ctx, cancel := context.WithTimeout(context.Background(), viper.GetDuration("timeout"))
+	ctx, cancel := context.WithTimeout(context.Background(), net.DefaultTimeout)
 	defer cancel()
 
 	var result *pAPI.ErrorCode

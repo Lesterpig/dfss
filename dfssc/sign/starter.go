@@ -85,9 +85,6 @@ func NewSignatureManager(passphrase string, c *contract.JSON) (*SignatureManager
 
 	m.mail = m.auth.Cert.Subject.CommonName
 	dAPI.SetIdentifier(m.mail)
-
-	net.DefaultTimeout = viper.GetDuration("timeout")
-
 	m.cServer = m.GetServer()
 	go func() { _ = net.Listen("0.0.0.0:"+strconv.Itoa(viper.GetInt("local_port")), m.cServer) }()
 
@@ -212,7 +209,7 @@ func (m *SignatureManager) addPeer(user *pAPI.User) (ready bool, err error) {
 	// need to create another way to access it
 	m.peersConn[user.Email] = conn
 
-	ctx, cancel := context.WithTimeout(context.Background(), viper.GetDuration("timeout"))
+	ctx, cancel := context.WithTimeout(context.Background(), net.DefaultTimeout)
 	defer cancel()
 	msg, err := client.Discover(ctx, &cAPI.Hello{Version: dfss.Version})
 	if err != nil {

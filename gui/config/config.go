@@ -8,14 +8,17 @@ import (
 	"os"
 	"os/user"
 	"path/filepath"
+	"time"
 
+	"dfss/net"
 	"github.com/spf13/viper"
 )
 
 // Config is the structure that will be persisted in the configuration file
 type Config struct {
-	Email    string `json:"email"`
-	Platform string `json:"platform"`
+	Email    string        `json:"email"`
+	Platform string        `json:"platform"`
+	Timeout  time.Duration `json:"timeout"`
 }
 
 // Load loads the configuration file into memory.
@@ -42,12 +45,17 @@ func Load() {
 	viper.Set("authenticated", isFileValid(viper.GetString("file_cert")))
 	viper.Set("local_port", 9005)
 
+	// Configure timeout
+	if t := viper.GetDuration("timeout"); t > 0 {
+		net.DefaultTimeout = t
+	}
+
 	return
 }
 
 // Save stores the current configuration object from memory.
 func Save() {
-	c := Config{viper.GetString("email"), viper.GetString("platform")}
+	c := Config{viper.GetString("email"), viper.GetString("platform"), viper.GetDuration("timeout")}
 	data, err := json.MarshalIndent(c, "", "  ")
 	if err != nil {
 		return

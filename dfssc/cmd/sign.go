@@ -18,7 +18,6 @@ var signCmd = &cobra.Command{
 			os.Exit(1)
 		}
 
-		_ = viper.BindPFlag("timeout", cmd.Flags().Lookup("timeout"))
 		_ = viper.BindPFlag("slowdown", cmd.Flags().Lookup("slowdown"))
 		_ = viper.BindPFlag("stopbefore", cmd.Flags().Lookup("stopbefore"))
 
