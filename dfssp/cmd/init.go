@@ -5,7 +5,6 @@ import (
 	"os"
 
 	"dfss/dfssc/common"
-	dapi "dfss/dfssd/api"
 	"dfss/dfssp/authority"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
@@ -23,11 +22,10 @@ var initCmd = &cobra.Command{
 		_ = viper.BindPFlag("unit", cmd.Flags().Lookup("unit"))
 		_ = viper.BindPFlag("key_size", cmd.Flags().Lookup("key"))
 
-		err := authority.Initialize(common.SubViper("key_size", "validity", "country", "organization", "unit", "cn", "path"), nil, nil)
+		_, err := authority.Initialize(common.SubViper("key_size", "validity", "country", "organization", "unit", "cn", "path"), nil, nil)
 		if err != nil {
 			fmt.Fprintln(os.Stderr, "An error occured during the initialization operation:", err)
 			os.Exit(1)
 		}
-		dapi.DLog("Private key and root certificate generated")
 	},
 }

@@ -20,6 +20,7 @@ var startCmd = &cobra.Command{
 		_ = viper.BindPFlag("address", cmd.Flags().Lookup("address"))
 		_ = viper.BindPFlag("port", cmd.Flags().Lookup("port"))
 		_ = viper.BindPFlag("validity", cmd.Flags().Lookup("validity"))
+		_ = viper.BindPFlag("ttps", cmd.Flags().Lookup("ttps"))
 
 		address := viper.GetString("address")
 		port := viper.GetString("port")

@@ -1,6 +1,7 @@
 package entities
 
 import (
+	"bytes"
 	"errors"
 
 	cAPI "dfss/dfssc/api"
@@ -26,11 +27,6 @@ func ArePromisesValid(promises []*cAPI.Promise) (bool, []*Promise) {
 //     the index of the promise coresponds to an expected message from the sender in the signed sequence
 // If true, returns a new promise entity
 func IsPromiseValid(promise *cAPI.Promise) (bool, *Promise) {
-	valid := IsPromiseFromAtoB(promise)
-	if !valid {
-		return false, &Promise{}
-	}
-
 	// This checks if the index of the specified promise corresponds to an expected promise from the sender hash of the promise
 	sender, recipient, index, err := GetPromiseProfile(promise)
 	if err != nil {
@@ -43,10 +39,14 @@ func IsPromiseValid(promise *cAPI.Promise) (bool, *Promise) {
 }
 
 // IsPromiseFromAtoB : determines if the specified promise, supposedly from 'A' to 'B' was indeed created by 'A' for 'B'.
-func IsPromiseFromAtoB(promise *cAPI.Promise) bool {
-	// TODO
-	// This requires the implementation of promises
-	return true
+func IsPromiseFromAtoB(promise *cAPI.Promise, from, to []byte, at uint32) bool {
+	if !(bytes.Equal(promise.Context.SenderKeyHash, from)) {
+		return false
+	}
+	if !(bytes.Equal(promise.Context.RecipientKeyHash, to)) {
+		return false
+	}
+	return promise.Index == at
 }
 
 // GetPromiseProfile : retrieves the indexes of the recipient and sender in the array of signers' hashes, and the index of the promise.

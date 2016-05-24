@@ -22,12 +22,13 @@ type PlatformID struct {
 // Initialize creates and saves the platform's private key and root certificate to a PEM format.
 // If ca and rKey are not nil, they will be used as the root certificate and root private key instead of creating a ones.
 // The files are saved at the specified path by viper.
-func Initialize(v *viper.Viper, ca *x509.Certificate, rKey *rsa.PrivateKey) error {
+// The returned `hash` is the SHA-512 hash of the generated certificate.
+func Initialize(v *viper.Viper, ca *x509.Certificate, rKey *rsa.PrivateKey) (hash []byte, err error) {
 	// Generate the private key.
 	key, err := auth.GeneratePrivateKey(v.GetInt("key_size"))
 
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	var cert []byte
@@ -50,24 +51,25 @@ func Initialize(v *viper.Viper, ca *x509.Certificate, rKey *rsa.PrivateKey) erro
 	}
 
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	// Create missing folders, if needed
 	err = os.MkdirAll(path, os.ModeDir|0700)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	// Convert the private key to a PEM format, and save it.
 	keyPem := auth.PrivateKeyToPEM(key)
 	err = ioutil.WriteFile(keyPath, keyPem, 0600)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	// Save the root certificate.
-	return ioutil.WriteFile(certPath, cert, 0600)
+	rawCert, _ := auth.PEMToCertificate(cert) // TODO optimize this...
+	return auth.GetCertificateHash(rawCert), ioutil.WriteFile(certPath, cert, 0600)
 }
 
 // Start fetches the platform's private rsa key and root certificate, and create a PlatformID accordingly.

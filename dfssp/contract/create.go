@@ -152,7 +152,7 @@ func (c *Builder) SendNewContractMail() {
 		return
 	}
 
-	file, err := GetJSON(c.Contract, nil)
+	file, err := GetJSON(c.Contract)
 	if err != nil {
 		log.Println(err)
 		return

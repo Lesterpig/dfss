@@ -17,6 +17,8 @@ service TTP {
 message AlertRequest {
 	/// Promises obtained at this point of the main protocol
 	repeated Promise promises = 1;
+	/// Index at which the alert token was sent
+	uint32 index = 2;
 }
 
 message RecoverRequest {

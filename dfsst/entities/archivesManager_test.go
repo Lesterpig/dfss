@@ -88,27 +88,17 @@ func TestInitializeArchives(t *testing.T) {
 			Seal:                 seal,
 		},
 	}
-	archives := NewSignatureArchives(signatureUUIDBson, sequence, signersEntities, contractDocumentHash, seal)
 	manager := &ArchivesManager{
-		DB:       dbManager,
-		Archives: archives,
+		DB: dbManager,
 	}
 	arch := NewSignatureArchives(signatureUUIDBson, sequence, signersEntities, contractDocumentHash, seal)
 
-	manager.InitializeArchives(promise, signatureUUIDBson, &signersEntities)
+	err = manager.InitializeArchives(promise, signatureUUIDBson, &signersEntities)
+	assert.Nil(t, err)
 	arch.Signers = manager.Archives.Signers
 	assert.Equal(t, manager.Archives, arch)
 
-	ok, err := collection.Insert(manager.Archives)
-	assert.Equal(t, ok, true)
-	assert.Equal(t, err, nil)
-	manager.Archives = &SignatureArchives{}
-
-	manager.InitializeArchives(promise, signatureUUIDBson, &signersEntities)
-	assert.Equal(t, err, nil)
-	assert.Equal(t, manager.Archives, arch)
-
-	ok, err = collection.DeleteByID(*manager.Archives)
+	ok, err := collection.DeleteByID(*manager.Archives)
 	assert.Equal(t, err, nil)
 	assert.Equal(t, ok, true)
 }
@@ -209,7 +199,7 @@ func TestHasSignerPromised(t *testing.T) {
 	assert.Equal(t, len(archives.ReceivedPromises), 2)
 
 	ok = manager.HasSignerPromised(1)
-	assert.Equal(t, ok, false)
+	assert.Equal(t, ok, true)
 
 	promise2 := &Promise{
 		RecipientKeyIndex: 0,

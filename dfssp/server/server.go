@@ -22,6 +22,7 @@ type platformServer struct {
 	Pid   *authority.PlatformID
 	DB    *mgdb.MongoManager
 	Rooms *common.WaitingGroupMap
+	TTPs  *authority.TTPHolder
 }
 
 // Register handler
@@ -98,6 +99,7 @@ func (s *platformServer) ReadySign(ctx context.Context, in *api.ReadySignRequest
 
 	signal := contract.ReadySign(s.DB, s.Rooms, &ctx, in)
 	if signal.ErrorCode.Code == api.ErrorCode_SUCCESS {
+		signal.Ttp = s.TTPs.Get() // Assign a ttp to this signature, if any available
 		sealedSignal := *signal
 		sealedSignal.ErrorCode = nil
 		sealedSignal.Seal = nil
@@ -125,11 +127,21 @@ func GetServer() *grpc.Server {
 		os.Exit(1)
 	}
 
+	ttpholder, err := authority.NewTTPHolder(viper.GetString("ttps"))
+	if err != nil {
+		fmt.Println("An error occured during the ttp file load:", err)
+	}
+
+	if ttpholder.Nb() == 0 {
+		fmt.Println("Warning: no TTP loaded. See `dfssp ttp --help`.")
+	}
+
 	server := net.NewServer(pid.RootCA, pid.Pkey, pid.RootCA)
 	api.RegisterPlatformServer(server, &platformServer{
 		Pid:   pid,
 		DB:    dbManager,
 		Rooms: common.NewWaitingGroupMap(),
+		TTPs:  ttpholder,
 	})
 	return server
 }

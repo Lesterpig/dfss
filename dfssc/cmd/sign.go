@@ -82,13 +82,6 @@ var signCmd = &cobra.Command{
 			os.Exit(1)
 		}
 
-		// Persist evidencies, if any
-		err = manager.PersistSignaturesToFile()
-		if err != nil {
-			fmt.Fprintln(os.Stderr, err)
-			os.Exit(1)
-		}
-
 		fmt.Println("Signature complete! See .proof file for evidences.")
 	},
 }

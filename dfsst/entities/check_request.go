@@ -8,7 +8,6 @@ import (
 	"dfss/auth"
 	cAPI "dfss/dfssc/api"
 	pAPI "dfss/dfssp/api"
-	tAPI "dfss/dfsst/api"
 	"dfss/net"
 	"golang.org/x/net/context"
 	"gopkg.in/mgo.v2/bson"
@@ -17,14 +16,14 @@ import (
 // IsRequestValid : determines if there are no errors in the received request.
 // ie: the information signed by the platform in the received promises is valid and consistent
 //     the sender of the request is present amongst the signed signers of the promises
-func IsRequestValid(ctx context.Context, request *tAPI.AlertRequest) (valid bool, signatureUUID bson.ObjectId, signers []Signer, senderIndex uint32) {
+func IsRequestValid(ctx context.Context, promises []*cAPI.Promise) (valid bool, signatureUUID bson.ObjectId, signers []Signer, senderIndex uint32) {
 	// Due to specifications, there should be at least one promise (from the sender to himself)
-	if len(request.Promises) == 0 {
+	if len(promises) == 0 {
 		valid = false
 		return
 	}
 
-	ok, expectedUUID, signers := IsPromiseSignedByPlatform(request.Promises[0])
+	ok, expectedUUID, signers := IsPromiseSignedByPlatform(promises[0])
 	if !ok {
 		valid = false
 		return
@@ -36,7 +35,7 @@ func IsRequestValid(ctx context.Context, request *tAPI.AlertRequest) (valid bool
 		return
 	}
 
-	senderIndex, err = GetIndexOfSigner(request.Promises[0], sender)
+	senderIndex, err = GetIndexOfSigner(promises[0], sender)
 	if err != nil {
 		valid = false
 		return
@@ -45,7 +44,7 @@ func IsRequestValid(ctx context.Context, request *tAPI.AlertRequest) (valid bool
 	// To check that all the promises contain the same signed information, we only need to check that:
 	// - it is correctly signed
 	// - promises are consistent wrt at least one signed field
-	for _, promise := range request.Promises {
+	for _, promise := range promises {
 		ok, receivedUUID, _ := IsPromiseSignedByPlatform(promise)
 		if !ok || (expectedUUID != receivedUUID) {
 			valid = false
@@ -144,11 +143,19 @@ func IsPlatformSealValid(promise *cAPI.Promise) bool {
 		return false
 	}
 
+	var ttp *pAPI.LaunchSignature_TTP
+	if promise.Context.TtpAddrPort != "" {
+		ttp = new(pAPI.LaunchSignature_TTP)
+		ttp.Addrport = promise.Context.TtpAddrPort
+		ttp.Hash = promise.Context.TtpHash
+	}
+
 	theoric := pAPI.LaunchSignature{
 		SignatureUuid: promise.Context.SignatureUUID,
 		DocumentHash:  promise.Context.ContractDocumentHash,
 		KeyHash:       promise.Context.Signers,
 		Sequence:      promise.Context.Sequence,
+		Ttp:           ttp,
 	}
 
 	ok, _ := auth.VerifyStructure(AuthContainer.CA, theoric, promise.Context.Seal)

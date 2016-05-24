@@ -1,6 +1,7 @@
 package tests
 
 import (
+	"bufio"
 	"io/ioutil"
 	"os"
 	"os/exec"
@@ -14,18 +15,11 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-// TestSignContract unroll the whole signature process.
-//
-// GOOD CASE
-// - Start platform
+// setupSignature prepares required servers and clients to sign a contract.
+// - Start platform, ttp, demonstrator
 // - Register client1, client2 and client3
 // - Create contract `contract.txt`
-// - Sign it
-// - Check if all proof files are present
-//
-// TODO BAD CASES
-
-func TestSignContract(t *testing.T) {
+func setupSignature(t *testing.T) (stop func(), clients []*exec.Cmd, contractPath, contractFilePath string) {
 	// Cleanup
 	eraseDatabase()
 
@@ -34,12 +28,10 @@ func TestSignContract(t *testing.T) {
 	assert.Equal(t, nil, err)
 	_, _, _, stop, ca, err := startPlatform(workingDir)
 	assert.Equal(t, nil, err)
-	defer stop()
 
 	time.Sleep(2 * time.Second)
 
 	// Register clients
-	clients := make([]*exec.Cmd, 3)
 	client1, err := createClient(workingDir, ca, 9091)
 	assert.Equal(t, nil, err)
 	err = registerAndAuth(client1, "client1@example.com", "password", "", true, true)
@@ -56,7 +48,7 @@ func TestSignContract(t *testing.T) {
 	// Create contract
 	client1 = newClient(client1)
 	setLastArg(client1, "new", true)
-	contractFilePath := filepath.Join("testdata", "contract.txt")
+	contractFilePath = filepath.Join("testdata", "contract.txt")
 	client1.Stdin = strings.NewReader(
 		"password\n" +
 			contractFilePath + "\n" +
@@ -71,9 +63,9 @@ func TestSignContract(t *testing.T) {
 
 	// Get contract file
 	contractEntity := getContract("contract.txt", 0)
-	contractData, err := contract.GetJSON(contractEntity, nil)
+	contractData, err := contract.GetJSON(contractEntity)
 	assert.Equal(t, nil, err)
-	contractPath := filepath.Join(workingDir, "c.dfss")
+	contractPath = filepath.Join(workingDir, "c.dfss")
 	err = ioutil.WriteFile(contractPath, contractData, os.ModePerm)
 	assert.Equal(t, nil, err)
 
@@ -85,11 +77,21 @@ func TestSignContract(t *testing.T) {
 	_, err = wrongFileClient.Output()
 	assert.NotNil(t, err)
 
-	// Sign!
+	clients = make([]*exec.Cmd, 3)
 	clients[0] = newClient(client1)
 	clients[1] = newClient(client2)
 	clients[2] = newClient(client3)
+	return
+}
 
+// TestSignContract unroll the whole signature process.
+// In this test, everything should work fine without any ttp call.
+func TestSignContract(t *testing.T) {
+	// Setup
+	stop, clients, contractPath, contractFilePath := setupSignature(t)
+	defer stop()
+
+	// Sign!
 	closeChannel := make(chan []byte, 3)
 	for i := 0; i < 3; i++ {
 		setLastArg(clients[i], "sign", true)
@@ -98,8 +100,8 @@ func TestSignContract(t *testing.T) {
 			time.Sleep(time.Duration(i*2) * time.Second)
 			c.Stdin = strings.NewReader(contractFilePath + "\npassword\nyes\n")
 			c.Stderr = os.Stderr
-			output, err1 := c.Output()
-			if err1 != nil {
+			output, err := c.Output()
+			if err != nil {
 				output = nil
 			}
 			closeChannel <- output
@@ -118,6 +120,12 @@ func TestSignContract(t *testing.T) {
 		}
 	}
 
+	checkProofFile(t, 3)
+	time.Sleep(time.Second)
+}
+
+// checkProofFile counts the number of proof file contained in the current directory, and compares it to the nb parameter.
+func checkProofFile(t *testing.T, nb int) {
 	// Ensure that all the files are present
 	proofFile := regexp.MustCompile(`client[0-9]+@example.com.*\.proof`)
 	files, _ := ioutil.ReadDir("./")
@@ -126,11 +134,55 @@ func TestSignContract(t *testing.T) {
 	for _, file := range files {
 		if proofFile.Match([]byte(file.Name())) {
 			matches++
-			err = os.Remove("./" + file.Name())
+			err := os.Remove("./" + file.Name())
 			assert.True(t, err == nil, "Cannot remove .proof matching file")
 		}
 	}
-	assert.True(t, matches == 3, "Missing proof file ?")
+	assert.Equal(t, nb, matches, "Invalid number of proof file(s)")
+}
 
+// TestSignContractFailure tests the signature with a faulty client, when contract can't be generated.
+// In this test, everything should not work fine, because client3 shutdowns way too early.
+func TestSignContractFailure(t *testing.T) {
+	signatureHelper(t, "1", 0)
+}
+
+// TestSignContractSuccess tests the signature with a faulty client, when contract can be generated.
+// In this test, everything should not work fine, because client3 shutdowns way too early.
+func TestSignContractSuccess(t *testing.T) {
+	signatureHelper(t, "2", 2)
+}
+
+// signatureHelper : launches a parametrized signature, with the number of rounds a client will accomplish before shutting down,
+// and the number of proof files expected to be generated.
+func signatureHelper(t *testing.T, round string, nbFiles int) {
+	// Setup
+	stop, clients, contractPath, contractFilePath := setupSignature(t)
+	defer stop()
+
+	// Configure client3 to be faulty
+	setLastArg(clients[2], "--stopbefore", true)
+	setLastArg(clients[2], round, false)
+	setLastArg(clients[2], "sign", false)
+
+	// Sign!
+	closeChannel := make(chan []byte, 3)
+	for i := 0; i < 3; i++ {
+		setLastArg(clients[i], "sign", true)
+		setLastArg(clients[i], contractPath, false)
+		go func(c *exec.Cmd, i int) {
+			c.Stdin = strings.NewReader(contractFilePath + "\npassword\nyes\n")
+			c.Stderr = bufio.NewWriter(os.Stdout)
+			output, _ := c.Output()
+			closeChannel <- output
+		}(clients[i], i)
+	}
+
+	for i := 0; i < 3; i++ {
+		// TODO check stderr?
+		<-closeChannel
+	}
+
+	checkProofFile(t, nbFiles)
 	time.Sleep(time.Second)
 }

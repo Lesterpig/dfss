@@ -17,7 +17,7 @@ import (
 )
 
 // DefaultTimeout should be used when a non-critical timeout is used in the application.
-var DefaultTimeout = 30 * time.Second
+var DefaultTimeout = 5 * time.Second
 
 // Connect to a peer.
 //
