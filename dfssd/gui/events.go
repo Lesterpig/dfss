@@ -17,8 +17,12 @@ import (
 // Timestamp: unix nano timestamp
 // Identifier: either "platform", "ttp" or "<email>"
 // Log: one of the following
+//      "sync with <entity>"
 //			"sent promise to <email>"
 //      "sent signature to <email>"
+//      "contacting TTP with resolve index <index>"
+//      "sent abort token to <email>"
+//      "send signed contract to <email>"
 //
 // Other messages are currently ignored.
 func (w *Window) AddEvent(e *api.Log) {
@@ -30,17 +34,30 @@ func (w *Window) AddEvent(e *api.Log) {
 	w.Log(fmt.Sprint(e.Identifier, " ", e.Log))
 
 	var receiver string
+	var index int
 	if n, _ := fmt.Sscanf(e.Log, "sent promise to %s", &receiver); n > 0 {
 		event.Type = PROMISE
 		event.Receiver = w.scene.identifierToIndex(receiver)
 	} else if n, _ := fmt.Sscanf(e.Log, "sent signature to %s", &receiver); n > 0 {
 		event.Type = SIGNATURE
 		event.Receiver = w.scene.identifierToIndex(receiver)
+	} else if n, _ := fmt.Sscanf(e.Log, "contacting TTP with resolve index %d", &index); n > 0 {
+		event.Type = TTPCALL
+		event.Receiver = w.scene.identifierToIndex("ttp")
+	} else if n, _ := fmt.Sscanf(e.Log, "sent abort token to %s", &receiver); n > 0 {
+		event.Type = TTPABORT
+		event.Receiver = w.scene.identifierToIndex(receiver)
+	} else if n, _ := fmt.Sscanf(e.Log, "sent signed contract to %s", &receiver); n > 0 {
+		event.Type = TTPSIGNED
+		event.Receiver = w.scene.identifierToIndex(receiver)
+	} else if n, _ := fmt.Sscanf(e.Log, "sync with %s", &receiver); n > 0 {
+		event.Type = SYNC
+		event.Receiver = w.scene.identifierToIndex(receiver)
+	} else {
+		return
 	}
 
-	if receiver != "" {
-		w.scene.Events = append(w.scene.Events, event)
-	}
+	w.scene.Events = append(w.scene.Events, event)
 }
 
 // DrawEvent triggers the appropriate draw action for a spectific event.
@@ -54,8 +71,14 @@ func (w *Window) DrawEvent(e *Event) {
 		color = "blue"
 	case SIGNATURE:
 		color = "green"
+	case TTPCALL:
+		color = "purple"
+	case TTPABORT:
+		color = "red"
+	case TTPSIGNED:
+		color = "lime"
 	default:
-		color = "black"
+		color = "grey"
 	}
 
 	w.DrawArrow(xa, ya, xb, yb, colors[color])

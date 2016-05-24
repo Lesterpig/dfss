@@ -5,10 +5,13 @@ package gui
 import "github.com/visualfc/goqt/ui"
 
 var colors = map[string]uint32{
-	"red":   0x00ff0000,
-	"green": 0x0000aa00,
-	"blue":  0x000000ff,
-	"black": 0x00000000,
+	"red":    0x00ff0000,
+	"green":  0x0000aa00,
+	"blue":   0x000000ff,
+	"black":  0x00000000,
+	"purple": 0x00aa00aa,
+	"lime":   0x0000ee00,
+	"grey":   0x00888888,
 }
 
 var pen_black = ui.NewPenWithColor(ui.NewColorWithGlobalcolor(ui.Qt_black))

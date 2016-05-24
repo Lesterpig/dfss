@@ -79,7 +79,7 @@ func (server *ttpServer) Alert(ctx context.Context, in *tAPI.AlertRequest) (*tAP
 	// We check that the sender of the request sent valid and complete information
 	stop, message, tmpPromises, err := server.handleInvalidPromises(manager, in.Promises, senderIndex, in.Index)
 	if stop {
-		dAPI.DLog("invalid promise caused stop")
+		dAPI.DLog("sent abort token to " + net.GetCN(&ctx))
 		return message, err
 	}
 	// Now we are sure that the sender of the AlertRequest is not dishonest
@@ -87,7 +87,7 @@ func (server *ttpServer) Alert(ctx context.Context, in *tAPI.AlertRequest) (*tAP
 	// We try to use the already generated contract if it exists
 	generated, contract := manager.WasContractSigned()
 	if generated {
-		dAPI.DLog("sending the signed contract")
+		dAPI.DLog("sent signed contract to " + net.GetCN(&ctx))
 		return &tAPI.TTPResponse{
 			Abort:    false,
 			Contract: contract,
@@ -102,8 +102,14 @@ func (server *ttpServer) Alert(ctx context.Context, in *tAPI.AlertRequest) (*tAP
 	// We manually update the database
 	ok, err = server.DB.Get("signatures").UpdateByID(*(manager.Archives))
 	if !ok {
-		dAPI.DLog("error during 'UpdateByID' l.81" + fmt.Sprint(err.Error()))
+		fmt.Fprintln(os.Stderr, err)
 		return nil, errors.New(InternalError)
+	}
+
+	if message.Abort {
+		dAPI.DLog("sent abort token to " + net.GetCN(&ctx))
+	} else {
+		dAPI.DLog("sent signed contract to " + net.GetCN(&ctx))
 	}
 
 	return message, err
@@ -121,7 +127,7 @@ func (server *ttpServer) handleAbortedSender(manager *entities.ArchivesManager, 
 
 		ok, err := manager.DB.Get("signatures").UpdateByID(*(manager.Archives))
 		if !ok {
-			dAPI.DLog("error during 'UpdateByID' l.99" + fmt.Sprint(err.Error()))
+			fmt.Fprintln(os.Stderr, err)
 			return true, nil, errors.New(InternalError)
 		}
 
@@ -166,11 +172,10 @@ func (server *ttpServer) handleInvalidPromises(manager *entities.ArchivesManager
 
 		ok, err := manager.DB.Get("signatures").UpdateByID(*(manager.Archives))
 		if !ok {
-			dAPI.DLog("error during 'UpdateByID' l.132" + fmt.Sprint(err.Error()))
+			fmt.Fprintln(os.Stderr, err)
 			return true, nil, nil, errors.New(InternalError)
 		}
 
-		dAPI.DLog("sending an abort token")
 		return true, &tAPI.TTPResponse{
 			Abort:    true,
 			Contract: nil,
@@ -199,14 +204,12 @@ func (server *ttpServer) updateArchiveWithEvidence(manager *entities.ArchivesMan
 // Returns the response to send back to the sender of the request.
 //
 // Does not take into account if the sender is dishonest.
-//
 // If the contract has been successfully generated, returns it. Otherwise, returns an abort token.
 //
 // DOES NOT UPDATE THE DATABASE (should be handled manually)
 func (server *ttpServer) handleContractGenerationTry(manager *entities.ArchivesManager) (*tAPI.TTPResponse, error) {
 	generated, contract := resolve.Solve(manager)
 	if !generated {
-		dAPI.DLog("contract couldn't be generated. Sending an abort token.")
 		return &tAPI.TTPResponse{
 			Abort:    true,
 			Contract: nil,
@@ -215,7 +218,6 @@ func (server *ttpServer) handleContractGenerationTry(manager *entities.ArchivesM
 
 	// We add the generated contract to the signatureArchives
 	manager.Archives.SignedContract = contract
-	dAPI.DLog("contract was generated. Sending the signed contract.")
 	return &tAPI.TTPResponse{
 		Abort:    false,
 		Contract: contract,
@@ -241,7 +243,7 @@ func GetServer() *grpc.Server {
 	dbManager, err := mgdb.NewManager(viper.GetString("dbURI"))
 	if err != nil {
 		fmt.Fprintln(os.Stderr, "An error occured during the connection to MongoDB:", err)
-		os.Exit(2)
+		os.Exit(1)
 	}
 
 	mutmap := make(map[bson.ObjectId]*sync.Mutex)
