@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"path/filepath"
+	"strings"
 	"testing"
 	"time"
 
@@ -88,7 +89,7 @@ func TestAddContract(t *testing.T) {
 	errorCode, err := client.PostContract(context.Background(), &api.PostContractRequest{
 		Hash:     defaultHash[:],
 		Filename: "ContractFilename",
-		Signer:   []string{user1.Email, user2.Email},
+		Signer:   []string{strings.ToUpper(user1.Email), user2.Email},
 		Comment:  "ContractComment",
 	})
 	assert.Equal(t, nil, err)
