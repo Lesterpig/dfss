@@ -43,8 +43,7 @@ func (s *platformServer) Auth(ctx context.Context, in *api.AuthRequest) (*api.Re
 //
 // Handle incoming UnregisterRequest messages
 func (s *platformServer) Unregister(ctx context.Context, in *api.Empty) (*api.ErrorCode, error) {
-	// TODO
-	return nil, nil
+	return user.Unregister(s.DB, net.GetClientHash(&ctx)), nil
 }
 
 // PostContract handler
