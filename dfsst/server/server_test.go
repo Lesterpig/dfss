@@ -104,8 +104,3 @@ func TestMain(m *testing.M) {
 
 	os.Exit(code)
 }
-
-func TestAlert(t *testing.T) {
-	// TODO
-	// This requires the user of a real Alert message
-}

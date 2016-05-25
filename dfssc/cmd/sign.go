@@ -74,6 +74,13 @@ var signCmd = &cobra.Command{
 		// TODO Warning, integration tests are checking Stdout
 		fmt.Println("Everybody is ready, starting the signature", signatureUUID)
 
+		// Persisting the signatureUUID and ttp addrport in case of a crash, to be able to recover
+		filename, err = manager.PersistRecoverDataToFile()
+		if err != nil {
+			fmt.Fprintln(os.Stderr, err)
+			os.Exit(1)
+		}
+
 		// Signature
 		manager.OnProgressUpdate = signProgressFn
 		err = manager.Sign()
@@ -83,6 +90,13 @@ var signCmd = &cobra.Command{
 		}
 
 		fmt.Println("Signature complete! See .proof file for evidences.")
+
+		// deleting the recover data file
+		err = os.Remove(filename)
+		if err != nil {
+			fmt.Fprintln(os.Stderr, err)
+			os.Exit(1)
+		}
 	},
 }
 

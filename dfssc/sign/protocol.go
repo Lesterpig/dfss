@@ -261,7 +261,7 @@ func (m *SignatureManager) resolve() error {
 		return nil
 	}
 	dAPI.DLog("contacted TTP, received signed contract")
-	return ioutil.WriteFile(m.mail+"-"+m.contract.UUID+".proof", response.Contract, 0600)
+	return ioutil.WriteFile(m.mail+"-"+m.uuid+".proof", response.Contract, 0600)
 }
 
 // checkPromise : verifies that the promise is valid wrt the expected promises.

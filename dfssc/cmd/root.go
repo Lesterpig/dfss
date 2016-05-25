@@ -58,6 +58,5 @@ func init() {
 	_ = viper.BindPFlag("timeout", RootCmd.PersistentFlags().Lookup("timeout"))
 
 	// Bind subcommands to root
-	RootCmd.AddCommand(dfss.VersionCmd, registerCmd, authCmd, newCmd, showCmd, fetchCmd, importCmd, exportCmd, signCmd, unregisterCmd)
-
+	RootCmd.AddCommand(dfss.VersionCmd, registerCmd, authCmd, newCmd, showCmd, fetchCmd, importCmd, exportCmd, signCmd, unregisterCmd, recoverCmd)
 }

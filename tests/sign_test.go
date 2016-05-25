@@ -144,25 +144,30 @@ func checkProofFile(t *testing.T, nb int) {
 // TestSignContractFailure tests the signature with a faulty client, when contract can't be generated.
 // In this test, everything should not work fine, because client3 shutdowns way too early.
 func TestSignContractFailure(t *testing.T) {
-	signatureHelper(t, "1", 0)
+	signatureHelper(t, true)
 }
 
 // TestSignContractSuccess tests the signature with a faulty client, when contract can be generated.
 // In this test, everything should not work fine, because client3 shutdowns way too early.
 func TestSignContractSuccess(t *testing.T) {
-	signatureHelper(t, "2", 2)
+	signatureHelper(t, false)
 }
 
 // signatureHelper : launches a parametrized signature, with the number of rounds a client will accomplish before shutting down,
 // and the number of proof files expected to be generated.
-func signatureHelper(t *testing.T, round string, nbFiles int) {
+func signatureHelper(t *testing.T, failure bool) {
 	// Setup
 	stop, clients, contractPath, contractFilePath := setupSignature(t)
 	defer stop()
 
+	stopBefore, expectedProofFile1, expectedProofFile2 := "1", 0, 0
+	if !failure {
+		stopBefore, expectedProofFile1, expectedProofFile2 = "2", 2, 1
+	}
+
 	// Configure client3 to be faulty
 	setLastArg(clients[2], "--stopbefore", true)
-	setLastArg(clients[2], round, false)
+	setLastArg(clients[2], stopBefore, false)
 	setLastArg(clients[2], "sign", false)
 
 	// Sign!
@@ -183,6 +188,40 @@ func signatureHelper(t *testing.T, round string, nbFiles int) {
 		<-closeChannel
 	}
 
-	checkProofFile(t, nbFiles)
+	checkProofFile(t, expectedProofFile1)
+	filename := checkRecoverFile(t, "client3@example.com")
+	callRecover(newClient(clients[2]), filename)
+	_ = os.Remove(filename)
+	checkProofFile(t, expectedProofFile2)
+
 	time.Sleep(time.Second)
+	return
+}
+
+// checkProofFile counts the number of proof file contained in the current directory, and compares it to the nb parameter.
+func checkRecoverFile(t *testing.T, mail string) string {
+	// Ensure that all the files are present
+	recoverFile := regexp.MustCompile(mail + `.*\.run`)
+	files, _ := ioutil.ReadDir("./")
+
+	var filename string
+	matches := 0
+	for _, file := range files {
+		if recoverFile.Match([]byte(file.Name())) {
+			matches++
+			filename = file.Name()
+		}
+	}
+	assert.Equal(t, 1, matches, "Invalid number of recover file(s)")
+	return filename
+}
+
+func callRecover(c *exec.Cmd, filename string) {
+	// We cannot use "setLastArg" because we need to update arguments
+	c.Args = c.Args[:(len(c.Args) - 4)]
+	c.Args = append(c.Args, "recover", filename)
+	c.Stdin = strings.NewReader("password\n")
+	c.Stdout = os.Stdout
+	c.Stderr = os.Stderr
+	_ = c.Run()
 }
