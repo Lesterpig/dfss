@@ -5,13 +5,11 @@ import (
 	"regexp"
 	"time"
 
-	"github.com/spf13/viper"
-
 	"dfss/dfssc/common"
 	"dfss/dfssc/security"
 	pb "dfss/dfssp/api"
 	"dfss/net"
-
+	"github.com/spf13/viper"
 	"golang.org/x/net/context"
 	"google.golang.org/grpc"
 )
@@ -26,6 +24,8 @@ type RegisterManager struct {
 	mail         string
 	bits         int
 }
+
+var mailRegex = regexp.MustCompile(`.+@.+\..+`)
 
 // NewRegisterManager return a new Register Manager to register a user
 func NewRegisterManager(passphrase, country, organization, unit, mail string, bits int, v *viper.Viper) (*RegisterManager, error) {
@@ -44,8 +44,7 @@ func NewRegisterManager(passphrase, country, organization, unit, mail string, bi
 
 // Check the validity of the provided email, passphrase and bits
 func (m *RegisterManager) checkValidParams() error {
-	re, _ := regexp.Compile(`.+@.+\..+`)
-	if b := re.MatchString(m.mail); !b {
+	if b := mailRegex.MatchString(m.mail); !b {
 		return errors.New("Provided mail is not valid")
 	}
 

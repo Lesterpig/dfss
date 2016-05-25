@@ -2,6 +2,7 @@ package contract_test // Using another package to avoid import cycles
 
 import (
 	"fmt"
+	"log"
 	"os"
 	"path/filepath"
 	"testing"
@@ -49,7 +50,7 @@ func TestMain(m *testing.M) {
 	viper.Set("verbose", true)
 
 	srv := server.GetServer()
-	go func() { _ = net.Listen("localhost:9090", srv) }()
+	go func() { log.Fatal(net.Listen("localhost:9090", srv)) }()
 
 	// Run
 	code := m.Run()
@@ -142,7 +143,7 @@ func TestGetWaitingForUser(t *testing.T) {
 	c1.Ready = false
 
 	c2 := entities.NewContract()
-	c2.AddSigner(nil, "mail1", []byte{})
+	c2.AddSigner(nil, "mAil1", []byte{})
 	c2.AddSigner(&knownID, "mail2", []byte{0x12})
 	c2.Ready = false
 

@@ -5,10 +5,10 @@ import (
 	"crypto/x509"
 	"fmt"
 	"io/ioutil"
+	"log"
 	"os"
 	"path/filepath"
 	"testing"
-	"time"
 
 	"dfss/auth"
 	"dfss/dfssp/api"
@@ -17,7 +17,6 @@ import (
 	"dfss/mgdb"
 	"dfss/net"
 	"github.com/spf13/viper"
-	"github.com/stretchr/testify/assert"
 	"golang.org/x/net/context"
 	"gopkg.in/mgo.v2/bson"
 )
@@ -28,6 +27,20 @@ var (
 	rootCA        *x509.Certificate
 	rootKey, pkey *rsa.PrivateKey
 )
+
+const (
+	// ValidServ is a host/port adress to a platform server with good setup
+	ValidServ = "localhost:9090"
+)
+
+func clientTest(t *testing.T, hostPort string) api.PlatformClient {
+	conn, err := net.Connect(hostPort, nil, nil, rootCA, nil)
+	if err != nil {
+		t.Fatal("Unable to connect: ", err)
+	}
+
+	return api.NewPlatformClient(conn)
+}
 
 func init() {
 	mail = "foo@foo.foo"
@@ -75,7 +88,7 @@ func TestMain(m *testing.M) {
 	viper.Set("validity", 365)
 	viper.Set("verbose", true)
 	srv := server.GetServer()
-	go func() { _ = net.Listen(ValidServ, srv) }()
+	go func() { log.Fatal(net.Listen(ValidServ, srv)) }()
 
 	// Run
 	err = collection.Drop()
@@ -86,7 +99,6 @@ func TestMain(m *testing.M) {
 		fmt.Println("An error occurred while droping the collection")
 	}
 	manager.Close()
-
 	os.Exit(code)
 }
 
@@ -182,70 +194,6 @@ func TestMongoFetchIncompleteUser(t *testing.T) {
 	equalUsers(t, &user, fetched)
 }
 
-func TestWrongAuthRequestContext(t *testing.T) {
-	mail := "right@right.right"
-	token := "right"
-
-	user := entities.NewUser()
-	user.Email = mail
-	user.RegToken = token
-	user.Registration = time.Now().UTC().Add(time.Hour * -48)
-
-	_, err := repository.Collection.Insert(*user)
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	client := clientTest(t, ValidServ)
-
-	request := &api.AuthRequest{Email: mail, Token: "foo"}
-
-	// Token timeout
-	msg, err := client.Auth(context.Background(), request)
-	assert.Equal(t, (*api.RegisteredUser)(nil), msg)
-	if err == nil {
-		t.Fatal("The request should have been evaluated as invalid")
-	}
-
-	// Token mismatch
-	user.Registration = time.Now().UTC()
-
-	_, err = repository.Collection.UpdateByID(*user)
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	msg, err = client.Auth(context.Background(), request)
-	assert.Equal(t, (*api.RegisteredUser)(nil), msg)
-	if err == nil {
-		t.Fatal("The request should have been evaluated as invalid")
-	}
-
-	res := entities.User{}
-	err = repository.Collection.FindByID(*user, &res)
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	assert.Equal(t, res.Certificate, "")
-	assert.Equal(t, res.CertHash, []byte{})
-
-	// Invalid certificate request (none here)
-	request.Token = token
-	msg, err = client.Auth(context.Background(), request)
-	assert.Equal(t, (*api.RegisteredUser)(nil), msg)
-	if err == nil {
-		t.Fatal("The request should have been evaluated as invalid")
-	}
-
-	err = repository.Collection.FindByID(*user, &res)
-	if err != nil {
-		t.Fatal(err)
-	}
-	assert.Equal(t, res.Certificate, "")
-	assert.Equal(t, res.CertHash, []byte{})
-}
-
 func ExampleAuth() {
 	mail := "example@example.example"
 	token := "example"
@@ -305,49 +253,4 @@ func ExampleAuth() {
 	// AuthRequest successfully sent
 	// Certificate successfully received
 	// Database successfully updated with cert and certHash
-}
-
-func TestRegisterTwice(t *testing.T) {
-	mail := "done@done.done"
-
-	user := entities.NewUser()
-	user.Email = mail
-
-	_, err = repository.Collection.Insert(*user)
-	if err != nil {
-		fmt.Println(err)
-	}
-
-	client := clientTest(t, ValidServ)
-
-	// An entry already exists with the same email
-	request := &api.RegisterRequest{Email: mail, Request: string(csr)}
-	errCode, err := client.Register(context.Background(), request)
-	assert.Equal(t, err, nil)
-	assert.Equal(t, errCode.Code, api.ErrorCode_INVARG)
-}
-
-func TestAuthTwice(t *testing.T) {
-	email := "email"
-	token := "token"
-	user := entities.NewUser()
-	user.Email = email
-	user.RegToken = token
-	user.Csr = string(csr)
-	user.Certificate = "foo"
-	user.CertHash = []byte{0xaa}
-
-	_, err = repository.Collection.Insert(*user)
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	// User is already registered
-	client := clientTest(t, ValidServ)
-	request := &api.AuthRequest{Email: email, Token: token}
-	msg, err := client.Auth(context.Background(), request)
-	assert.Equal(t, msg, (*api.RegisteredUser)(nil))
-	if err == nil {
-		t.Fatal("The user should have been evaluated as already registered")
-	}
 }

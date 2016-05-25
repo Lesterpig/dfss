@@ -89,7 +89,7 @@ func (r *ContractRepository) GetWaitingForUser(email string) ([]Contract, error)
 		"ready": false,
 		"signers": bson.M{
 			"$elemMatch": bson.M{
-				"email": email,
+				"email": bson.M{"$regex": bson.RegEx{Pattern: "^" + email + "$", Options: "i"}},
 				"hash":  []byte{},
 			}},
 	}, &res)

@@ -4,6 +4,7 @@ package contract
 import (
 	"crypto/sha512"
 	"log"
+	"strings"
 	"time"
 
 	"dfss/dfssp/api"
@@ -62,7 +63,6 @@ func (c *Builder) Execute() *api.ErrorCode {
 
 // checkInput checks that a PostContractRequest is well-formed
 func (c *Builder) checkInput() *api.ErrorCode {
-
 	if len(c.in.Signer) == 0 {
 		return &api.ErrorCode{Code: api.ErrorCode_INVARG, Message: "Expecting at least one signer"}
 	}
@@ -76,18 +76,23 @@ func (c *Builder) checkInput() *api.ErrorCode {
 	}
 
 	return nil
-
 }
 
 // fetchSigners fetches authenticated users for this contract from the DB
 func (c *Builder) fetchSigners() error {
 	var users []entities.User
 
+	// Convert emails to case-tolerant emails
+	var conditions []bson.RegEx
+	for _, s := range c.in.Signer {
+		conditions = append(conditions, bson.RegEx{Pattern: "^" + s + "$", Options: "i"})
+	}
+
 	// Fetch users where email is part of the signers slice in request
 	// and authentication is valid
 	err := c.m.Get("users").FindAll(bson.M{
 		"expiration": bson.M{"$gt": time.Now()},
-		"email":      bson.M{"$in": c.in.Signer},
+		"email":      bson.M{"$in": conditions},
 	}, &users)
 	if err != nil {
 		return err
@@ -96,8 +101,9 @@ func (c *Builder) fetchSigners() error {
 	// Locate missing users
 	for _, s := range c.in.Signer {
 		found := false
+		lowerEmail := strings.ToLower(s)
 		for _, u := range users {
-			if s == u.Email {
+			if lowerEmail == strings.ToLower(u.Email) {
 				found = true
 				break
 			}
