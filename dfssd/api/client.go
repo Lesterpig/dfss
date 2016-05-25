@@ -1,6 +1,7 @@
 package api
 
 import (
+	"fmt"
 	"time"
 
 	"golang.org/x/net/context"
@@ -10,7 +11,7 @@ import (
 
 var (
 	address, identifier string
-	demo                bool
+	demo, verbose       bool
 	// lazy initializer
 	dial       *grpc.ClientConn
 	demoClient DemonstratorClient
@@ -18,10 +19,11 @@ var (
 
 // Configure is used to update current parameters.
 // Call it at least one time before the first DLog call.
-func Configure(activated bool, addrport, id string) {
+func Configure(verbswitch, activated bool, addrport, id string) {
 	address = addrport
 	identifier = id
 	demo = activated
+	verbose = verbswitch
 }
 
 // SetIdentifier updates the current client identifier.
@@ -58,6 +60,11 @@ func DClose() {
 //
 // The client is dialed in a lazy way
 func DLog(log string) {
+	// check verbose switch
+	if verbose {
+		fmt.Println(log)
+	}
+
 	// check demo switch
 	if !demo {
 		return

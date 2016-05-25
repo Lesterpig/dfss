@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	"dfss"
+	dapi "dfss/dfssd/api"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 )
@@ -21,6 +22,12 @@ Distributed Fair Signing System project
 Sign your contract using a secure cryptographic protocol`,
 	Run: func(cmd *cobra.Command, args []string) {
 		_ = cmd.Help()
+	},
+	PersistentPreRun: func(cmd *cobra.Command, args []string) {
+		dapi.Configure(viper.GetBool("verbose"), viper.GetString("demo") != "", viper.GetString("demo"), "ttp")
+	},
+	PersistentPostRun: func(cmd *cobra.Command, args []string) {
+		dapi.DClose()
 	},
 }
 

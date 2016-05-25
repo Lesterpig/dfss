@@ -20,9 +20,6 @@ var startCmd = &cobra.Command{
 
 Fill the DFSS_TTP_PASSWORD environment variable if the private key is enciphered`,
 	Run: func(cmd *cobra.Command, args []string) {
-		demo := viper.GetString("demo")
-		dapi.Configure(demo != "", demo, "ttp")
-
 		srv := server.GetServer()
 
 		addrPort := viper.GetString("address") + ":" + strconv.Itoa(viper.GetInt("port"))

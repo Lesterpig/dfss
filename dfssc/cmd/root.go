@@ -24,7 +24,7 @@ A tool to sign multiparty contract using a secure cryptographic protocol`,
 	},
 	PersistentPreRun: func(cmd *cobra.Command, args []string) {
 		net.DefaultTimeout = viper.GetDuration("timeout")
-		dapi.Configure(viper.GetString("demo") != "", viper.GetString("demo"), "client")
+		dapi.Configure(viper.GetBool("verbose"), viper.GetString("demo") != "", viper.GetString("demo"), "client")
 	},
 	PersistentPostRun: func(cmd *cobra.Command, args []string) {
 		dapi.DClose()

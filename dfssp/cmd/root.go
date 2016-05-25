@@ -20,7 +20,7 @@ Users and Contracts manager`,
 		_ = cmd.Help()
 	},
 	PersistentPreRun: func(cmd *cobra.Command, args []string) {
-		dapi.Configure(viper.GetString("demo") != "", viper.GetString("demo"), "platform")
+		dapi.Configure(viper.GetBool("verbose"), viper.GetString("demo") != "", viper.GetString("demo"), "platform")
 	},
 	PersistentPostRun: func(cmd *cobra.Command, args []string) {
 		dapi.DClose()
