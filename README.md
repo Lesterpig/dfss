@@ -1,7 +1,6 @@
 DFSS
 ====
-
-> Distributed Fair Signing System
+> Distributed Fair Signature System
 
 DFSS is a simple and secure way to e-sign contracts with a large number of participants, ensuring fairness and minimizing the involvement of the trusted third party (TTP).
 This repository contains source code for this INSA Rennes project.

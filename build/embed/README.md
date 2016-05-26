@@ -1,6 +1,6 @@
 DFSS
 ====
-> Distributed Fair Signing System
+> Distributed Fair Signature System
 
 Prerequisites
 -------------
@@ -25,7 +25,8 @@ You just have to untar the archive and run the following binaries:
 ./dfsst help # TTP
 ```
 
-On Linux-64 and Windows builds, two additional graphic binaries are included. You may need some Qt4 libraries on your system to run them.
+On Linux-64 and Windows builds, two additional graphic binaries are included.
+You may need some Qt4 libraries on your system to run them (Ubuntu and Fedora standard releases have these dependencies).
 
 ```bash
 ./dfssc_gui # Graphic client
@@ -43,11 +44,12 @@ For instance, if we are running the plaform on the `example.com` host:
 ./dfssp --cn example.com --country FR --validity 3650 init
 ```
 
-Then, it is possible to create TTP credentials from generated root credentials.
+Then, it's possible to create TTP credentials from generated root credentials.
 The generated files are stored in a subdirectory "ttp".
+Please note that the platform needs to generate a ttp listing, called "ttps". This file contains the ttp public address specified in the following command.
 
 ```bash
-./dfssp --cn ttp.example.com --country FR --validity 365 ttp
+./dfssp --cn ttp.example.com --country FR --validity 365 --addr ttp.example.com:9020 ttp
 ```
 
 You can then start the platform. Here we are considering a mongoDB database running on the same host.
@@ -64,10 +66,10 @@ export DFSS_MAIL_PASSWORD="password"
 Then:
 
 ```bash
-./dfssp start
+./dfssp -t ttps start
 ```
 
-You can also start the TTP:
+You must also start the TTP:
 
 ```bash
 ./dfsst --cert ttp/cert.pem --key ttp/cert.pem start
@@ -93,4 +95,11 @@ It's then possible to send new contracts to the platform:
 
 ```bash
 ./dfssc --ca path/to/dfssp_rootCA.pem --host example.com new
+```
+
+Other commands like `sign`, `fetch` and `recover` are available in the documentation that can be accessed using the `-h` flag.
+For example:
+
+```bash
+./dfssc sign -h
 ```
