@@ -1,10 +1,10 @@
 package user_test
 
 import (
-	"dfss/dfssp/api"
 	"testing"
 	"time"
 
+	"dfss/dfssp/api"
 	"dfss/dfssp/entities"
 	"github.com/stretchr/testify/assert"
 	"golang.org/x/net/context"

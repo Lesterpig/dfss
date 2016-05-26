@@ -2,9 +2,9 @@ package entities
 
 import (
 	"bytes"
+	"crypto/sha512"
 	"errors"
 
-	"crypto/sha512"
 	"dfss/auth"
 	cAPI "dfss/dfssc/api"
 	pAPI "dfss/dfssp/api"

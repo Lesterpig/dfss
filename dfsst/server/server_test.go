@@ -10,12 +10,10 @@ import (
 	"path/filepath"
 	"testing"
 
-	"github.com/spf13/viper"
-
 	"dfss/auth"
 	"dfss/dfsst/entities"
 	"dfss/mgdb"
-
+	"github.com/spf13/viper"
 	"gopkg.in/mgo.v2/bson"
 )
 

@@ -1,7 +1,6 @@
 package tests
 
 import (
-	"dfss/dfssc/common"
 	"io/ioutil"
 	"os"
 	"os/exec"
@@ -9,6 +8,7 @@ import (
 	"strings"
 	"testing"
 
+	"dfss/dfssc/common"
 	"github.com/stretchr/testify/assert"
 )
 

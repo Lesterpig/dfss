@@ -7,12 +7,13 @@ import (
 	"crypto/rand"
 	"crypto/rsa"
 	"crypto/x509"
-	"dfss/auth"
-	"dfss/dfssc/common"
 	"encoding/base64"
 	"fmt"
 	"io"
 	"strings"
+
+	"dfss/auth"
+	"dfss/dfssc/common"
 )
 
 // GetCertificate return the Certificate stored on the disk

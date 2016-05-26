@@ -1,10 +1,9 @@
 package entities
 
 import (
-	"dfss/mgdb"
-
 	"time"
 
+	"dfss/mgdb"
 	"gopkg.in/mgo.v2/bson"
 )
 
