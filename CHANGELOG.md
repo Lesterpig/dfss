@@ -1,6 +1,52 @@
 CHANGELOG
 =========
 
+v0.3.0
+------
+> 26/05/2016
+
+#### CLI Client
+
+- Log more information during signature (!69)
+- Add an optional local file check before signature (!74)
+- Add a slowdown flag for tests (!78)
+- Add a stopbefore flag for tests (!79)
+- Add TTP resolution (!80)
+- Add timeout flag (!81)
+- Add unregister command (!85)
+
+#### GUI Client
+
+- Improve contract display (!70)
+- Fix crash when the dfss file is corrupted (!71)
+- Add an optional local file check before signature (!74)
+- Add a cancel button before signature (!75)
+- Add TTP resolution (!80)
+- Add timeout configuration option (!81)
+
+#### Platform
+
+- Support different subnets between signers (!73)
+- Add TTP listing support (!80)
+- Disable case sensitivity in mails (!86)
+- Add unregister API (!85)
+- Fix timeout issues during ready sign (!89)
+- Add contract UUID in invitation mails (!90)
+
+#### TTP
+
+- Add TTP resolution (!80)
+- Fix concurrency problems (!82)
+
+#### Demonstrator
+
+- Add a step-by-step speed (!76)
+- Add communication visualization for TTP and platform (!83)
+
+#### Misc
+
+- Fix the verbose flag, now displays messages sent to demonstrator (!88)
+
 v0.2.0
 ------
 > 25/04/2016
