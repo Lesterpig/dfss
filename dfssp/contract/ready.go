@@ -21,6 +21,11 @@ type readySignal struct {
 	sequence     []uint32 // Only used to broadcast signature sequence
 }
 
+// ReadySignTimeout is the delay users have to confirm the signature.
+// A high value is not recommended, as there is no way to create any other signature on the same contract before the timeout
+// if a client has connection issues.
+var ReadySignTimeout = time.Minute
+
 // ReadySign is the last job of the platform before the signature can occur.
 // When a new client is ready, it joins a waitingGroup and waits for a master broadcast announcing that everybody is ready.
 //
@@ -45,6 +50,7 @@ func ReadySign(db *mgdb.MongoManager, rooms *common.WaitingGroupMap, ctx *contex
 	rooms.Broadcast(roomID, &readySignal{data: cn})
 
 	// Wait for ready signal
+	timeout := time.After(ReadySignTimeout)
 	for {
 		select {
 		case signal, ok := <-channel:
@@ -67,7 +73,7 @@ func ReadySign(db *mgdb.MongoManager, rooms *common.WaitingGroupMap, ctx *contex
 		case <-(*ctx).Done(): // Client's disconnection
 			rooms.Unjoin(roomID, channel)
 			return &api.LaunchSignature{ErrorCode: &api.ErrorCode{Code: api.ErrorCode_INVARG}}
-		case <-time.After(time.Minute): // Someone has not confirmed the signature within the delay
+		case <-timeout: // Someone has not confirmed the signature within the delay
 			rooms.Unjoin(roomID, channel)
 			return &api.LaunchSignature{ErrorCode: &api.ErrorCode{Code: api.ErrorCode_TIMEOUT, Message: "timeout for ready signal"}}
 		}
@@ -102,6 +108,7 @@ func masterReadyRoutine(db *mgdb.MongoManager, rooms *common.WaitingGroupMap, co
 
 	signersReady := make([]bool, len(contract.Signers))
 	work := true
+	timeout := time.After(ReadySignTimeout)
 	for work {
 		select {
 		case signal, ok := <-channel:
@@ -120,7 +127,7 @@ func masterReadyRoutine(db *mgdb.MongoManager, rooms *common.WaitingGroupMap, co
 				})
 				work = false
 			}
-		case <-time.After(10 * time.Minute):
+		case <-timeout:
 			work = false
 		}
 	}
