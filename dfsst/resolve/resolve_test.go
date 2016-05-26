@@ -1,11 +1,11 @@
 package resolve
 
 import (
+	"crypto/sha512"
 	"fmt"
 	"os"
 	"testing"
 
-	"crypto/sha512"
 	cAPI "dfss/dfssc/api"
 	"dfss/dfsst/entities"
 	"dfss/mgdb"

@@ -1,11 +1,11 @@
 package entities
 
 import (
+	"crypto/sha512"
 	"fmt"
 	"os"
 	"testing"
 
-	"crypto/sha512"
 	cAPI "dfss/dfssc/api"
 	"dfss/mgdb"
 	"github.com/stretchr/testify/assert"

@@ -1,16 +1,16 @@
 package user
 
 import (
-	"dfss/auth"
-	"dfss/dfssc/common"
-	"dfss/dfssc/security"
-	"dfss/mockp/server"
 	"fmt"
 	"os"
 	"path/filepath"
 	"testing"
 	"time"
 
+	"dfss/auth"
+	"dfss/dfssc/common"
+	"dfss/dfssc/security"
+	"dfss/mockp/server"
 	"github.com/spf13/viper"
 	"github.com/stretchr/testify/assert"
 )

@@ -4,7 +4,6 @@ package entities
 import (
 	cAPI "dfss/dfssc/api"
 	"dfss/mgdb"
-
 	"gopkg.in/mgo.v2/bson"
 )
 

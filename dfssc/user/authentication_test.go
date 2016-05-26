@@ -1,11 +1,11 @@
 package user
 
 import (
-	"dfss/dfssc/common"
 	"fmt"
 	"os"
 	"testing"
 
+	"dfss/dfssc/common"
 	"github.com/spf13/viper"
 	"github.com/stretchr/testify/assert"
 )

@@ -1,12 +1,12 @@
 package security
 
 import (
-	"dfss/dfssc/common"
 	"fmt"
 	"os"
 	"path/filepath"
 	"testing"
 
+	"dfss/dfssc/common"
 	"github.com/spf13/viper"
 	"github.com/stretchr/testify/assert"
 )

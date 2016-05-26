@@ -3,11 +3,10 @@ package user
 import (
 	"errors"
 
-	"golang.org/x/net/context"
-	"google.golang.org/grpc"
-
 	pb "dfss/dfssp/api"
 	"dfss/net"
+	"golang.org/x/net/context"
+	"google.golang.org/grpc"
 )
 
 // Unregister a user from the platform

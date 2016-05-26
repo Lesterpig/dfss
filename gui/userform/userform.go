@@ -7,7 +7,6 @@ import (
 	"dfss/dfssc/user"
 	"dfss/gui/common"
 	"dfss/gui/config"
-
 	"github.com/spf13/viper"
 	"github.com/visualfc/goqt/ui"
 )

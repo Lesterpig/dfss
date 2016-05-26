@@ -1,13 +1,13 @@
 package user
 
 import (
-	"dfss/dfssc/common"
-	"dfss/dfssc/security"
 	"fmt"
 	"os"
 	"path/filepath"
 	"testing"
 
+	"dfss/dfssc/common"
+	"dfss/dfssc/security"
 	"github.com/stretchr/testify/assert"
 )
 

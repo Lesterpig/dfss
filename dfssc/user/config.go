@@ -1,12 +1,12 @@
 package user
 
 import (
-	"dfss/auth"
-	"dfss/dfssc/common"
-	"dfss/dfssc/security"
 	"encoding/json"
 	"fmt"
 
+	"dfss/auth"
+	"dfss/dfssc/common"
+	"dfss/dfssc/security"
 	"github.com/spf13/viper"
 )
 

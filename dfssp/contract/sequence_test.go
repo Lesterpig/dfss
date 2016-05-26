@@ -1,9 +1,10 @@
 package contract_test
 
 import (
+	"testing"
+
 	"dfss/dfssp/contract"
 	"github.com/stretchr/testify/assert"
-	"testing"
 )
 
 var refSeq = []uint32{0, 1, 2, 0, 1, 2, 0, 1, 2} // for n = 3

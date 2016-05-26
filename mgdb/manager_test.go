@@ -2,9 +2,10 @@ package mgdb
 
 import (
 	"fmt"
-	"gopkg.in/mgo.v2/bson"
 	"os"
 	"testing"
+
+	"gopkg.in/mgo.v2/bson"
 )
 
 type card struct {

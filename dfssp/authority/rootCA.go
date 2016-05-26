@@ -8,9 +8,8 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/spf13/viper"
-
 	"dfss/auth"
+	"github.com/spf13/viper"
 )
 
 // PlatformID contains platform private key and root certificate

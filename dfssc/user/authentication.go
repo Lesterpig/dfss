@@ -1,18 +1,16 @@
 package user
 
 import (
+	"errors"
 	"io/ioutil"
 	"regexp"
 	"time"
-
-	"github.com/spf13/viper"
 
 	"dfss/dfssc/common"
 	"dfss/dfssc/security"
 	pb "dfss/dfssp/api"
 	"dfss/net"
-	"errors"
-
+	"github.com/spf13/viper"
 	"golang.org/x/net/context"
 	"google.golang.org/grpc"
 )

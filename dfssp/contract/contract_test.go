@@ -11,7 +11,6 @@ import (
 	"dfss/dfssp/server"
 	"dfss/mgdb"
 	"dfss/net"
-
 	"github.com/spf13/viper"
 	"github.com/stretchr/testify/assert"
 	"gopkg.in/mgo.v2/bson"
