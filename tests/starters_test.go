@@ -58,13 +58,13 @@ func startPlatform(tmpDir string) (platform, ttp, demo *exec.Cmd, stop func(), c
 	time.Sleep(time.Second)
 
 	// Start platform
-	platform = exec.Command(path, "--db", dbURI, "--path", dir, "-p", testPort, "--ttps", ttpsPath, "-d", "localhost:9099", "-v", "start")
+	platform = exec.Command(path, "--db", dbURI, "--path", dir, "-p", testPort, "--ttps", ttpsPath, "-d", "localhost:9099", "start")
 	platform.Stdout = os.Stdout
 	platform.Stderr = os.Stderr
 	err = platform.Start()
 
 	// Start TTP
-	ttp = exec.Command(ttpPath, "--db", dbURI, "--port", "9098", "-d", "localhost:9099", "-v", "start")
+	ttp = exec.Command(ttpPath, "--db", dbURI, "--port", "9098", "-d", "localhost:9099", "start")
 	ttp.Dir = filepath.Join(dir, "ttp")
 	ttp.Stdout = os.Stdout
 	ttp.Stderr = os.Stderr
@@ -107,7 +107,7 @@ func createClient(tmpDir string, ca []byte, port int) (*exec.Cmd, error) {
 
 	// Prepare the client command.
 	// The last argument is up to you!
-	cmd := exec.Command(path, "--ca", caPath, "--cert", certPath, "--host", "127.0.0.1:"+testPort, "--key", keyPath, "--port", strconv.Itoa(port), "--timeout", "3s", "-v", "-d", "localhost:9099")
+	cmd := exec.Command(path, "--ca", caPath, "--cert", certPath, "--host", "127.0.0.1:"+testPort, "--key", keyPath, "--port", strconv.Itoa(port), "--timeout", "3s", "-d", "localhost:9099")
 
 	return cmd, nil
 }
