@@ -14,6 +14,7 @@ import (
 	"dfss/dfssp/api"
 	"dfss/dfssp/entities"
 	"dfss/dfssp/server"
+	u "dfss/dfssp/user"
 	"dfss/mgdb"
 	"dfss/net"
 	"github.com/spf13/viper"
@@ -119,6 +120,25 @@ func TestMongoInsertUser(t *testing.T) {
 	_, err = repository.Collection.Insert(user)
 	if err != nil {
 		t.Fatal("An error occurred while inserting the user")
+	}
+}
+
+func TestUnregisterUser(t *testing.T) {
+	var hash = []byte{0xde, 0xad, 0xbe, 0xef}
+	user := entities.NewUser()
+	user.Email = "dfss2@mpcs.tk"
+	user.CertHash = hash
+	user.Csr = "csr2"
+	user.RegToken = "regToken 2"
+
+	_, err = repository.Collection.Insert(user)
+	if err != nil {
+		t.Fatal("An error occurred while inserting the user")
+	}
+
+	response := u.Unregister(manager, hash)
+	if response.Code != api.ErrorCode_SUCCESS {
+		t.Fatal("An error occured while deleting the user:" + response.Message)
 	}
 }
 
