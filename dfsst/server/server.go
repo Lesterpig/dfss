@@ -226,8 +226,44 @@ func (server *ttpServer) handleContractGenerationTry(manager *entities.ArchivesM
 
 // Recover route for the TTP.
 func (server *ttpServer) Recover(ctx context.Context, in *tAPI.RecoverRequest) (*tAPI.TTPResponse, error) {
-	// TODO
-	return nil, nil
+	if !bson.IsObjectIdHex(in.SignatureUUID) {
+		return nil, errors.New("Invalid signature uuid.")
+	}
+	bsonUUID := bson.ObjectIdHex(in.SignatureUUID)
+
+	manager := entities.NewArchivesManager(server.DB)
+	present, archives := manager.ContainsSignature(bsonUUID)
+	if !present {
+		return nil, errors.New("Unknown signature uuid.")
+	}
+	manager.Archives = archives
+
+	contract, err := handleRecover(ctx, manager)
+	if err != nil {
+		return nil, err
+	}
+
+	return &tAPI.TTPResponse{Contract: contract}, nil
+}
+
+func handleRecover(ctx context.Context, manager *entities.ArchivesManager) ([]byte, error) {
+	senderHash := net.GetClientHash(&ctx)
+	if senderHash == nil {
+		return []byte{}, errors.New("Bad authentication.")
+	}
+
+	present, senderID := manager.Archives.ContainsSigner(senderHash)
+	if !present {
+		return []byte{}, errors.New("Signer was not part of the signature.")
+	}
+
+	aborted := manager.HasReceivedAbortToken(senderID)
+	if aborted {
+		return []byte{}, errors.New("Signer was aborted.")
+	}
+
+	_, contract := manager.WasContractSigned()
+	return contract, nil
 }
 
 // GetServer returns the gRPC server.

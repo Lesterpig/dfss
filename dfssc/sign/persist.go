@@ -6,6 +6,7 @@ import (
 	"io/ioutil"
 
 	cAPI "dfss/dfssc/api"
+	"dfss/dfssc/common"
 	"dfss/dfssp/contract"
 )
 
@@ -45,5 +46,34 @@ func (m *SignatureManager) PersistSignaturesToFile() error {
 		return err
 	}
 
-	return ioutil.WriteFile(m.mail+"-"+m.contract.UUID+".proof", proof, 0600)
+	return ioutil.WriteFile(m.mail+"-"+m.uuid+".proof", proof, 0600)
+}
+
+// PersistRecoverDataToFile : save recover informations to disk.
+// returns the file name and an error if any occured
+func (m *SignatureManager) PersistRecoverDataToFile() (string, error) {
+	// Check content, don't write an empty file
+	if len(m.uuid) == 0 || len(m.ttpData.Addrport) == 0 || len(m.ttpData.Hash) == 0 {
+		return "", fmt.Errorf("Invalid recover data. Cannot persist file.")
+	}
+
+	// Fill JSON struct
+	recData := common.RecoverDataJSON{
+		SignatureUUID: m.uuid,
+		TTPAddrport:   m.ttpData.Addrport,
+		TTPHash:       m.ttpData.Hash,
+	}
+
+	file, err := json.MarshalIndent(recData, "", "  ")
+	if err != nil {
+		return "", err
+	}
+
+	filename := m.mail + "-" + m.uuid + ".run"
+	err = ioutil.WriteFile(filename, file, 0600)
+	if err != nil {
+		return "", err
+	}
+
+	return filename, nil
 }

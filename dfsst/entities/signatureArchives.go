@@ -1,6 +1,8 @@
 package entities
 
 import (
+	"bytes"
+
 	"gopkg.in/mgo.v2/bson"
 )
 
@@ -104,4 +106,16 @@ func NewAbortedSigner(signerIndex, abortIndex uint32) *AbortedSigner {
 		SignerIndex: signerIndex,
 		AbortIndex:  abortIndex,
 	}
+}
+
+// ContainsSigner : determines whether or not the specified signer is one of the signers,
+// and also returns the sequence id of said signer.
+func (archives *SignatureArchives) ContainsSigner(hash []byte) (bool, uint32) {
+	for i, s := range archives.Signers {
+		if bytes.Equal(hash, s.Hash) {
+			return true, uint32(i)
+		}
+	}
+
+	return false, uint32(0)
 }

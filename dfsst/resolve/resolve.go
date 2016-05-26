@@ -182,8 +182,8 @@ func Solve(manager *entities.ArchivesManager) (bool, []byte) {
 func GenerateSignedContract(archives *entities.SignatureArchives) []byte {
 	var pseudoContract string
 	for _, p := range archives.ReceivedPromises {
-		signature := "SIGNATURE FROM SIGNER " + string(archives.Signers[p.SenderKeyIndex].Hash)
-		signature += " ON SIGNATURE n° " + string(archives.ID) + "\n"
+		signature := "SIGNATURE FROM SIGNER " + fmt.Sprintf("%x", archives.Signers[p.SenderKeyIndex].Hash)
+		signature += " ON SIGNATURE n° " + fmt.Sprint(archives.ID) + "\n"
 		pseudoContract += signature
 	}
 

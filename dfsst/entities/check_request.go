@@ -29,13 +29,13 @@ func IsRequestValid(ctx context.Context, promises []*cAPI.Promise) (valid bool, 
 		return
 	}
 
-	sender, err := GetSenderHashFromContext(ctx)
-	if err != nil {
+	sender := net.GetClientHash(&ctx)
+	if sender == nil {
 		valid = false
 		return
 	}
 
-	senderIndex, err = GetIndexOfSigner(promises[0], sender)
+	senderIndex, err := GetIndexOfSigner(promises[0], sender)
 	if err != nil {
 		valid = false
 		return
@@ -74,19 +74,6 @@ func IsPromiseSignedByPlatform(promise *cAPI.Promise) (bool, bson.ObjectId, []Si
 	}
 
 	return true, signatureUUID, signers
-}
-
-// GetSenderHashFromContext : creates the sender's certificate hash from the specified context.
-func GetSenderHashFromContext(ctx context.Context) ([]byte, error) {
-	state, _, ok := net.GetTLSState(&ctx)
-	if !ok || len(state.VerifiedChains) == 0 {
-		return nil, errors.New("Empty verified sender certificate")
-	}
-
-	cert := state.VerifiedChains[0][0]
-	hash := auth.GetCertificateHash(cert)
-
-	return hash, nil
 }
 
 // GetIndexOfSigner : determines the index of the specified signer's hash in the array of signers' hashes.

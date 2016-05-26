@@ -446,8 +446,8 @@ func TestGenerateSignedContract(t *testing.T) {
 
 	var pseudoContract string
 	for _, p := range promises {
-		signature := "SIGNATURE FROM SIGNER " + string(signersEntities[p.SenderKeyIndex].Hash)
-		signature += " ON SIGNATURE n° " + string(id) + "\n"
+		signature := "SIGNATURE FROM SIGNER " + fmt.Sprintf("%x", signersEntities[p.SenderKeyIndex].Hash)
+		signature += " ON SIGNATURE n° " + fmt.Sprint(id) + "\n"
 		pseudoContract += signature
 	}
 
