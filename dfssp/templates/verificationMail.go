@@ -2,7 +2,7 @@ package templates
 
 const verificationMail = `Dear sir or Madam,
 
-You asked to register to the DFSS platform.
+You asked to register on the DFSS platform.
 Please send us your authentication request with
 the following text as token:
 

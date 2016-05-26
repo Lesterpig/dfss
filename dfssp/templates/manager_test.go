@@ -31,6 +31,7 @@ Signers :
   - mail@example.com
   - mail2@example.com
 
+Contract ID   : ` + contract.ID.Hex() + `
 Contract name : name.pdf
 SHA-512 hash  : 010211aa
 Comment       : comment
