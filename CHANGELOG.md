@@ -1,6 +1,18 @@
 CHANGELOG
 =========
 
+v0.3.1
+------
+> 27/05/2016
+
+#### CLI Client
+
+- Fix unregister command (!94)
+
+#### Platform
+
+- Fix the unability to sign several times the same contract (!93)
+
 v0.3.0
 ------
 > 26/05/2016
