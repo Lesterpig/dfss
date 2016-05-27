@@ -1,31 +1,35 @@
 package user
 
 import (
-	"errors"
-
-	pb "dfss/dfssp/api"
+	"dfss/dfssc/common"
+	"dfss/dfssc/security"
+	"dfss/dfssp/api"
 	"dfss/net"
+	"github.com/spf13/viper"
 	"golang.org/x/net/context"
-	"google.golang.org/grpc"
 )
 
 // Unregister a user from the platform
-func Unregister() error {
-	client, err := connect()
+func Unregister(passphrase string) error {
+	auth := security.NewAuthContainer(passphrase)
+	ca, cert, key, err := auth.LoadFiles()
 	if err != nil {
 		return err
 	}
 
-	// Stop the context if it takes too long for the platform to answer
-	ctx, cancel := context.WithTimeout(context.Background(), net.DefaultTimeout)
-	defer cancel()
-	response, err := client.Unregister(ctx, &pb.Empty{})
+	conn, err := net.Connect(viper.GetString("platform_addrport"), cert, key, ca, nil)
 	if err != nil {
-		return errors.New(grpc.ErrorDesc(err))
-	}
-	if response.Code != pb.ErrorCode_SUCCESS {
-		return errors.New(response.Message)
+		return err
 	}
 
-	return nil
+	client := api.NewPlatformClient(conn)
+	ctx, cancel := context.WithTimeout(context.Background(), net.DefaultTimeout)
+	defer cancel()
+	response, err := client.Unregister(ctx, &api.Empty{})
+
+	if err != nil {
+		return err
+	}
+
+	return common.EvaluateErrorCodeResponse(response)
 }

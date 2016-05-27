@@ -22,14 +22,15 @@ var unregisterCmd = &cobra.Command{
 		}
 
 		// Confirmation
-		var ready string
+		var passphrase, ready string
+		_ = readPassword(&passphrase, false)
 		readStringParam("Do you REALLY want to delete "+cert.Subject.CommonName+"? Type 'yes' to confirm", "", &ready)
 		if ready != "yes" {
 			fmt.Fprintln(os.Stderr, "Unregistering aborted!")
 			os.Exit(1)
 		}
 
-		err = user.Unregister()
+		err = user.Unregister(passphrase)
 		if err != nil {
 			fmt.Fprintln(os.Stderr, "Cannot unregister:", err.Error())
 			os.Exit(2)
