@@ -33,8 +33,9 @@ var ReadySignTimeout = time.Minute
 func ReadySign(db *mgdb.MongoManager, rooms *common.WaitingGroupMap, ctx *context.Context, in *api.ReadySignRequest) *api.LaunchSignature {
 	roomID := "ready_" + in.ContractUuid
 	channel, _, first := rooms.Join(roomID)
-	cn := net.GetCN(ctx)
+	defer rooms.Unjoin(roomID, channel)
 
+	cn := net.GetCN(ctx)
 	// Check UUID
 	if !bson.IsObjectIdHex(in.ContractUuid) {
 		return &api.LaunchSignature{ErrorCode: &api.ErrorCode{Code: api.ErrorCode_INVARG}}
@@ -71,10 +72,8 @@ func ReadySign(db *mgdb.MongoManager, rooms *common.WaitingGroupMap, ctx *contex
 				return &api.LaunchSignature{ErrorCode: &api.ErrorCode{Code: api.ErrorCode_INVARG}}
 			}
 		case <-(*ctx).Done(): // Client's disconnection
-			rooms.Unjoin(roomID, channel)
 			return &api.LaunchSignature{ErrorCode: &api.ErrorCode{Code: api.ErrorCode_INVARG}}
 		case <-timeout: // Someone has not confirmed the signature within the delay
-			rooms.Unjoin(roomID, channel)
 			return &api.LaunchSignature{ErrorCode: &api.ErrorCode{Code: api.ErrorCode_TIMEOUT, Message: "timeout for ready signal"}}
 		}
 	}
@@ -86,6 +85,7 @@ func ReadySign(db *mgdb.MongoManager, rooms *common.WaitingGroupMap, ctx *contex
 func masterReadyRoutine(db *mgdb.MongoManager, rooms *common.WaitingGroupMap, contractUUID string) {
 	roomID := "ready_" + contractUUID
 	channel, oldMessages, _ := rooms.Join(roomID)
+	defer rooms.Unjoin(roomID, channel)
 
 	// Push oldMessages into the channel.
 	// It is safe as this sould be a very small slice (the room is just created).
@@ -102,7 +102,6 @@ func masterReadyRoutine(db *mgdb.MongoManager, rooms *common.WaitingGroupMap, co
 			ready: true,
 			data:  "",
 		}) // This represents a "error" response
-		rooms.Unjoin(roomID, channel)
 		return
 	}
 
@@ -132,7 +131,6 @@ func masterReadyRoutine(db *mgdb.MongoManager, rooms *common.WaitingGroupMap, co
 		}
 	}
 
-	rooms.Unjoin(roomID, channel)
 }
 
 // FindAndUpdatePendingSigner is a utility function to return the state of current signers readiness.
